@@ -1,83 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { Poll } from '@/types/poll';
-import PollCard from '@/components/PollCard';
+import { usePollStore } from '../src/store/usePollStore';
+import { mapStorePollToUIPoll } from '../src/types/poll';
+import PollCard from '../components/PollCard';
 
 export default function Home() {
-  const [polls, setPolls] = useState<Poll[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchPolls = async () => {
-      try {
-        // Mock data - in a real app, this would be an API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const now = new Date();
-        const mockPolls: Poll[] = [
-          {
-            id: '1',
-            question: 'What\'s your favorite programming language?',
-            options: [
-              { id: '1', text: 'TypeScript', votes: 42, emoji: '💙' },
-              { id: '2', text: 'Python', votes: 35, emoji: '🐍' },
-              { id: '3', text: 'JavaScript', votes: 28, emoji: '✨' },
-            ],
-            createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 24), // 1 day ago
-            expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 2), // 2 days from now
-            isExpired: false,
-            totalVotes: 105,
-            createdBy: 'devuser',
-            userVotedOptionId: Math.random() > 0.5 ? '1' : undefined,
-          },
-          {
-            id: '2',
-            question: 'Best way to spend a weekend?',
-            options: [
-              { id: '1', text: 'Hiking', votes: 15, emoji: '⛰️' },
-              { id: '2', text: 'Netflix & Chill', votes: 32, emoji: '🍿' },
-              { id: '3', text: 'Coding', votes: 28, emoji: '💻' },
-              { id: '4', text: 'Traveling', votes: 19, emoji: '✈️' },
-            ],
-            createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 2), // 2 hours ago
-            expiresAt: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 5), // 5 days from now
-            isExpired: false,
-            totalVotes: 94,
-            createdBy: 'traveler',
-          },
-          {
-            id: '3',
-            question: 'Preferred coffee drink?',
-            options: [
-              { id: '1', text: 'Espresso', votes: 25, emoji: '☕' },
-              { id: '2', text: 'Latte', votes: 30, emoji: '🥛' },
-              { id: '3', text: 'Cappuccino', votes: 20, emoji: '☕' },
-              { id: '4', text: 'Americano', votes: 15, emoji: '☕' },
-              { id: '5', text: 'I don\'t drink coffee', votes: 10, emoji: '🚫' },
-            ],
-            createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-            expiresAt: new Date(now.getTime() - 1000 * 60 * 60), // 1 hour ago (expired)
-            isExpired: true,
-            totalVotes: 100,
-            createdBy: 'coffeelover',
-            userVotedOptionId: '2',
-          },
-        ];
-
-        setPolls(mockPolls);
-      } catch (err) {
-        console.error('Failed to fetch polls:', err);
-        setError('Failed to load polls. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPolls();
-  }, []);
+  const storePolls = usePollStore((state) => state.polls);
+  const isLoading = false; // Loading state can be added to the store if needed
+  const error = ''; // Error handling can be added to the store if needed
+  
+  // Convert store polls to UI polls
+  const polls = storePolls.map(mapStorePollToUIPoll);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">

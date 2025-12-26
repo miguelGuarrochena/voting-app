@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from 'next/font/google';
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import { AuthProvider } from '@/context/AuthContext';
+import Navbar from '../components/Navbar';
+import { AuthProvider } from '../context/AuthContext';
+import StoreProvider from '../src/providers/StoreProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,13 +21,15 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className={`${inter.className} flex flex-col min-h-screen`}>
         <AuthProvider>
-          <Navbar />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <footer className="py-4 text-center text-sm text-slate-500">
-            © {new Date().getFullYear()} Pickly. All rights reserved.
-          </footer>
+          <StoreProvider>
+            <Navbar />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <footer className="py-4 text-center text-sm text-slate-500">
+              © {new Date().getFullYear()} Pickly. All rights reserved.
+            </footer>
+          </StoreProvider>
         </AuthProvider>
       </body>
     </html>
