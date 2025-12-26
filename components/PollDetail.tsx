@@ -1,41 +1,58 @@
 'use client';
 
 import { useState } from 'react';
-import { Poll, emojiOptions, defaultEmoji } from '@/types/poll';
+import { Poll, defaultEmoji } from '@/types/poll';
 import { formatDistanceToNow } from 'date-fns';
+
+const EMOJI_REACTIONS = {
+  positive: ['👍', '👏', '😍', '🔥'],
+  negative: ['😐', '😡', '🍅', '🤮']
+} as const;
 
 interface PollDetailProps {
   poll: Poll;
-  onVote: (optionId: string) => void;
+  onVote: (optionId: string, emoji: string) => void;
+}
+
+interface SelectedReaction {
+  optionId: string;
+  emoji: string;
 }
 
 export default function PollDetail({ poll, onVote }: PollDetailProps) {
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(
-    poll.userVotedOptionId || null
-  );
-  const [hasVoted, setHasVoted] = useState(!!poll.userVotedOptionId);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [userReactions, setUserReactions] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleVote = async () => {
-    if (!selectedOptionId || hasVoted) return;
+  const handleEmojiSelect = async (optionId: string, emoji: string) => {
+    if (userReactions[optionId]) return; // Prevent multiple reactions to same option
     
     setIsSubmitting(true);
     setError('');
     
     try {
-      await onVote(selectedOptionId);
-      setHasVoted(true);
+      await onVote(optionId, emoji);
+      setUserReactions(prev => ({
+        ...prev,
+        [optionId]: emoji
+      }));
     } catch (err) {
-      setError('Failed to submit your vote. Please try again.');
-      console.error('Voting error:', err);
+      setError('Failed to record your reaction. Please try again.');
+      console.error('Reaction error:', err);
     } finally {
+      setSelectedOption(null);
       setIsSubmitting(false);
     }
   };
 
+  const toggleEmojiPicker = (optionId: string) => {
+    if (userReactions[optionId]) return; // Don't show picker for already reacted options
+    setSelectedOption(selectedOption === optionId ? null : optionId);
+  };
+
   const totalVotes = poll.options.reduce((sum, option) => sum + option.votes, 0);
-  const hasEnded = poll.isExpired || hasVoted;
+  const hasEnded = poll.isExpired;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -65,71 +82,74 @@ export default function PollDetail({ poll, onVote }: PollDetailProps) {
           const percentage = totalVotes > 0 
             ? Math.round((option.votes / totalVotes) * 100) 
             : 0;
-          const isSelected = selectedOptionId === option.id;
-          const showResults = hasEnded || hasVoted;
+          
+          const isSelected = selectedOption === option.id;
           
           return (
             <div key={option.id} className="space-y-1">
-              <button
-                type="button"
-                disabled={poll.isExpired || hasVoted}
-                onClick={() => !hasEnded && setSelectedOptionId(option.id)}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
-                  isSelected 
-                    ? 'border-sky-500 bg-sky-50' 
-                    : 'border-gray-200 hover:border-sky-300'
-                } ${hasEnded ? 'cursor-default' : 'cursor-pointer'}`}
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-xl">{option.emoji || defaultEmoji}</span>
-                    <span className="font-medium">{option.text}</span>
+              <div className="relative">
+                <button
+                  type="button"
+                  disabled={poll.isExpired || !!userReactions[option.id]}
+                  onClick={() => !poll.isExpired && toggleEmojiPicker(option.id)}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                    isSelected
+                      ? 'border-sky-500 bg-sky-50 scale-[1.02]'
+                      : 'border-gray-200 hover:border-sky-300 hover:scale-[1.01]'
+                  } ${
+                    poll.isExpired || userReactions[option.id] 
+                      ? 'cursor-default opacity-90' 
+                      : 'cursor-pointer active:scale-95'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">
+                        {userReactions[option.id] || (option.emoji || defaultEmoji)}
+                      </span>
+                      <span className="font-medium">{option.text}</span>
+                    </div>
+                    {userReactions[option.id] && (
+                      <span className="text-sm font-medium text-gray-500">
+                        You reacted with {userReactions[option.id]}
+                      </span>
+                    )}
                   </div>
-                  {showResults && (
-                    <span className="text-sm font-medium text-gray-500">
-                      {percentage}%
-                    </span>
-                  )}
-                </div>
-                
-                {showResults && (
-                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-sky-500 h-2 rounded-full transition-all duration-500" 
-                      style={{ width: `${percentage}%` }}
-                    />
+                </button>
+
+                {/* Emoji Picker */}
+                {isSelected && !userReactions[option.id] && (
+                  <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 p-2">
+                    <div className="mb-2 text-xs text-gray-500 font-medium px-1">
+                      React with...
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[...EMOJI_REACTIONS.positive, ...EMOJI_REACTIONS.negative].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEmojiSelect(option.id, emoji);
+                          }}
+                          className="text-2xl p-2 hover:bg-gray-100 rounded-md transition-colors active:scale-95"
+                          disabled={isSubmitting}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </button>
-              
-              {showResults && option.votes > 0 && (
-                <p className="text-xs text-gray-500 pl-1">
-                  {option.votes} {option.votes === 1 ? 'vote' : 'votes'}
-                </p>
-              )}
+              </div>
             </div>
           );
         })}
       </div>
-
-      {!poll.isExpired && !hasVoted && (
-        <button
-          type="button"
-          onClick={handleVote}
-          disabled={!selectedOptionId || isSubmitting}
-          className={`mt-6 w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-            selectedOptionId && !isSubmitting
-              ? 'bg-sky-600 hover:bg-sky-700'
-              : 'bg-gray-300 cursor-not-allowed'
-          } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500`}
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Vote'}
-        </button>
-      )}
-
-      {hasVoted && (
-        <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
-          🎉 Thanks for voting! Your choice has been recorded.
+      
+      {isSubmitting && (
+        <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded-md text-sm text-center">
+          Recording your reaction...
         </div>
       )}
     </div>
