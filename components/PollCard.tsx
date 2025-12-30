@@ -1,6 +1,7 @@
 'use client';
 
-import { Poll, getTopReaction, getTotalReactions, isPositiveReaction, ReactionType } from '../src/types/poll';
+import { memo, useMemo, useCallback } from 'react';
+import { Poll, getTopReaction, isPositiveReaction, ReactionType } from '../src/types/poll';
 import usePollStore from '../store/pollStore';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,19 +16,46 @@ interface PollCardProps {
   index?: number;
 }
 
-export default function PollCard({ poll, index = 0 }: PollCardProps) {
-  const reactToOption = usePollStore(state => state.reactToOption);
-  const userReactions = usePollStore(state => state.userReactions[poll.id] || {});
+const PollCard = memo(function PollCard({ poll, index = 0 }: PollCardProps) {
+  // Memoize derived state to prevent unnecessary recalculations
+  const { isExpired, timeRemaining } = useMemo(() => {
+    const now = new Date();
+    const expiryDate = new Date(poll.expiresAt);
+    return {
+      isExpired: expiryDate < now,
+      timeRemaining: formatDistanceToNow(expiryDate, { addSuffix: true })
+    };
+  }, [poll.expiresAt]);
+
+  // Memoize store selectors to prevent unnecessary re-renders
+  const reactToOption = usePollStore((state) => state.reactToOption);
+  const userReactions = usePollStore(
+    useCallback((state) => state.userReactions[poll.id] || {}, [poll.id])
+  );
   
-  const isExpired = new Date(poll.expiresAt) < new Date();
-  const timeRemaining = formatDistanceToNow(new Date(poll.expiresAt), { addSuffix: true });
-  
-  const handleReaction = (optionId: string, emoji: ReactionType) => {
+  // Memoize the handleReaction function with stable references
+  const handleReaction = useCallback((optionId: string, emoji: ReactionType) => {
     reactToOption(poll.id, optionId, emoji);
-  };
+  }, [poll.id, reactToOption]);
   
-  // Helper function to render reaction buttons
-  const renderReactionButton = (emoji: ReactionType, optionId: string) => {
+  // Memoize vote calculations
+  const { totalVotes, hasVotes } = useMemo(() => {
+    const getOptionVotes = (option: Poll['options'][number]) => {
+      return Object.values(option.reactions).reduce((sum: number, count: number) => sum + count, 0);
+    };
+    
+    const votes = poll.options.reduce((sum, option) => sum + getOptionVotes(option), 0);
+    return {
+      totalVotes: votes,
+      hasVotes: votes > 0
+    };
+  }, [poll.options]);
+  
+  // Memoize the options to show to prevent unnecessary re-renders
+  const optionsToShow = useMemo(() => poll.options.slice(0, 3), [poll.options]);
+
+  // Memoize the renderReactionButton function with stable references
+  const renderReactionButton = useCallback((emoji: ReactionType, optionId: string) => {
     const isActive = userReactions[optionId] === emoji;
     return (
       <button
@@ -45,21 +73,15 @@ export default function PollCard({ poll, index = 0 }: PollCardProps) {
         {emoji}
       </button>
     );
-  };
-  
-  const getOptionVotes = (option: Poll['options'][0]) => {
-    return Object.values(option.reactions).reduce((sum, count) => sum + count, 0);
-  };
-  
-  const totalVotes = poll.options.reduce((sum, option) => sum + getOptionVotes(option), 0);
-  const hasVotes = totalVotes > 0;
-  
+  }, [handleReaction, userReactions]);
+
   return (
     <motion.div 
       className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 hover:-translate-y-1"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
+      transition={{ delay: (index || 0) * 0.1 }}
+      layoutId={`poll-${poll.id}`}
     >
       {/* Poll image (use first option's image if available) */}
       {poll.options[0]?.imageUrl && (
@@ -69,6 +91,8 @@ export default function PollCard({ poll, index = 0 }: PollCardProps) {
             alt={poll.options[0].title}
             fill
             className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={index !== undefined && index < 3}
           />
         </div>
       )}
@@ -92,8 +116,11 @@ export default function PollCard({ poll, index = 0 }: PollCardProps) {
         )}
         
         <div className="space-y-3 mt-4">
-          {poll.options.slice(0, 3).map((option) => {
-            const optionVotes = getOptionVotes(option);
+          {optionsToShow.map((option) => {
+            const optionVotes = Object.values(option.reactions).reduce(
+              (sum: number, count: number) => sum + count, 
+              0
+            );
             const percentage = hasVotes ? Math.round((optionVotes / totalVotes) * 100) : 0;
             const topReaction = getTopReaction(option.reactions);
             
@@ -110,75 +137,33 @@ export default function PollCard({ poll, index = 0 }: PollCardProps) {
                   )}
                 </div>
                 
-                {hasVotes && (
-                  <div className="w-full bg-gray-100 rounded-full h-2">
+                <div className="w-full bg-gray-100 rounded-full h-2">
+                  {hasVotes && (
                     <div 
                       className="h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600" 
                       style={{ width: `${percentage}%` }}
                     />
-                  </div>
-                )}
+                  )}
+                </div>
                 
                 {!isExpired && (
                   <div className="flex space-x-1 pt-1 overflow-x-auto pb-2 -mx-1 px-1">
-                    {REACTION_EMOJIS.map((emoji) => {
-                      const isActive = userReactions[option.id] === emoji;
-                      return (
-                        <button
-                          key={emoji}
-                          onClick={() => handleReaction(option.id, emoji)}
-                          className={`p-1.5 rounded-full transition-all ${
-                            isActive 
-                              ? 'bg-blue-100 scale-110' 
-                              : 'hover:bg-gray-100 hover:scale-105'
-                          }`}
-                          aria-label={`React with ${emoji}`}
-                        >
-                          <span className={`text-lg ${isActive ? 'scale-125' : ''}`}>
-                            {emoji}
-                          </span>
-                        </button>
-                      );
-                    })}
+                    {REACTION_EMOJIS.map((emoji) => renderReactionButton(emoji, option.id))}
                   </div>
                 )}
               </div>
             );
           })}
-          
-          {poll.options.length > 3 && (
-            <div className="text-sm text-center text-gray-500 pt-2">
-              +{poll.options.length - 3} more options
-            </div>
-          )}
         </div>
         
-        <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="flex -space-x-2">
-              {poll.options.slice(0, 3).map(option => {
-                const topReaction = getTopReaction(option.reactions);
-                return topReaction ? (
-                  <div 
-                    key={option.id}
-                    className="w-6 h-6 rounded-full bg-white border-2 border-white flex items-center justify-center text-xs"
-                    title={`${option.title}: ${topReaction.emoji} ${topReaction.count}`}
-                  >
-                    {topReaction.emoji}
-                  </div>
-                ) : null;
-              })}
-            </div>
-            <span className="ml-2 text-sm text-gray-500">
-              {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
-            </span>
-          </div>
+        <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
+          <span>{poll.totalReactions} reactions</span>
           
           <Link 
             href={`/polls/${poll.id}`}
             className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center"
           >
-            View poll
+            View details
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
@@ -187,4 +172,6 @@ export default function PollCard({ poll, index = 0 }: PollCardProps) {
       </div>
     </motion.div>
   );
-}
+});
+
+export { PollCard };

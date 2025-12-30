@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useCallback } from 'react';
 import usePollStore from '@/store/pollStore';
-import PollCard from '../PollCard';
+import { PollCard } from '../PollCard';
 
 export default function FeedGrid() {
   const { polls, loadPolls, filter, setFilter } = usePollStore();
