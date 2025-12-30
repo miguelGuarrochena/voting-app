@@ -2,48 +2,32 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import PollDetail from '../../../components/PollDetail';
 import { usePollStore } from '../../../src/store/usePollStore';
-import { mapStorePollToUIPoll } from '../../../src/types/poll';
+import PollDetail from '../../../components/PollDetail';
 
 export default function PollPage() {
-  const { id: pollId } = useParams();
   const router = useRouter();
+  const { id: pollId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
   // Get the poll from the store
-  const storePoll = usePollStore((state) => 
-    state.polls.find((p) => p.id === pollId)
-  );
-  const voteOnOption = usePollStore((state) => state.voteOnOption);
-  
-  // Map the store poll to UI poll
-  const poll = storePoll ? mapStorePollToUIPoll(storePoll) : null;
+  const { getPollById } = usePollStore();
+  const poll = getPollById(pollId as string);
   
   useEffect(() => {
     // Simulate loading
     const timer = setTimeout(() => {
       setIsLoading(false);
-      if (!storePoll) {
+      if (!poll) {
         setError('Poll not found');
       }
     }, 300);
     
     return () => clearTimeout(timer);
-  }, [storePoll]);
-  
-  const handleVote = async (optionId: string, emoji: string) => {
-    if (!pollId || typeof pollId !== 'string') return;
-    
-    try {
-      voteOnOption(pollId, optionId, emoji);
-    } catch (err) {
-      console.error('Failed to vote:', err);
-      throw err;
-    }
-  };
+  }, [poll]);
 
   if (isLoading) {
     return (
@@ -51,9 +35,14 @@ export default function PollPage() {
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-3/4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="space-y-4 mt-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-4 bg-gray-200 rounded"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          
+          <div className="mt-8 space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-100 rounded w-full"></div>
+              </div>
             ))}
           </div>
         </div>
@@ -72,14 +61,16 @@ export default function PollPage() {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-700">{error || 'Poll not found'}</p>
-              <div className="mt-2">
-                <button
-                  onClick={() => router.push('/')}
-                  className="text-sm font-medium text-red-700 hover:text-red-600"
+              <p className="text-sm text-red-700">
+                {error || 'Poll not found. It may have been deleted or never existed.'}
+              </p>
+              <div className="mt-4">
+                <Link 
+                  href="/" 
+                  className="text-sm font-medium text-red-700 hover:text-red-600 underline"
                 >
-                  ← Back to all polls
-                </button>
+                  ← Back to home
+                </Link>
               </div>
             </div>
           </div>
@@ -88,35 +79,54 @@ export default function PollPage() {
     );
   }
 
+  // Calculate total votes for this poll
+  const totalVotes = poll.options.reduce((sum, option) => {
+    return sum + Object.values(option.reactions).reduce((a: number, b: number) => a + b, 0);
+  }, 0);
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="bg-white rounded-xl shadow-sm border p-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{poll.question}</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Created by {poll.author.name} • {poll.totalVotes} votes • 
-              <span className={`ml-1 ${poll.isExpired ? 'text-red-600' : 'text-green-600'}`}>
-                {poll.isExpired ? 'Ended' : `Ends ${formatDistanceToNow(poll.expiresAt, { addSuffix: true })}`}
+      <div className="mb-6">
+        <Link 
+          href="/" 
+          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+        >
+          <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to polls
+        </Link>
+      </div>
+      
+      <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+        <div className="p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{poll.title}</h1>
+          {poll.description && (
+            <p className="text-gray-600 mb-4">{poll.description}</p>
+          )}
+          
+          <div className="flex items-center text-sm text-gray-500 mb-6">
+            <span>Created by {poll.createdBy}</span>
+            <span className="mx-2">•</span>
+            <span>
+              {formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}
+            </span>
+            <span className="mx-2">•</span>
+            <span>{totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}</span>
+            {new Date(poll.expiresAt) < new Date() ? (
+              <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                Ended
               </span>
-            </p>
+            ) : (
+              <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                Active
+              </span>
+            )}
           </div>
-          <button
-            onClick={() => router.back()}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <span className="sr-only">Close</span>
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="mt-8">
-          <PollDetail 
-            poll={poll} 
-            onVote={handleVote} 
-          />
+          
+          <div className="space-y-4">
+            <PollDetail pollId={poll.id} />
+          </div>
         </div>
       </div>
     </div>

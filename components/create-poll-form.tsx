@@ -1,10 +1,30 @@
 'use client';
 
+'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatForDateTimeInput, addDays } from '@/utils/date';
+import { usePollStore } from '@/src/store/usePollStore';
 
-import type { PollOption, Participant } from '@/types';
+type FormPollOption = {
+  id: string;
+  text: string;
+  image: string;
+  emoji?: string;
+};
+
+type PollOption = {
+  id: string;
+  label: string;
+  image: string;
+  reactions: Record<string, number>;
+};
+
+type Participant = {
+  id: string;
+  emailOrUsername: string;
+};
 
 export function CreatePollForm() {
   const [title, setTitle] = useState('');
@@ -16,16 +36,17 @@ export function CreatePollForm() {
   });
   const [isPrivate, setIsPrivate] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
-  const [options, setOptions] = useState<PollOption[]>([
-    { id: crypto.randomUUID(), text: '' },
-    { id: crypto.randomUUID(), text: '' },
+  const [options, setOptions] = useState<FormPollOption[]>([
+    { id: crypto.randomUUID(), text: '', image: '' },
+    { id: crypto.randomUUID(), text: '', image: '' },
   ]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [newParticipant, setNewParticipant] = useState('');
   const router = useRouter();
+  const { addPoll } = usePollStore();
 
   const addOption = () => {
-    setOptions([...options, { id: crypto.randomUUID(), text: '' }]);
+    setOptions([...options, { id: crypto.randomUUID(), text: '', image: '' }]);
   };
 
   const removeOption = (id: string) => {
@@ -33,7 +54,7 @@ export function CreatePollForm() {
     setOptions(options.filter(option => option.id !== id));
   };
 
-  const updateOption = (id: string, updates: Partial<PollOption>) => {
+  const updateOption = (id: string, updates: Partial<FormPollOption>) => {
     setOptions(
       options.map(option =>
         option.id === id ? { ...option, ...updates } : option
@@ -57,9 +78,28 @@ export function CreatePollForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock submission - in a real app, this would call an API
-    const pollId = crypto.randomUUID();
-    router.push(`/polls/${pollId}`);
+    
+    // Create the new poll
+    const newPoll = {
+      title,
+      description: description || undefined,
+      expiresAt: new Date(expirationDate).toISOString(),
+      isPublic: !isPrivate,
+      options: options
+        .filter(option => option.text.trim() !== '')
+        .map(option => ({
+          id: crypto.randomUUID(),
+          label: option.text,
+          image: option.image || '',
+          reactions: {},
+        })),
+    };
+    
+    // Add to store
+    addPoll(newPoll);
+    
+    // Redirect to the new poll
+    router.push('/'); // Will redirect to home where the new poll will be shown
   };
 
   const minDate = new Date().toISOString().split('T')[0];

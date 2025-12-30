@@ -25,101 +25,58 @@ export type Poll = {
 
 type PollStore = {
   polls: Poll[];
-  addPoll: (poll: Omit<Poll, 'id' | 'createdAt'>) => void;
+  addPoll: (poll: Omit<Poll, 'id' | 'createdAt' | 'createdBy'>) => void;
   voteOnOption: (pollId: string, optionId: string, emoji: string) => void;
+  getPollById: (id: string) => Poll | undefined;
 };
 
-const MOCK_POLLS: Poll[] = [
-  {
-    id: '1',
-    title: 'Which outfit looks better?',
-    description: 'Help me decide for the party tonight!',
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    isPublic: true,
-    createdBy: 'user1',
-    createdAt: new Date().toISOString(),
-    options: [
-      {
-        id: '1-1',
-        label: 'Casual Look',
-        image: 'https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=500&auto=format&fit=crop',
-        reactions: { '👍': 12, '❤️': 8 },
-      },
-      {
-        id: '1-2',
-        label: 'Formal Look',
-        image: 'https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=500&auto=format&fit=crop',
-        reactions: { '👍': 5, '❤️': 15 },
-      },
-    ],
-  },
-  {
-    id: '2',
-    title: 'Best Halloween Costume',
-    description: 'Which one should I wear for the contest?',
-    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-    isPublic: true,
-    createdBy: 'user2',
-    createdAt: new Date().toISOString(),
-    options: [
-      {
-        id: '2-1',
-        label: 'Superhero',
-        image: 'https://images.unsplash.com/photo-1518364538800-6bae3c2ea0f2?w=500&auto=format&fit=crop',
-        reactions: { '😎': 7, '👏': 3 },
-      },
-      {
-        id: '2-2',
-        label: 'Zombie',
-        image: 'https://images.unsplash.com/photo-1508361001413-7a9daf21c0c4?w=500&auto=format&fit=crop',
-        reactions: { '😱': 10, '👻': 8 },
-      },
-      {
-        id: '2-3',
-        label: 'Vampire',
-        image: 'https://images.unsplash.com/photo-1508361001413-7a9daf21c0c4?w=500&auto=format&fit=crop',
-        reactions: { '🧛': 15, '😈': 5 },
-      },
-    ],
-  },
-];
-
-export const usePollStore = create<PollStore>((set) => ({
-  polls: MOCK_POLLS,
+export const usePollStore = create<PollStore>((set, get) => ({
+  polls: [],
   
   addPoll: (poll) =>
-    set((state) => ({
-      polls: [
-        ...state.polls,
-        {
-          ...poll,
-          id: uuidv4(),
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    })),
-
+    set((state) => {
+      const newPoll: Poll = {
+        ...poll,
+        id: uuidv4(),
+        createdBy: 'current-user', // In a real app, this would be the logged-in user
+        createdAt: new Date().toISOString(),
+        options: poll.options.map(option => ({
+          ...option,
+          reactions: {},
+        })),
+      };
+      
+      return {
+        polls: [...state.polls, newPoll],
+      };
+    }),
+    
   voteOnOption: (pollId, optionId, emoji) =>
     set((state) => ({
-      polls: state.polls.map((poll) =>
-        poll.id === pollId
-          ? {
-              ...poll,
-              options: poll.options.map((option) =>
-                option.id === optionId
-                  ? {
-                      ...option,
-                      reactions: {
-                        ...option.reactions,
-                        [emoji]: (option.reactions[emoji] || 0) + 1,
-                      },
-                    }
-                  : option
-              ),
-            }
-          : poll
-      ),
+      polls: state.polls.map((poll) => {
+        if (poll.id !== pollId) return poll;
+        
+        return {
+          ...poll,
+          options: poll.options.map((option) => {
+            if (option.id !== optionId) return option;
+            
+            const currentCount = option.reactions[emoji] || 0;
+            return {
+              ...option,
+              reactions: {
+                ...option.reactions,
+                [emoji]: currentCount + 1,
+              },
+            };
+          }),
+        };
+      }),
     })),
+    
+  getPollById: (id) => {
+    return get().polls.find((poll) => poll.id === id);
+  },
 }));
 
 export default usePollStore;

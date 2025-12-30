@@ -9,52 +9,41 @@ const EMOJI_REACTIONS = {
   negative: ['👎', '😡', '🤔']
 } as const;
 
-type PollOption = {
-  id: string;
-  label: string;
-  image: string;
-  reactions: { [emoji: string]: number };
-};
-
 type PollDetailProps = {
   pollId: string;
 };
 
 export default function PollDetail({ pollId }: PollDetailProps) {
-  const { polls, voteOnOption } = usePollStore();
+  const { voteOnOption, getPollById } = usePollStore();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [userReactions, setUserReactions] = useState<Record<string, string>>({});
   
-  // Find the poll by ID
-  const poll = polls.find(p => p.id === pollId);
+  // Get the poll from the store
+  const poll = getPollById(pollId);
   
   if (!poll) {
     return <div className="text-center py-8">Poll not found</div>;
   }
   
   // Calculate total votes and check if poll has ended
-  const totalVotes = poll.options.reduce((sum, option) => {
-    return sum + Object.values(option.reactions).reduce((a, b) => a + b, 0);
+  const totalVotes = poll.options.reduce((sum: number, option) => {
+    const optionVotes = Object.values(option.reactions).reduce(
+      (a: number, b: number) => a + b, 
+      0
+    );
+    return sum + optionVotes;
   }, 0);
   
   const hasEnded = new Date(poll.expiresAt) < new Date();
   
   // Helper function to get votes for an option
-  const getOptionVotes = (optionId: string) => {
-    const option = poll?.options.find(o => o.id === optionId);
+  const getOptionVotes = (optionId: string): number => {
+    const option = poll.options.find((o: { id: string }) => o.id === optionId);
     if (!option) return 0;
-    return Object.values(option.reactions).reduce((a, b) => a + b, 0);
-  };
-  
-  // Helper function to get the most popular emoji for an option
-  const getTopEmoji = (optionId: string) => {
-    const option = poll?.options.find(o => o.id === optionId);
-    if (!option) return null;
-    
-    const entries = Object.entries(option.reactions);
-    if (entries.length === 0) return null;
-    
-    return entries.reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    return Object.values(option.reactions).reduce(
+      (a: number, b: number) => a + b, 
+      0
+    );
   };
 
   const handleEmojiSelect = (optionId: string, emoji: string) => {
@@ -69,6 +58,9 @@ export default function PollDetail({ pollId }: PollDetailProps) {
         ...prev,
         [optionId]: emoji
       }));
+      
+      // Close the emoji picker
+      setSelectedOption(null);
     } catch (err) {
       console.error('Error voting:', err);
     }
@@ -79,9 +71,22 @@ export default function PollDetail({ pollId }: PollDetailProps) {
     setSelectedOption(selectedOption === optionId ? null : optionId);
   };
 
-
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">{poll.title}</h1>
+        {poll.description && (
+          <p className="mt-2 text-gray-600">{poll.description}</p>
+        )}
+        <p className="mt-2 text-sm text-gray-500">
+          Created by {poll.createdBy} • {formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}
+        </p>
+        {hasEnded && (
+          <div className="mt-2 text-sm font-medium text-red-600">
+            This poll has ended
+          </div>
+        )}
+      </div>
 
       <div className="space-y-4">
         {poll.options.map((option) => {
@@ -103,9 +108,11 @@ export default function PollDetail({ pollId }: PollDetailProps) {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900">{option.label}</h3>
                     <p className="text-sm text-gray-500 mt-1">
                       {optionVotes} {optionVotes === 1 ? 'vote' : 'votes'} • {percentage}%
                     </p>
+                    
                     {option.image && (
                       <div className="mt-2 rounded-lg overflow-hidden">
                         <img 
@@ -115,12 +122,11 @@ export default function PollDetail({ pollId }: PollDetailProps) {
                         />
                       </div>
                     )}
+                    
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                       <div 
                         className="bg-sky-500 h-2 rounded-full" 
-                        style={{ 
-                          width: `${percentage}%`
-                        }}
+                        style={{ width: `${percentage}%` }}
                       />
                     </div>
                   </div>
@@ -149,14 +155,15 @@ export default function PollDetail({ pollId }: PollDetailProps) {
                 {isSelected && !hasReacted && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <p className="text-xs text-gray-500 mb-2">Choose a reaction:</p>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2">
                       {[...EMOJI_REACTIONS.positive, ...EMOJI_REACTIONS.negative].map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
                           onClick={() => handleEmojiSelect(option.id, emoji)}
                           className="text-2xl hover:scale-125 transform transition-transform"
-                            >
+                          aria-label={`React with ${emoji}`}
+                        >
                           {emoji}
                         </button>
                       ))}
@@ -170,4 +177,4 @@ export default function PollDetail({ pollId }: PollDetailProps) {
       </div>
     </div>
   );
-};
+}

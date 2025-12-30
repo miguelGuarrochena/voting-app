@@ -1,58 +1,98 @@
-import { Poll as StorePoll } from '../store/usePollStore';
+// Types for our voting app
+
+export type ReactionType = '👏' | '😄' | '❤️' | '🔥' | '😡' | '🤮' | '🍅' | '😈';
+
+export interface ReactionCount {
+  // Positive emojis (count towards ranking)
+  '👏': number;
+  '😄': number;
+  '❤️': number;
+  '🔥': number;
+  // Negative emojis (expressive only)
+  '😡': number;
+  '🤮': number;
+  '🍅': number;
+  '😈': number;
+}
+
+export interface UserReaction {
+  userId: string;
+  pollId: string;
+  optionId: string;
+  emoji: ReactionType;
+  timestamp: Date;
+}
 
 export interface PollOption {
   id: string;
-  text: string;
-  votes: number;
-  emoji: string;
-  image?: string;
-}
-
-export interface Author {
-  id: string;
-  name: string;
-  avatar: string;
+  pollId: string;
+  title: string;
+  imageUrl?: string;
+  reactions: ReactionCount;
+  rank?: number;
 }
 
 export interface Poll {
   id: string;
-  question: string;
-  options: PollOption[];
+  title: string;
+  description?: string;
+  createdBy: string;
   createdAt: Date;
   expiresAt: Date;
-  author: Author;
-  totalVotes: number;
-  isPublic: boolean;
-  isExpired?: boolean;
+  visibility: 'public' | 'private';
+  options: PollOption[];
+  totalReactions: number;
+  views: number;
 }
 
-// Utility function to convert store poll to UI poll
-export function mapStorePollToUIPoll(storePoll: StorePoll): Poll {
-  const now = new Date();
-  const expiresAt = new Date(storePoll.expiresAt);
-  
-  return {
-    id: storePoll.id,
-    question: storePoll.title,
-    options: storePoll.options.map(option => ({
-      id: option.id,
-      text: option.label,
-      votes: Object.values(option.reactions).reduce((sum, count) => sum + count, 0),
-      emoji: Object.keys(option.reactions)[0] || '👍',
-      image: option.image
-    })),
-    createdAt: new Date(storePoll.createdAt),
-    expiresAt,
-    isExpired: expiresAt < now,
-    author: {
-      id: storePoll.createdBy,
-      name: storePoll.createdBy,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(storePoll.createdBy)}&background=random`
-    },
-    totalVotes: storePoll.options.reduce(
-      (sum, option) => sum + Object.values(option.reactions).reduce((a, b) => a + b, 0),
-      0
-    ),
-    isPublic: storePoll.isPublic
-  };
+export interface FeedState {
+  polls: Poll[];
+  filter: 'trending' | 'recent' | 'expiring';
+  setFilter: (filter: 'trending' | 'recent' | 'expiring') => void;
+  loadPolls: () => void;
 }
+
+export interface PollDetailState {
+  currentPoll: Poll | null;
+  userReactions: Record<string, ReactionType>; // optionId -> emoji
+  react: (optionId: string, emoji: ReactionType) => void;
+  removeReaction: (optionId: string) => void;
+}
+
+// Utility functions
+export const getTotalReactions = (reactions: ReactionCount): number => {
+  return Object.values(reactions).reduce((sum, count) => sum + count, 0);
+};
+
+export const getTopReaction = (reactions: ReactionCount): { emoji: ReactionType; count: number } | null => {
+  const entries = Object.entries(reactions) as [ReactionType, number][];
+  if (entries.length === 0) return null;
+  
+  let topEmoji: ReactionType = entries[0][0];
+  let topCount = entries[0][1];
+  
+  for (const [emoji, count] of entries) {
+    if (count > topCount) {
+      topEmoji = emoji;
+      topCount = count;
+    }
+  }
+  
+  return topCount > 0 ? { emoji: topEmoji, count: topCount } : null;
+};
+
+export const isPositiveReaction = (emoji: ReactionType): boolean => {
+  return ['👏', '😄', '❤️', '🔥'].includes(emoji);
+};
+
+// Helper to create an empty reaction count object
+export const createEmptyReactions = (): ReactionCount => ({
+  '👏': 0,
+  '😄': 0,
+  '❤️': 0,
+  '🔥': 0,
+  '😡': 0,
+  '🤮': 0,
+  '🍅': 0,
+  '😈': 0,
+});
