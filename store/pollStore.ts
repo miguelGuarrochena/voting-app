@@ -97,7 +97,12 @@ const usePollStore = create<PollStore>((set, get) => ({
     const { polls, isLoading } = get();
     
     // Prevent multiple simultaneous loads
-    if (isLoading || polls.length > 0) {
+    if (isLoading) {
+      return;
+    }
+    
+    // Skip if we already have polls
+    if (polls.length > 0) {
       return;
     }
     

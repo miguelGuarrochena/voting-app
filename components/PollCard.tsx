@@ -2,7 +2,7 @@
 
 import { memo, useMemo, useCallback } from 'react';
 import { Poll, getTopReaction, isPositiveReaction, ReactionType } from '../src/types/poll';
-import usePollStore from '../store/pollStore';
+import usePollStore from '../store/pollStore.mock';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -27,11 +27,12 @@ const PollCard = memo(function PollCard({ poll, index = 0 }: PollCardProps) {
     };
   }, [poll.expiresAt]);
 
-  // Memoize store selectors to prevent unnecessary re-renders
+  // Select only the necessary values from the store
   const reactToOption = usePollStore((state) => state.reactToOption);
-  const userReactions = usePollStore(
-    useCallback((state) => state.userReactions[poll.id] || {}, [poll.id])
+  const userReactionsForPoll = usePollStore(
+    (state) => state.userReactions[poll.id]
   );
+  const userReactions = userReactionsForPoll || useMemo(() => ({}), []);
   
   // Memoize the handleReaction function with stable references
   const handleReaction = useCallback((optionId: string, emoji: ReactionType) => {

@@ -1,23 +1,25 @@
 'use client';
 
 import React, { useEffect, useMemo, useCallback } from 'react';
-import usePollStore from '@/store/pollStore';
+import usePollStore from '../../store/pollStore.mock';
 import { PollCard } from '../PollCard';
 
 export default function FeedGrid() {
-  const { polls, loadPolls, filter, setFilter } = usePollStore();
+  // Select individual values from the store to prevent unnecessary re-renders
+  const polls = usePollStore((state) => state.polls);
+  const filter = usePollStore((state) => state.filter);
+  const loadPolls = usePollStore((state) => state.loadPolls);
+  const setFilter = usePollStore((state) => state.setFilter);
   
   // Memoize filter handlers to prevent unnecessary re-renders
   const handleFilterChange = useCallback((newFilter: 'trending' | 'recent' | 'expiring') => {
     setFilter(newFilter);
   }, [setFilter]);
   
-  // Load polls only on initial mount
+  // Load polls on mount and when filter changes
   useEffect(() => {
     loadPolls();
-    // Empty dependency array ensures this runs only once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadPolls]);
   
   // Memoize sorted polls to prevent unnecessary re-renders
   const sortedPolls = useMemo(() => {
