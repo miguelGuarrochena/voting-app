@@ -79,12 +79,13 @@ interface PollStore {
   removeReaction: (pollId: string, optionId: string) => void;
   createPoll: (pollData: Omit<Poll, 'id' | 'createdAt' | 'totalReactions' | 'views'>) => Promise<Poll>;
   addView: (pollId: string) => void;
+  getPollById: (pollId: string) => Poll | null;
 }
 
 // Create the store with a stable reference
 const usePollStore = create<PollStore>((set, get) => ({
   // Initial state
-  polls: [],
+  polls: mockPolls,
   filter: 'trending',
   currentPoll: null,
   userReactions: {},
@@ -101,7 +102,7 @@ const usePollStore = create<PollStore>((set, get) => ({
       return;
     }
     
-    // Skip if we already have polls
+    // Skip if we already have polls (to prevent duplicates)
     if (polls.length > 0) {
       return;
     }
@@ -143,12 +144,16 @@ const usePollStore = create<PollStore>((set, get) => ({
       })),
     };
     
-    // Add to mock data
-    mockPolls.unshift(newPoll);
-    
-    set((state) => ({
-      polls: [newPoll, ...state.polls]
-    }));
+    // Only update the store state, don't modify mockPolls
+    set((state) => {
+      // Check if poll with this ID already exists
+      if (state.polls.some(poll => poll.id === newPoll.id)) {
+        return state; // Don't add duplicate
+      }
+      return {
+        polls: [newPoll, ...state.polls]
+      };
+    });
     
     return newPoll;
   },
@@ -301,6 +306,7 @@ const usePollStore = create<PollStore>((set, get) => ({
     return topCount > 0 ? { emoji: topEmoji, count: topCount } : null;
   },
   
+  getPollById: (pollId: string) => get().polls.find(p => p.id === pollId) || null,
   isPositiveReaction: (emoji: ReactionType): boolean => {
     return ['👏', '😄', '❤️', '🔥'].includes(emoji);
   }

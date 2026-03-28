@@ -2,7 +2,7 @@
 
 import { memo, useMemo, useCallback } from 'react';
 import { Poll, getTopReaction, isPositiveReaction, ReactionType } from '../src/types/poll';
-import usePollStore from '../store/pollStore.mock';
+import usePollStore from '../store/pollStore';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';

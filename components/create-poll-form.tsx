@@ -5,7 +5,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatForDateTimeInput, addDays } from '@/utils/date';
-import { usePollStore } from '@/src/store/usePollStore';
+import { createEmptyReactions } from '@/src/types/poll';
+import usePollStore from '@/store/pollStore';
 
 type FormPollOption = {
   id: string;
@@ -43,7 +44,7 @@ export function CreatePollForm() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [newParticipant, setNewParticipant] = useState('');
   const router = useRouter();
-  const { addPoll } = usePollStore();
+  const { createPoll } = usePollStore();
 
   const addOption = () => {
     setOptions([...options, { id: crypto.randomUUID(), text: '', image: '' }]);
@@ -83,20 +84,23 @@ export function CreatePollForm() {
     const newPoll = {
       title,
       description: description || undefined,
-      expiresAt: new Date(expirationDate).toISOString(),
+      expiresAt: new Date(expirationDate),
       isPublic: !isPrivate,
+      createdBy: 'current-user', // In a real app, this would be the logged-in user
+      visibility: (!isPrivate ? 'public' : 'private') as 'public' | 'private',
       options: options
         .filter(option => option.text.trim() !== '')
         .map(option => ({
           id: crypto.randomUUID(),
-          label: option.text,
-          image: option.image || '',
-          reactions: {},
+          pollId: '', // Will be set by the store
+          title: option.text,
+          imageUrl: option.image || undefined,
+          reactions: createEmptyReactions(),
         })),
     };
     
     // Add to store
-    addPoll(newPoll);
+    createPoll(newPoll);
     
     // Redirect to the new poll
     router.push('/'); // Will redirect to home where the new poll will be shown

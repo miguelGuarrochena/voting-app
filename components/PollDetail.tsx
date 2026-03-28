@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { usePollStore } from '@/src/store/usePollStore';
+import usePollStore from '@/store/pollStore';
 
 const EMOJI_REACTIONS = {
   positive: ['👍', '❤️', '😂', '😮', '😢', '🙌'],
@@ -14,7 +14,7 @@ type PollDetailProps = {
 };
 
 export default function PollDetail({ pollId }: PollDetailProps) {
-  const { voteOnOption, getPollById } = usePollStore();
+  const { reactToOption, getPollById } = usePollStore();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [userReactions, setUserReactions] = useState<Record<string, string>>({});
   
@@ -51,7 +51,7 @@ export default function PollDetail({ pollId }: PollDetailProps) {
     
     try {
       // Update the store
-      voteOnOption(pollId, optionId, emoji);
+      reactToOption(pollId, optionId, emoji as any);
       
       // Update local UI state
       setUserReactions(prev => ({
@@ -108,16 +108,16 @@ export default function PollDetail({ pollId }: PollDetailProps) {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900">{option.label}</h3>
+                    <h3 className="font-medium text-gray-900">{option.title}</h3>
                     <p className="text-sm text-gray-500 mt-1">
                       {optionVotes} {optionVotes === 1 ? 'vote' : 'votes'} • {percentage}%
                     </p>
                     
-                    {option.image && (
+                    {option.imageUrl && (
                       <div className="mt-2 rounded-lg overflow-hidden">
                         <img 
-                          src={option.image} 
-                          alt={option.label} 
+                          src={option.imageUrl} 
+                          alt={option.title} 
                           className="w-full h-32 object-cover"
                         />
                       </div>
