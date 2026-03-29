@@ -1,8 +1,8 @@
 'use client';
 
 import { memo, useMemo, useCallback } from 'react';
-import { Poll, getTopReaction, isPositiveReaction, ReactionType } from '../src/types/poll';
-import usePollStore from '../store/pollStore';
+import { Poll, getTopReaction, isPositiveReaction, ReactionType } from '@/types/poll';
+import usePollStore from '@/store/pollStore';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';

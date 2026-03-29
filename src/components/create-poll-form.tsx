@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatForDateTimeInput, addDays } from '@/utils/date';
-import { createEmptyReactions } from '@/src/types/poll';
+import { createEmptyReactions } from '@/types/poll';
 import usePollStore from '@/store/pollStore';
 
 type FormPollOption = {

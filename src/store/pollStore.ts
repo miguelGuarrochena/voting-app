@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { Poll, PollOption, ReactionType, ReactionCount, UserReaction } from '../src/types/poll';
+import { Poll, PollOption, ReactionType, ReactionCount, UserReaction } from '@/types/poll';
 
 // Helper function to create a new empty reaction count
 const createEmptyReactions = (): ReactionCount => ({

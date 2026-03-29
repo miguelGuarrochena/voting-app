@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useCallback } from 'react';
-import usePollStore from '../../store/pollStore';
-import { PollCard } from '../PollCard';
+import usePollStore from '@/store/pollStore';
+import { PollCard } from '@/components/PollCard';
 
 export default function FeedGrid() {
   // Select individual values from the store to prevent unnecessary re-renders

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import FeedGrid from '../components/feed/FeedGrid';
+import FeedGrid from '@/components/feed/FeedGrid';
 
 export default function Home() {
   const router = useRouter();

@@ -4,8 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import usePollStore from '../../../store/pollStore';
-import PollDetail from '../../../components/PollDetail';
+import usePollStore from '@/store/pollStore';
+import PollDetail from '@/components/PollDetail';
 
 export default function PollPage() {
   const router = useRouter();

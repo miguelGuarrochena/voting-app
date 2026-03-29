@@ -1,4 +1,4 @@
-import { Poll } from '../types/poll';
+import { Poll } from '@/types/poll';
 
 export const mockPolls: Poll[] = [
   {

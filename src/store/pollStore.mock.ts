@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { Poll, PollOption, ReactionType } from '../src/types/poll';
-import { mockPolls } from '../src/mock/polls';
+import { Poll, PollOption, ReactionType } from '@/types/poll';
+import { mockPolls } from '@/mock/polls';
 
 // Helper function to create a new empty reaction count
 const createEmptyReactions = (): Record<ReactionType, number> => ({

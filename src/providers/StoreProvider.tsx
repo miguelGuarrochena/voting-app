@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
-import { usePollStore } from '../store/usePollStore';
+import { usePollStore } from '@/store/usePollStore';
 
 // This component ensures the store is properly initialized on the client
 export default function StoreProvider({ children }: { children: ReactNode }) {
