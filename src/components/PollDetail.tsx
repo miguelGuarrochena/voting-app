@@ -4,13 +4,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import usePollStore from '@/store/pollStore';
-import { Poll, ReactionType } from '@/types/poll';
+import { Poll, getPositiveVotes, POSITIVE_REACTIONS, NEGATIVE_REACTIONS, ALL_SUPPORTED_REACTIONS } from '@/types/poll';
 import Image from 'next/image';
 import { getCreatorAvatar } from '@/data/mockPolls';
 import confetti from 'canvas-confetti';
 
-// Define the reaction emojis
-const REACTION_EMOJIS: ReactionType[] = ['👏', '😄', '❤️', '🔥', '😡', '🤮', '🍅', '😈'];
+// Define the reaction emojis separated by type
+const POSITIVE_EMOJIS = POSITIVE_REACTIONS;
+const NEGATIVE_EMOJIS = NEGATIVE_REACTIONS;
+const REACTION_EMOJIS = ALL_SUPPORTED_REACTIONS;
 
 // Warm gradients for no-image fallbacks
 const GRADIENTS = [
@@ -33,7 +35,7 @@ export default function PollDetail({ pollId }: PollDetailProps) {
   const [activeTab, setActiveTab] = useState<TabType>('vote');
   const [timeRemaining, setTimeRemaining] = useState('');
   const [showReactionStrip, setShowReactionStrip] = useState<string | null>(null);
-  const [selectedReaction, setSelectedReaction] = useState<Record<string, ReactionType>>({});
+  const [selectedReaction, setSelectedReaction] = useState<Record<string, string>>({});
   
   // Get the poll from the store
   const poll = getPollById(pollId);
@@ -45,12 +47,10 @@ export default function PollDetail({ pollId }: PollDetailProps) {
     return <div className="text-center py-8">Poll not found</div>;
   }
   
-  // Calculate total votes and check if poll has ended
+  // Calculate total votes and check if poll has ended (only positive reactions count)
   const totalVotes = useMemo(() => {
     if (!poll) return 0;
-    return poll.options.reduce((sum, option) => {
-      return sum + Object.values(option.reactions).reduce((a, b) => a + b, 0);
-    }, 0);
+    return poll.options.reduce((sum, option) => sum + getPositiveVotes(option.reactions), 0);
   }, [poll]);
   
   const hasEnded = useMemo(() => {
@@ -103,7 +103,7 @@ export default function PollDetail({ pollId }: PollDetailProps) {
   };
   
   // Handle reaction
-  const handleReaction = (optionId: string, emoji: ReactionType) => {
+  const handleReaction = (optionId: string, emoji: string) => {
     reactToOption(poll.id, optionId, emoji);
     setSelectedReaction(prev => ({ ...prev, [optionId]: emoji }));
     setShowReactionStrip(null);
@@ -116,29 +116,29 @@ export default function PollDetail({ pollId }: PollDetailProps) {
   };
   
   // Get top reactions for an option
-  const getTopReactions = (reactions: Record<ReactionType, number>): [ReactionType, number][] => {
+  const getTopReactions = (reactions: Record<string, number>): [string, number][] => {
     return Object.entries(reactions)
       .filter(([_, count]) => count > 0)
       .sort(([_, a], [__, b]) => b - a)
-      .slice(0, 3) as [ReactionType, number][];
+      .slice(0, 3) as [string, number][];
   };
   
-  // Get sorted options for results
+  // Get sorted options for results (based on positive votes only)
   const getSortedOptions = () => {
     return [...poll.options].sort((a, b) => {
-      const aVotes = Object.values(a.reactions).reduce((sum, count) => sum + count, 0);
-      const bVotes = Object.values(b.reactions).reduce((sum, count) => sum + count, 0);
+      const aVotes = getPositiveVotes(a.reactions);
+      const bVotes = getPositiveVotes(b.reactions);
       return bVotes - aVotes;
     });
   };
   
-  // Check if it's a tie
+  // Check if it's a tie (based on positive votes only)
   const isTie = () => {
     const sorted = getSortedOptions();
     if (sorted.length < 2) return false;
     
-    const firstVotes = Object.values(sorted[0].reactions).reduce((sum, count) => sum + count, 0);
-    const secondVotes = Object.values(sorted[1].reactions).reduce((sum, count) => sum + count, 0);
+    const firstVotes = getPositiveVotes(sorted[0].reactions);
+    const secondVotes = getPositiveVotes(sorted[1].reactions);
     
     return Math.abs(firstVotes - secondVotes) <= Math.max(firstVotes, secondVotes) * 0.02;
   };
@@ -302,14 +302,14 @@ function VoteTab({
   totalVotes: number;
   hasEnded: boolean;
   userVotedOption: string | undefined;
-  userReactions: Record<string, ReactionType>;
+  userReactions: Record<string, string>;
   showReactionStrip: string | null;
-  selectedReaction: Record<string, ReactionType>;
+  selectedReaction: Record<string, string>;
   onVote: (optionId: string) => void;
-  onReaction: (optionId: string, emoji: ReactionType) => void;
+  onReaction: (optionId: string, emoji: string) => void;
   onToggleReactionStrip: (optionId: string | null) => void;
   getGradient: (title: string) => string;
-  getTopReactions: (reactions: Record<ReactionType, number>) => [ReactionType, number][];
+  getTopReactions: (reactions: Record<string, number>) => [string, number][];
 }) {
   const optionsWithImages = poll.options.filter(option => option.imageUrl);
   
@@ -362,7 +362,7 @@ function VoteTab({
       {/* Voting Cards */}
       <div className="space-y-4 px-4 md:px-0">
         {poll.options.map((option) => {
-          const optionVotes = Object.values(option.reactions).reduce((sum, count) => sum + count, 0);
+          const optionVotes = getPositiveVotes(option.reactions);
           const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
           const hasVoted = userVotedOption === option.id;
           const topReactions = getTopReactions(option.reactions);
@@ -433,19 +433,42 @@ function VoteTab({
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.8, opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="flex gap-2 justify-center"
+                    className="space-y-2"
                   >
-                    {REACTION_EMOJIS.map((emoji) => (
-                      <motion.button
-                        key={emoji}
-                        onClick={() => onReaction(option.id, emoji)}
-                        className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[var(--surface)] hover:bg-[var(--surface-2)] flex items-center justify-center text-2xl transition-all hover:scale-110"
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        {emoji}
-                      </motion.button>
-                    ))}
+                    {/* Positive Reactions */}
+                    <div className="flex gap-2 justify-center">
+                      {POSITIVE_EMOJIS.map((emoji) => (
+                        <motion.button
+                          key={emoji}
+                          onClick={() => onReaction(option.id, emoji)}
+                          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-green-50 hover:bg-green-100 border border-green-200 flex items-center justify-center text-2xl transition-all hover:scale-110"
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.9 }}
+                          title="Counts as vote"
+                        >
+                          {emoji}
+                        </motion.button>
+                      ))}
+                    </div>
+                    {/* Negative Reactions */}
+                    <div className="flex gap-2 justify-center">
+                      {NEGATIVE_EMOJIS.map((emoji) => (
+                        <motion.button
+                          key={emoji}
+                          onClick={() => onReaction(option.id, emoji)}
+                          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-red-50 hover:bg-red-100 border border-red-200 flex items-center justify-center text-2xl transition-all hover:scale-110"
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.9 }}
+                          title="Visual reaction only"
+                        >
+                          {emoji}
+                        </motion.button>
+                      ))}
+                    </div>
+                    <div className="text-center text-xs text-gray-500">
+                      <span className="text-green-600">👍 ❤️ 😂 🔥</span> count as votes • 
+                      <span className="text-red-600"> 👎 😡</span> are visual only
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -458,27 +481,59 @@ function VoteTab({
       {totalVotes > 0 && (
         <div className="bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4">
           <h3 className="font-display font-semibold text-[var(--text)] mb-3">Top Reactions</h3>
-          <div className="flex gap-2 flex-wrap">
-            {(() => {
-              const allReactions: Record<ReactionType, number> = {
-                '👏': 0, '😄': 0, '❤️': 0, '🔥': 0, '😡': 0, '🤮': 0, '🍅': 0, '😈': 0
-              };
-              poll.options.forEach(option => {
-                Object.entries(option.reactions).forEach(([emoji, count]) => {
-                  allReactions[emoji as ReactionType] = (allReactions[emoji as ReactionType] || 0) + count;
-                });
-              });
-              
-              return Object.entries(allReactions)
-                .filter(([_, count]) => count > 0)
-                .sort(([_, a], [__, b]) => b - a)
-                .slice(0, 6)
-                .map(([emoji, count]) => (
-                  <div key={emoji} className="bg-[var(--primary-light)] text-[var(--primary)] px-3 py-1 rounded-full text-sm font-medium">
-                    {emoji} {count}
-                  </div>
-                ));
-            })()}
+          <div className="space-y-2">
+            {/* Positive Reactions */}
+            <div>
+              <div className="text-xs text-green-600 font-medium mb-1">Voting Reactions</div>
+              <div className="flex gap-2 flex-wrap">
+                {(() => {
+                  const positiveReactions: Record<string, number> = {};
+                  POSITIVE_EMOJIS.forEach(emoji => {
+                    positiveReactions[emoji] = 0;
+                  });
+                  poll.options.forEach(option => {
+                    POSITIVE_EMOJIS.forEach(emoji => {
+                      positiveReactions[emoji] += option.reactions[emoji];
+                    });
+                  });
+                  
+                  return Object.entries(positiveReactions)
+                    .filter(([_, count]) => count > 0)
+                    .sort(([_, a], [__, b]) => b - a)
+                    .map(([emoji, count]) => (
+                      <div key={emoji} className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                        {emoji} {count}
+                      </div>
+                    ));
+                })()}
+              </div>
+            </div>
+            {/* Negative Reactions */}
+            <div>
+              <div className="text-xs text-red-600 font-medium mb-1">Visual Reactions</div>
+              <div className="flex gap-2 flex-wrap">
+                {(() => {
+                  const negativeReactions: Record<string, number> = {};
+                  NEGATIVE_EMOJIS.forEach(emoji => {
+                    negativeReactions[emoji] = 0;
+                  });
+                  poll.options.forEach(option => {
+                    NEGATIVE_EMOJIS.forEach(emoji => {
+                      negativeReactions[emoji] += option.reactions[emoji];
+                    });
+                  });
+                  
+                  return Object.entries(negativeReactions)
+                    .filter(([_, count]) => count > 0)
+                    .sort(([_, a], [__, b]) => b - a)
+                    .map(([emoji, count]) => (
+                      <div key={emoji} className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">
+                        {emoji} {count}
+                      </div>
+                    ));
+                })()}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -500,7 +555,7 @@ function ResultsTab({
   totalVotes: number;
   hasEnded: boolean;
   getGradient: (title: string) => string;
-  getTopReactions: (reactions: Record<ReactionType, number>) => [ReactionType, number][];
+  getTopReactions: (reactions: Record<string, number>) => [string, number][];
   isTie: () => boolean;
   getSortedOptions: () => Poll['options'];
 }) {
@@ -552,7 +607,7 @@ function ResultsTab({
                   {sortedOptions[1].title}
                 </div>
                 <div className="w-20 bg-[#C0C0C0] rounded-t-lg flex items-center justify-center text-white font-bold py-8">
-                  {Math.round((Object.values(sortedOptions[1].reactions).reduce((sum, count) => sum + count, 0) / totalVotes) * 100)}%
+                  {Math.round((getPositiveVotes(sortedOptions[1].reactions) / totalVotes) * 100)}%
                 </div>
               </motion.div>
             )}
@@ -585,7 +640,7 @@ function ResultsTab({
                   {sortedOptions[0].title}
                 </div>
                 <div className="w-24 bg-[#FFD700] rounded-t-lg flex items-center justify-center text-white font-bold py-12">
-                  {Math.round((Object.values(sortedOptions[0].reactions).reduce((sum, count) => sum + count, 0) / totalVotes) * 100)}%
+                  {Math.round((getPositiveVotes(sortedOptions[0].reactions) / totalVotes) * 100)}%
                 </div>
               </motion.div>
             )}
@@ -618,7 +673,7 @@ function ResultsTab({
                   {sortedOptions[2].title}
                 </div>
                 <div className="w-20 bg-[#CD7F32] rounded-t-lg flex items-center justify-center text-white font-bold py-6">
-                  {Math.round((Object.values(sortedOptions[2].reactions).reduce((sum, count) => sum + count, 0) / totalVotes) * 100)}%
+                  {Math.round((getPositiveVotes(sortedOptions[2].reactions) / totalVotes) * 100)}%
                 </div>
               </motion.div>
             )}
@@ -640,7 +695,7 @@ function ResultsTab({
         <h3 className="font-display text-xl font-bold text-[var(--text)] mb-6">Complete Results</h3>
         <div className="space-y-4">
           {sortedOptions.map((option, index) => {
-            const optionVotes = Object.values(option.reactions).reduce((sum, count) => sum + count, 0);
+            const optionVotes = getPositiveVotes(option.reactions);
             const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
             const topReactions = getTopReactions(option.reactions);
             

@@ -17,6 +17,7 @@ export const mockPolls: Poll[] = [
         pollId: '1',
         title: 'Casual look',
         imageUrl: 'https://picsum.photos/seed/outfit1/400/300',
+        votes: 45,
         reactions: { 
           '👏': 8, 
           '😄': 5,
@@ -34,6 +35,7 @@ export const mockPolls: Poll[] = [
         pollId: '1',
         title: 'Formal look',
         imageUrl: 'https://picsum.photos/seed/outfit2/400/300',
+        votes: 32,
         reactions: { 
           '👏': 0, 
           '😄': 0,
@@ -65,6 +67,7 @@ export const mockPolls: Poll[] = [
         pollId: '2',
         title: 'TypeScript',
         imageUrl: 'https://picsum.photos/seed/typescript/400/300',
+        votes: 67,
         reactions: { 
           '👏': 12, 
           '😄': 8,
@@ -82,6 +85,7 @@ export const mockPolls: Poll[] = [
         pollId: '2',
         title: 'Rust',
         imageUrl: 'https://picsum.photos/seed/rust/400/300',
+        votes: 43,
         reactions: { 
           '👏': 0, 
           '😄': 5,
@@ -99,6 +103,7 @@ export const mockPolls: Poll[] = [
         pollId: '2',
         title: 'Go',
         imageUrl: 'https://picsum.photos/seed/golang/400/300',
+        votes: 28,
         reactions: { 
           '👏': 0, 
           '😄': 2,

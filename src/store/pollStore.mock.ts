@@ -1,24 +1,15 @@
 import { create } from 'zustand';
-import { Poll, PollOption, ReactionType } from '@/types/poll';
+import { Poll, PollOption, ReactionCount } from '@/types/poll';
 import { mockPolls } from '@/mock/polls';
 
 // Helper function to create a new empty reaction count
-const createEmptyReactions = (): Record<ReactionType, number> => ({
-  '👏': 0,
-  '😄': 0,
-  '❤️': 0,
-  '🔥': 0,
-  '😡': 0,
-  '🤮': 0,
-  '🍅': 0,
-  '😈': 0,
-});
+const createEmptyReactions = (): ReactionCount => ({});
 
 // Mock user ID for the current user
 const MOCK_USER_ID = 'current-user-123';
 
 // In-memory state for user reactions
-let userReactionsState: Record<string, Record<string, ReactionType>> = {};
+let userReactionsState: Record<string, Record<string, string>> = {};
 
 // Clone mock data to avoid mutating the original
 const getMockPolls = () => JSON.parse(JSON.stringify(mockPolls)) as Poll[];
@@ -29,10 +20,10 @@ interface PollStore {
   setFilter: (filter: 'trending' | 'recent' | 'expiring') => void;
   loadPolls: () => Promise<void>;
   currentPoll: Poll | null;
-  userReactions: Record<string, Record<string, ReactionType>>;
+  userReactions: Record<string, Record<string, string>>;
   isLoading: boolean;
   loadPoll: (pollId: string) => Promise<void>;
-  reactToOption: (pollId: string, optionId: string, emoji: ReactionType) => void;
+  reactToOption: (pollId: string, optionId: string, emoji: string) => void;
   removeReaction: (pollId: string, optionId: string) => void;
   createPoll: (pollData: Omit<Poll, 'id' | 'createdAt' | 'totalReactions' | 'views'>) => Promise<Poll>;
   addView: (pollId: string) => void;

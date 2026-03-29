@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo, useCallback, useState, useEffect } from 'react';
-import { Poll, ReactionType } from '@/types/poll';
+import { Poll, getPositiveVotes, ALL_SUPPORTED_REACTIONS } from '@/types/poll';
 import usePollStore from '@/store/pollStore';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { getCreatorAvatar } from '@/data/mockPolls';
 
 // Define the reaction emojis
-const REACTION_EMOJIS: ReactionType[] = ['👏', '😄', '❤️', '🔥', '😡', '🤮', '🍅', '😈'];
+const REACTION_EMOJIS = ALL_SUPPORTED_REACTIONS;
 
 // Warm gradients for no-image fallbacks
 const GRADIENTS = [
@@ -43,7 +43,7 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
   const { isExpired, timeRemaining, totalVotes, hasVotes } = useMemo(() => {
     const now = new Date();
     const expiryDate = new Date(poll.expiresAt);
-    const votes = poll.options.reduce((sum, option) => sum + (option.votes || 0), 0);
+    const votes = poll.options.reduce((sum: number, option: any) => sum + getPositiveVotes(option.reactions), 0);
     
     return {
       isExpired: expiryDate < now,
@@ -58,8 +58,8 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
     if (!hasVotes) return;
     
     const percentages: Record<string, number> = {};
-    poll.options.forEach((option) => {
-      const percentage = totalVotes > 0 ? Math.round((option.votes || 0) / totalVotes * 100) : 0;
+    poll.options.forEach((option: any) => {
+      const percentage = totalVotes > 0 ? Math.round((getPositiveVotes(option.reactions) / totalVotes) * 100) : 0;
       percentages[option.id] = 0;
       
       // Animate to actual percentage
@@ -86,7 +86,7 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
   }, []);
   
   // Get top 3 reactions for an option
-  const getTopReactions = useCallback((reactions: Record<ReactionType, number>) => {
+  const getTopReactions = useCallback((reactions: Record<string, number>) => {
     return Object.entries(reactions)
       .filter(([_, count]) => count > 0)
       .sort(([_, a], [__, b]) => b - a)
@@ -99,13 +99,13 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
   
   return (
     <motion.div 
-      className={`${isCompact ? 'w-[280px] h-[360px]' : 'w-full h-full'} bg-white rounded-[24px] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 overflow-hidden border border-[var(--border)] @media(hover:hover):hover:-translate-y-1 active:scale-[0.98] flex flex-col`}
+      className={`${isCompact ? 'w-full' : 'w-full h-full min-h-[400px] md:min-h-[420px]'} bg-white rounded-[16px] sm:rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 overflow-hidden border border-[var(--border)] @media(hover:hover):hover:-translate-y-1 active:scale-[0.98] flex flex-col`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Image Section - Fixed 200px height */}
-      <div className="relative h-[200px] flex-shrink-0">
+      {/* Image Section - Fixed responsive height */}
+      <div className="relative h-[160px] sm:h-[180px] md:h-[200px] flex-shrink-0">
         {mainImage ? (
           <>
             <Image
@@ -130,22 +130,22 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
         )}
         
         {/* Title on Image */}
-        <div className="absolute bottom-3 left-4 right-4">
-          <h3 className="font-display text-white font-semibold text-base line-clamp-2">
+        <div className="absolute bottom-2 sm:bottom-3 left-3 sm:left-4 right-3 sm:right-4">
+          <h3 className="font-display text-white font-semibold text-sm sm:text-base line-clamp-2">
             {poll.title}
           </h3>
         </div>
       </div>
       
       {/* Content Section */}
-      <div className="p-4 flex flex-col flex-1">
+      <div className="p-3 sm:p-4 flex flex-col flex-1">
         {/* Creator Info */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-xs font-medium">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-xs font-medium">
               {getCreatorAvatar(poll.createdBy)}
             </div>
-            <span className="text-sm text-[var(--text-muted)]">
+            <span className="text-xs sm:text-sm text-[var(--text-muted)]">
               {poll.createdBy} · {formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}
             </span>
           </div>
@@ -161,10 +161,10 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
           </div>
         </div>
         
-        {/* Options - Fixed min-height */}
-        <div className={`space-y-3 ${isCompact ? 'min-h-[120px]' : 'min-h-[180px]'} flex-1`}>
-          {poll.options.map((option, index) => {
-            const percentage = totalVotes > 0 ? Math.round((option.votes || 0) / totalVotes * 100) : 0;
+        {/* Options - Fixed responsive min-height */}
+        <div className={`space-y-2 sm:space-y-3 ${isCompact ? 'min-h-[80px] sm:min-h-[100px] md:min-h-[120px]' : 'min-h-[140px] sm:min-h-[160px] md:min-h-[180px]'} flex-1`}>
+          {poll.options.map((option: any, index: any) => {
+            const percentage = totalVotes > 0 ? Math.round((getPositiveVotes(option.reactions) / totalVotes) * 100) : 0;
             const animatedPercentage = animatedPercentages[option.id] || 0;
             const topReactions = getTopReactions(option.reactions);
             const hasVoted = userVotedOption === option.id;
@@ -183,27 +183,27 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
                       <Image
                         src={option.imageUrl}
                         alt={option.title}
-                        width={24}
-                        height={24}
+                        width={20}
+                        height={20}
                         className="rounded object-cover"
                       />
                     )}
-                    <span className="font-medium text-sm text-[var(--text)]">
+                    <span className="font-medium text-xs sm:text-sm text-[var(--text)]">
                       {option.title}
                     </span>
                     {hasVoted && (
-                      <span className="text-[var(--primary)] text-sm">✓</span>
+                      <span className="text-[var(--primary)] text-xs sm:text-sm">✓</span>
                     )}
                   </div>
-                  <span className="text-sm font-medium text-[var(--text)]">
+                  <span className="text-xs sm:text-sm font-medium text-[var(--text)]">
                     {percentage}%
                   </span>
                 </div>
                 
                 {/* Progress Bar */}
-                <div className="w-full bg-[var(--surface-2)] rounded-full h-2 mb-2 overflow-hidden">
+                <div className="w-full bg-[var(--surface-2)] rounded-full h-1.5 sm:h-2 mb-1.5 sm:mb-2 overflow-hidden">
                   <div 
-                    className="bg-[var(--primary)] h-2 rounded-full transition-all duration-800 ease-out"
+                    className="bg-[var(--primary)] h-1.5 sm:h-2 rounded-full transition-all duration-800 ease-out"
                     style={{ 
                       width: `${animatedPercentage}%`,
                       transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
@@ -217,7 +217,7 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
                     {topReactions.map(([emoji, count]) => (
                       <div
                         key={emoji}
-                        className="bg-[var(--primary-light)] text-[var(--primary)] text-xs px-2 py-0.5 rounded-full"
+                        className="bg-[var(--primary-light)] text-[var(--primary)] text-xs px-1.5 py-0.5 rounded-full"
                       >
                         {emoji} {count}
                       </div>
@@ -230,14 +230,14 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
         </div>
         
         {/* Footer - Pinned to bottom */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-[var(--border)]">
-          <div className="text-sm text-[var(--text-muted)]">
+        <div className="flex items-center justify-between mt-auto pt-2 sm:pt-3 border-t border-[var(--border)]">
+          <div className="text-xs sm:text-sm text-[var(--text-muted)]">
             {totalVotes} votes · {timeRemaining.replace('in ', '')}
           </div>
           
           <Link
             href={`/polls/${poll.id}`}
-            className="text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-dark)] flex items-center gap-1"
+            className="text-xs sm:text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-dark)] flex items-center gap-1"
           >
             View →
           </Link>

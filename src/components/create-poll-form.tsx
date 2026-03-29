@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatForDateTimeInput, addDays } from '@/utils/date';
@@ -13,13 +11,6 @@ type FormPollOption = {
   text: string;
   image: string;
   emoji?: string;
-};
-
-type PollOption = {
-  id: string;
-  label: string;
-  image: string;
-  reactions: Record<string, number>;
 };
 
 type Participant = {
@@ -43,6 +34,8 @@ export function CreatePollForm() {
   ]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [newParticipant, setNewParticipant] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { createPoll } = usePollStore();
 
@@ -73,37 +66,145 @@ export function CreatePollForm() {
     setNewParticipant('');
   };
 
+  const handleImageUpload = (optionId: string, file: File) => {
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      setErrors(prev => ({
+        ...prev,
+        [optionId]: 'Only JPG and PNG images are allowed'
+      }));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(prev => ({
+        ...prev,
+        [optionId]: 'Image size must be less than 5MB'
+      }));
+      return;
+    }
+
+    // Clear any previous errors for this option
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[optionId];
+      return newErrors;
+    });
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      updateOption(optionId, { image: event.target?.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = (optionId: string) => {
+    updateOption(optionId, { image: '' });
+  };
+
   const removeParticipant = (id: string) => {
     setParticipants(participants.filter(p => p.id !== id));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isFormValid = () => {
+    return title.trim().length >= 3 && 
+           options.filter(opt => opt.text.trim() !== '').length >= 2 &&
+           expirationDate &&
+           !isSubmitting;
+  };
+
+  // Validation function
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Title validation
+    if (!title.trim()) {
+      newErrors.title = 'Poll title is required';
+    } else if (title.trim().length < 3) {
+      newErrors.title = 'Title must be at least 3 characters long';
+    } else if (title.trim().length > 100) {
+      newErrors.title = 'Title must be less than 100 characters';
+    }
+
+    // Options validation
+    const validOptions = options.filter(option => option.text.trim() !== '');
+    if (validOptions.length < 2) {
+      newErrors.options = 'At least 2 options are required';
+    } else if (validOptions.length > 10) {
+      newErrors.options = 'Maximum 10 options allowed';
+    }
+
+    // Check for duplicate options
+    const optionTexts = validOptions.map(opt => opt.text.trim().toLowerCase());
+    const duplicates = optionTexts.filter((text, index) => optionTexts.indexOf(text) !== index);
+    if (duplicates.length > 0) {
+      newErrors.options = 'Duplicate options are not allowed';
+    }
+
+    // Expiration date validation
+    if (!expirationDate) {
+      newErrors.expiration = 'Expiration date is required';
+    } else {
+      const expiryTime = new Date(expirationDate).getTime();
+      const now = new Date().getTime();
+      const oneHourFromNow = now + (60 * 60 * 1000);
+      
+      if (expiryTime < oneHourFromNow) {
+        newErrors.expiration = 'Poll must expire at least 1 hour from now';
+      }
+    }
+
+    // Private poll validation
+    if (isPrivate && participants.length === 0) {
+      newErrors.participants = 'Private polls require at least one participant';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Create the new poll
-    const newPoll = {
-      title,
-      description: description || undefined,
-      expiresAt: new Date(expirationDate),
-      isPublic: !isPrivate,
-      createdBy: 'current-user', // In a real app, this would be the logged-in user
-      visibility: (!isPrivate ? 'public' : 'private') as 'public' | 'private',
-      options: options
-        .filter(option => option.text.trim() !== '')
-        .map(option => ({
-          id: crypto.randomUUID(),
-          pollId: '', // Will be set by the store
-          title: option.text,
-          imageUrl: option.image || undefined,
-          reactions: createEmptyReactions(),
-        })),
-    };
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
     
-    // Add to store
-    createPoll(newPoll);
-    
-    // Redirect to the new poll
-    router.push('/'); // Will redirect to home where the new poll will be shown
+    try {
+      // Create the new poll
+      const newPoll = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        expiresAt: new Date(expirationDate),
+        isPublic: !isPrivate,
+        createdBy: 'current-user', // In a real app, this would be the logged-in user
+        visibility: (!isPrivate ? 'public' : 'private') as 'public' | 'private',
+        options: options
+          .filter(option => option.text.trim() !== '')
+          .map(option => ({
+            id: crypto.randomUUID(),
+            pollId: '', // Will be set by the store
+            title: option.text.trim(),
+            imageUrl: option.image || undefined,
+            votes: 0,
+            reactions: createEmptyReactions(),
+          })),
+      };
+      
+      // Add to store
+      createPoll(newPoll);
+      
+      // Redirect to the new poll
+      router.push('/'); // Will redirect to home where the new poll will be shown
+    } catch (error) {
+      setErrors({ submit: 'Failed to create poll. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const minDate = new Date().toISOString().split('T')[0];
@@ -122,11 +223,22 @@ export function CreatePollForm() {
             id="title"
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) {
+                setErrors(prev => ({ ...prev, title: '' }));
+              }
+            }}
+            className={`w-full p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors ${
+              errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : ''
+            }`}
             placeholder="What's your poll about?"
-            required
+            maxLength={100}
           />
+          {errors.title && (
+            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">{title.length}/100 characters</p>
         </div>
 
         <div className="mb-4">
@@ -137,9 +249,11 @@ export function CreatePollForm() {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-500 min-h-[100px]"
+            className="w-full p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 min-h-[100px] transition-colors"
             placeholder="Add more details about your poll..."
+            maxLength={500}
           />
+          <p className="mt-1 text-xs text-gray-500">{description.length}/500 characters</p>
         </div>
 
         <div>
@@ -151,11 +265,25 @@ export function CreatePollForm() {
             type="datetime-local"
             min={minDate}
             value={expirationDate}
-            onChange={(e) => setExpirationDate(e.target.value)}
-            className="p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
-            required
+            onChange={(e) => {
+              setExpirationDate(e.target.value);
+              if (errors.expiration) {
+                setErrors(prev => ({ ...prev, expiration: '' }));
+              }
+            }}
+            className={`p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors ${
+              errors.expiration ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : ''
+            }`}
           />
+          {errors.expiration && (
+            <p className="mt-1 text-sm text-red-600">{errors.expiration}</p>
+          )}
         </div>
+        {errors.options && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{errors.options}</p>
+          </div>
+        )}
       </div>
 
       {/* Poll Options Section */}
@@ -174,9 +302,9 @@ export function CreatePollForm() {
                     type="text"
                     value={option.text}
                     onChange={(e) => updateOption(option.id, { text: e.target.value })}
-                    className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                    className="flex-1 p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
                     placeholder={`Option ${index + 1}`}
-                    required
+                    maxLength={50}
                   />
                   <input
                     type="text"
@@ -190,27 +318,36 @@ export function CreatePollForm() {
                 <div className="flex items-center gap-2">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/jpg,image/png"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          updateOption(option.id, { image: event.target?.result as string });
-                        };
-                        reader.readAsDataURL(file);
+                        handleImageUpload(option.id, file);
                       }
                     }}
-                    className="text-sm text-gray-600"
+                    className="text-sm text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                   {option.image && (
-                    <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
-                      <img 
-                        src={option.image} 
-                        alt="Option preview" 
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="relative group">
+                      <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
+                        <img 
+                          src={option.image} 
+                          alt="Option preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeImage(option.id)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                        title="Remove image"
+                      >
+                        ×
+                      </button>
                     </div>
+                  )}
+                  {errors[option.id] && (
+                    <p className="text-xs text-red-600">{errors[option.id]}</p>
                   )}
                 </div>
               </div>
@@ -268,6 +405,11 @@ export function CreatePollForm() {
               <label htmlFor="private" className="block text-gray-700">
                 Private - Only invited participants can view and vote
               </label>
+              {isPrivate && participants.length === 0 && (
+                <p className="text-sm text-amber-600 mt-2">
+                  ⚠️ Private polls require at least one participant
+                </p>
+              )}
               {isPrivate && (
                 <div className="mt-3 ml-4 space-y-4">
                   <div className="flex items-center">
@@ -330,15 +472,29 @@ export function CreatePollForm() {
       </div>
 
       {/* Submit Button */}
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="text-sm text-gray-600">
+          <p>• Title is required (min. 3 characters)</p>
+          <p>• At least 2 options required</p>
+          <p>• Images must be JPG or PNG (max 5MB)</p>
+        </div>
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          disabled={!title || !expirationDate || options.some(o => !o.text)}
+          disabled={!isFormValid()}
+          className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            isFormValid()
+              ? 'bg-blue-500 text-white hover:bg-blue-600'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
-          Create Poll
+          {isSubmitting ? 'Creating...' : 'Create Poll'}
         </button>
       </div>
+      {errors.submit && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">{errors.submit}</p>
+        </div>
+      )}
     </form>
   );
 }

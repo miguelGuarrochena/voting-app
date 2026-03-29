@@ -1,25 +1,22 @@
 // Types for our voting app
 
-export type ReactionType = '👏' | '😄' | '❤️' | '🔥' | '😡' | '🤮' | '🍅' | '😈';
+export type ReactionType = string; // Allow any emoji string
 
-export interface ReactionCount {
-  // Positive emojis (count towards ranking)
-  '👏': number;
-  '😄': number;
-  '❤️': number;
-  '🔥': number;
-  // Negative emojis (expressive only)
-  '😡': number;
-  '🤮': number;
-  '🍅': number;
-  '😈': number;
+export type ReactionCategory = 'positive' | 'negative';
+
+export interface ReactionMeta {
+  emoji: string;
+  type: ReactionCategory;
 }
+
+// Dynamic reaction count type that supports any emoji
+export type ReactionCount = Record<string, number>;
 
 export interface UserReaction {
   userId: string;
   pollId: string;
   optionId: string;
-  emoji: ReactionType;
+  emoji: string; // Allow any emoji string
   timestamp: Date;
 }
 
@@ -62,8 +59,8 @@ export interface FeedState {
 
 export interface PollDetailState {
   currentPoll: Poll | null;
-  userReactions: Record<string, ReactionType>; // optionId -> emoji
-  react: (optionId: string, emoji: ReactionType) => void;
+  userReactions: Record<string, string>; // optionId -> emoji (any string)
+  react: (optionId: string, emoji: string) => void;
   removeReaction: (optionId: string) => void;
 }
 
@@ -72,12 +69,12 @@ export const getTotalReactions = (reactions: ReactionCount): number => {
   return Object.values(reactions).reduce((sum, count) => sum + count, 0);
 };
 
-export const getTopReaction = (reactions: ReactionCount): { emoji: ReactionType; count: number } | null => {
-  const entries = Object.entries(reactions) as [ReactionType, number][];
+export const getTopReaction = (reactions: ReactionCount): { emoji: string; count: number } | null => {
+  const entries = Object.entries(reactions);
   if (entries.length === 0) return null;
   
-  let topEmoji: ReactionType = entries[0][0];
-  let topCount = entries[0][1];
+  let topEmoji = '';
+  let topCount = -1;
   
   for (const [emoji, count] of entries) {
     if (count > topCount) {
@@ -89,18 +86,30 @@ export const getTopReaction = (reactions: ReactionCount): { emoji: ReactionType;
   return topCount > 0 ? { emoji: topEmoji, count: topCount } : null;
 };
 
-export const isPositiveReaction = (emoji: ReactionType): boolean => {
-  return ['👏', '😄', '❤️', '🔥'].includes(emoji);
+export const isPositiveReaction = (emoji: string): boolean => {
+  return (POSITIVE_REACTIONS as readonly string[]).includes(emoji);
 };
 
 // Helper to create an empty reaction count object
-export const createEmptyReactions = (): ReactionCount => ({
-  '👏': 0,
-  '😄': 0,
-  '❤️': 0,
-  '🔥': 0,
-  '😡': 0,
-  '🤮': 0,
-  '🍅': 0,
-  '😈': 0,
-});
+export const createEmptyReactions = (): ReactionCount => ({});
+
+// Helper to get positive votes only (for ranking)
+export const getPositiveVotes = (reactions: ReactionCount): number => {
+  return POSITIVE_REACTIONS.reduce((sum, emoji) => sum + (reactions[emoji] || 0), 0);
+};
+
+// Supported reactions configuration
+export const POSITIVE_REACTIONS = ['👍', '❤️', '😂', '🔥', '👏'] as const;
+export const NEGATIVE_REACTIONS = ['�', '😡'] as const;
+export const ALL_SUPPORTED_REACTIONS = [...POSITIVE_REACTIONS, ...NEGATIVE_REACTIONS] as const;
+
+// Reaction metadata for future features
+export const REACTION_META: Record<string, ReactionMeta> = {
+  '👍': { emoji: '👍', type: 'positive' },
+  '❤️': { emoji: '❤️', type: 'positive' },
+  '😂': { emoji: '😂', type: 'positive' },
+  '🔥': { emoji: '🔥', type: 'positive' },
+  '👏': { emoji: '👏', type: 'positive' },
+  '👎': { emoji: '👎', type: 'negative' },
+  '😡': { emoji: '😡', type: 'negative' },
+};

@@ -80,7 +80,7 @@ export default function FeedGrid() {
       {/* Polls Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedPolls.map((poll, index) => (
-          <PollCard key={`${poll.id}-${index}`} poll={poll} index={index} />
+          <PollCard key={`${poll.id}-${index}`} poll={poll} />
         ))}
       </div>
       

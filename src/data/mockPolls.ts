@@ -18,14 +18,12 @@ export const mockPolls: Poll[] = [
         title: 'Vampire',
         imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80',
         reactions: {
-          '👏': 28,
-          '😄': 15,
+          '👍': 28,
           '❤️': 12,
-          '🔥': 8,
-          '😡': 2,
-          '🤮': 1,
-          '🍅': 0,
-          '😈': 3
+          '😂': 8,
+          '🔥': 15,
+          '👎': 2,
+          '😡': 3
         },
         votes: 71,
         rank: 1
@@ -36,14 +34,12 @@ export const mockPolls: Poll[] = [
         title: 'Witch',
         imageUrl: 'https://images.unsplash.com/photo-1574362848147-3d7b1966467e?w=600&q=80',
         reactions: {
-          '👏': 18,
-          '😄': 12,
+          '👍': 18,
           '❤️': 8,
-          '🔥': 6,
-          '😡': 1,
-          '🤮': 0,
-          '🍅': 1,
-          '😈': 2
+          '😂': 6,
+          '🔥': 12,
+          '👎': 1,
+          '😡': 2
         },
         votes: 47,
         rank: 2
@@ -54,14 +50,12 @@ export const mockPolls: Poll[] = [
         title: 'Superhero',
         imageUrl: 'https://images.unsplash.com/photo-1604053576264-d6996eea3a1d?w=600&q=80',
         reactions: {
-          '👏': 12,
-          '😄': 8,
+          '👍': 12,
           '❤️': 6,
-          '🔥': 4,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 1
+          '😂': 4,
+          '🔥': 8,
+          '👎': 0,
+          '😡': 1
         },
         votes: 31,
         rank: 3
@@ -85,14 +79,12 @@ export const mockPolls: Poll[] = [
         title: 'Miami',
         imageUrl: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?w=600&q=80',
         reactions: {
-          '👏': 22,
-          '😄': 18,
+          '👍': 22,
           '❤️': 8,
-          '🔥': 12,
-          '😡': 1,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 2
+          '😂': 12,
+          '🔥': 18,
+          '👎': 1,
+          '😡': 2
         },
         votes: 61,
         rank: 1
@@ -103,14 +95,12 @@ export const mockPolls: Poll[] = [
         title: 'Bali',
         imageUrl: 'https://images.unsplash.com/photo-1518548419970-5823dfd2cd30?w=600&q=80',
         reactions: {
-          '👏': 15,
-          '😄': 12,
+          '👍': 15,
           '❤️': 6,
-          '🔥': 8,
-          '😡': 0,
-          '🤮': 1,
-          '🍅': 0,
-          '😈': 1
+          '😂': 8,
+          '🔥': 12,
+          '👎': 0,
+          '😡': 1
         },
         votes: 42,
         rank: 2
@@ -121,14 +111,12 @@ export const mockPolls: Poll[] = [
         title: 'Barcelona',
         imageUrl: 'https://images.unsplash.com/photo-1583894217816-65e281134209?w=600&q=80',
         reactions: {
-          '👏': 8,
-          '😄': 6,
+          '👍': 8,
           '❤️': 4,
-          '🔥': 3,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '😂': 3,
+          '🔥': 6,
+          '👎': 0,
+          '😡': 0
         },
         votes: 21,
         rank: 3
@@ -151,14 +139,12 @@ export const mockPolls: Poll[] = [
         pollId: '3',
         title: 'Pizza 🍕',
         reactions: {
-          '👏': 45,
-          '😄': 38,
+          '👍': 45,
           '❤️': 28,
-          '🔥': 22,
-          '😡': 3,
-          '🤮': 2,
-          '🍅': 1,
-          '😈': 4
+          '😂': 22,
+          '🔥': 38,
+          '👎': 3,
+          '😡': 4
         },
         votes: 143,
         rank: 1
@@ -168,14 +154,12 @@ export const mockPolls: Poll[] = [
         pollId: '3',
         title: 'Sushi 🍣',
         reactions: {
-          '👏': 32,
-          '😄': 28,
+          '👍': 32,
           '❤️': 24,
-          '🔥': 18,
-          '😡': 2,
-          '🤮': 1,
-          '🍅': 0,
-          '😈': 2
+          '😂': 18,
+          '🔥': 28,
+          '👎': 2,
+          '😡': 2
         },
         votes: 107,
         rank: 2
@@ -185,14 +169,12 @@ export const mockPolls: Poll[] = [
         pollId: '3',
         title: 'Tacos 🌮',
         reactions: {
-          '👏': 18,
-          '😄': 15,
+          '👍': 18,
           '❤️': 12,
-          '🔥': 8,
-          '😡': 1,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 1
+          '😂': 8,
+          '🔥': 15,
+          '👎': 1,
+          '😡': 1
         },
         votes: 54,
         rank: 3
@@ -216,14 +198,12 @@ export const mockPolls: Poll[] = [
         title: 'Drama Masterpiece',
         imageUrl: 'https://images.unsplash.com/photo-1489599809568-352b6a1a5a8c?w=600&q=80',
         reactions: {
-          '👏': 35,
-          '😄': 28,
+          '👍': 35,
           '❤️': 22,
-          '🔥': 18,
-          '😡': 2,
-          '🤮': 1,
-          '🍅': 0,
-          '😈': 3
+          '😂': 18,
+          '🔥': 28,
+          '👎': 2,
+          '😡': 3
         },
         votes: 125,
         rank: 1
@@ -234,14 +214,12 @@ export const mockPolls: Poll[] = [
         title: 'Action Thriller',
         imageUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d2abc40?w=600&q=80',
         reactions: {
-          '👏': 28,
-          '😄': 22,
+          '👍': 28,
           '❤️': 18,
-          '🔥': 15,
-          '😡': 1,
-          '🤮': 0,
-          '🍅': 1,
-          '😈': 2
+          '😂': 15,
+          '🔥': 22,
+          '👎': 1,
+          '😡': 2
         },
         votes: 88,
         rank: 2
@@ -252,14 +230,12 @@ export const mockPolls: Poll[] = [
         title: 'Sci-Fi Epic',
         imageUrl: 'https://images.unsplash.com/photo-1485949023787-4c3125afaccc?w=600&q=80',
         reactions: {
-          '👏': 18,
-          '😄': 15,
+          '👍': 18,
           '❤️': 12,
-          '🔥': 8,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 1
+          '😂': 8,
+          '🔥': 15,
+          '👎': 0,
+          '😡': 1
         },
         votes: 53,
         rank: 3
@@ -270,14 +246,12 @@ export const mockPolls: Poll[] = [
         title: 'Comedy Hit',
         imageUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&q=80',
         reactions: {
-          '👏': 12,
-          '😄': 8,
+          '👍': 12,
           '❤️': 6,
-          '🔥': 4,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '😂': 4,
+          '🔥': 8,
+          '👎': 0,
+          '😡': 0
         },
         votes: 30,
         rank: 4
@@ -300,14 +274,12 @@ export const mockPolls: Poll[] = [
         pollId: '5',
         title: 'Running',
         reactions: {
-          '👏': 42,
-          '😄': 35,
+          '👍': 42,
           '❤️': 28,
-          '🔥': 22,
-          '😡': 1,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 2
+          '😂': 22,
+          '🔥': 35,
+          '👎': 1,
+          '😡': 2
         },
         votes: 130,
         rank: 1
@@ -317,14 +289,12 @@ export const mockPolls: Poll[] = [
         pollId: '5',
         title: 'Weight Training',
         reactions: {
-          '👏': 18,
-          '😄': 15,
+          '👍': 18,
           '❤️': 12,
-          '🔥': 8,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 1
+          '😂': 8,
+          '🔥': 15,
+          '👎': 0,
+          '😡': 1
         },
         votes: 44,
         rank: 2
@@ -334,14 +304,12 @@ export const mockPolls: Poll[] = [
         pollId: '5',
         title: 'Yoga',
         reactions: {
-          '👏': 12,
-          '😄': 8,
+          '👍': 12,
           '❤️': 6,
-          '🔥': 4,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '😂': 4,
+          '🔥': 8,
+          '👎': 0,
+          '😡': 0
         },
         votes: 30,
         rank: 3
@@ -364,14 +332,12 @@ export const mockPolls: Poll[] = [
         pollId: '6',
         title: 'Coffee ☕',
         reactions: {
-          '👏': 18,
-          '😄': 15,
+          '👍': 18,
           '❤️': 12,
-          '🔥': 8,
-          '😡': 1,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 1
+          '😂': 8,
+          '🔥': 15,
+          '👎': 1,
+          '😡': 1
         },
         votes: 55,
         rank: 1
@@ -381,14 +347,12 @@ export const mockPolls: Poll[] = [
         pollId: '6',
         title: 'Matcha 🍵',
         reactions: {
-          '👏': 17,
-          '😄': 14,
+          '👍': 17,
           '❤️': 11,
-          '🔥': 7,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 1
+          '😂': 7,
+          '🔥': 14,
+          '👎': 0,
+          '😡': 1
         },
         votes: 50,
         rank: 2
@@ -412,14 +376,12 @@ export const mockPolls: Poll[] = [
         title: 'Modern Minimalist',
         imageUrl: 'https://images.unsplash.com/photo-1497366214047-f369c0f1a4c5?w=600&q=80',
         reactions: {
-          '👏': 8,
-          '😄': 6,
+          '👍': 8,
           '❤️': 4,
-          '🔥': 3,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '😂': 3,
+          '🔥': 6,
+          '👎': 0,
+          '😡': 0
         },
         votes: 21,
         rank: 1
@@ -430,14 +392,12 @@ export const mockPolls: Poll[] = [
         title: 'Industrial Chic',
         imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80',
         reactions: {
-          '👏': 6,
-          '😄': 4,
+          '👍': 6,
           '❤️': 3,
-          '🔥': 2,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '😂': 2,
+          '🔥': 4,
+          '👎': 0,
+          '😡': 0
         },
         votes: 15,
         rank: 2
@@ -448,14 +408,12 @@ export const mockPolls: Poll[] = [
         title: 'Cozy Traditional',
         imageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80',
         reactions: {
-          '👏': 4,
-          '😄': 2,
+          '👍': 4,
           '❤️': 2,
-          '🔥': 1,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '😂': 1,
+          '🔥': 2,
+          '👎': 0,
+          '😡': 0
         },
         votes: 9,
         rank: 3
@@ -478,14 +436,12 @@ export const mockPolls: Poll[] = [
         pollId: '8',
         title: 'Beach Day',
         reactions: {
-          '👏': 0,
-          '😄': 0,
+          '👍': 0,
           '❤️': 0,
+          '😂': 0,
           '🔥': 0,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '👎': 0,
+          '😡': 0
         },
         votes: 0,
         rank: 0
@@ -495,14 +451,12 @@ export const mockPolls: Poll[] = [
         pollId: '8',
         title: 'Hiking Trip',
         reactions: {
-          '👏': 0,
-          '😄': 0,
+          '👍': 0,
           '❤️': 0,
+          '😂': 0,
           '🔥': 0,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '👎': 0,
+          '😡': 0
         },
         votes: 0,
         rank: 0
@@ -512,14 +466,12 @@ export const mockPolls: Poll[] = [
         pollId: '8',
         title: 'City Exploration',
         reactions: {
-          '👏': 0,
-          '😄': 0,
+          '👍': 0,
           '❤️': 0,
+          '😂': 0,
           '🔥': 0,
-          '😡': 0,
-          '🤮': 0,
-          '🍅': 0,
-          '😈': 0
+          '👎': 0,
+          '😡': 0
         },
         votes: 0,
         rank: 0

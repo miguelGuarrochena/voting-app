@@ -1,20 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Poll, PollOption, ReactionType, ReactionCount, UserReaction, UserVote } from '@/types/poll';
+import { Poll, PollOption, ReactionCount, UserReaction, UserVote, createEmptyReactions } from '@/types/poll';
 import { mockPolls } from '@/data/mockPolls';
 
 // Helper function to create a new empty reaction count
-const createEmptyReactions = (): ReactionCount => ({
-  '👏': 0,
-  '😄': 0,
-  '❤️': 0,
-  '🔥': 0,
-  '😡': 0,
-  '🤮': 0,
-  '🍅': 0,
-  '😈': 0,
-});
+const createEmptyReactionsLocal = (): ReactionCount => ({});
 
 interface PollStore {
   polls: Poll[];
@@ -22,11 +13,11 @@ interface PollStore {
   setFilter: (filter: 'trending' | 'recent' | 'expiring') => void;
   loadPolls: () => Promise<void>;
   currentPoll: Poll | null;
-  userReactions: Record<string, Record<string, ReactionType>>;
+  userReactions: Record<string, Record<string, string>>;
   userVotes: Record<string, string>; // pollId -> optionId
   isLoading: boolean;
   loadPoll: (pollId: string) => Promise<void>;
-  reactToOption: (pollId: string, optionId: string, emoji: ReactionType) => void;
+  reactToOption: (pollId: string, optionId: string, emoji: string) => void;
   removeReaction: (pollId: string, optionId: string) => void;
   voteOnOption: (pollId: string, optionId: string) => void;
   createPoll: (pollData: Omit<Poll, 'id' | 'createdAt' | 'totalReactions' | 'views'>) => Promise<Poll>;
@@ -134,7 +125,7 @@ const usePollStore = create<PollStore>()(
           views: 0,
           options: pollData.options.map(opt => ({
             ...opt,
-            reactions: createEmptyReactions(),
+            reactions: createEmptyReactionsLocal(),
             votes: 0,
             rank: 0,
           })),
@@ -167,7 +158,7 @@ const usePollStore = create<PollStore>()(
         }));
       },
       
-      reactToOption: (pollId: string, optionId: string, emoji: ReactionType) => {
+      reactToOption: (pollId: string, optionId: string, emoji: string) => {
         const { currentPoll, polls, userReactions } = get();
         
         // Create a deep copy of the polls to modify
@@ -215,7 +206,7 @@ const usePollStore = create<PollStore>()(
           return;
         }
         
-        // Add new reaction
+        // Add new reaction safely
         option.reactions[emoji] = (option.reactions[emoji] || 0) + 1;
         poll.totalReactions++;
         
@@ -282,7 +273,7 @@ const usePollStore = create<PollStore>()(
       
       // Utility functions
       getTotalReactions: (reactions: ReactionCount): number => {
-        return Object.values(reactions).reduce((sum, count) => sum + count, 0);
+        return (Object.values(reactions) as number[]).reduce((sum, count) => sum + count, 0);
       },
       
       getTopReaction: (reactions: ReactionCount): { emoji: string; count: number } | null => {
@@ -293,9 +284,9 @@ const usePollStore = create<PollStore>()(
         let topCount = -1;
         
         for (const [emoji, count] of entries) {
-          if (count > topCount) {
+          if ((count as number) > topCount) {
             topEmoji = emoji;
-            topCount = count;
+            topCount = count as number;
           }
         }
         
@@ -303,7 +294,7 @@ const usePollStore = create<PollStore>()(
       },
       
       getPollById: (pollId: string) => get().polls.find(p => p.id === pollId) || null,
-      isPositiveReaction: (emoji: ReactionType): boolean => {
+      isPositiveReaction: (emoji: string): boolean => {
         return ['👏', '😄', '❤️', '🔥'].includes(emoji);
       }
     }),
@@ -341,21 +332,21 @@ export default usePollStore;
 
 // Utility function to calculate total reactions for an option
 export const getTotalReactions = (reactions: ReactionCount): number => {
-  return Object.values(reactions).reduce((sum, count) => sum + count, 0);
+  return (Object.values(reactions) as number[]).reduce((sum, count) => sum + count, 0);
 };
 
 // Utility function to get the top reaction for an option
 export const getTopReaction = (reactions: ReactionCount): { emoji: string; count: number } | null => {
-  const entries = Object.entries(reactions) as [ReactionType, number][];
+  const entries = Object.entries(reactions);
   if (entries.length === 0) return null;
   
-  let topEmoji: ReactionType = entries[0][0];
-  let topCount = entries[0][1];
+  let topEmoji = '';
+  let topCount = -1;
   
   for (const [emoji, count] of entries) {
-    if (count > topCount) {
+    if ((count as number) > topCount) {
       topEmoji = emoji;
-      topCount = count;
+      topCount = count as number;
     }
   }
   
@@ -363,6 +354,6 @@ export const getTopReaction = (reactions: ReactionCount): { emoji: string; count
 };
 
 // Utility function to check if a reaction is positive
-export const isPositiveReaction = (emoji: ReactionType): boolean => {
+export const isPositiveReaction = (emoji: string): boolean => {
   return ['👏', '😄', '❤️', '🔥'].includes(emoji);
 };
