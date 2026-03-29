@@ -29,6 +29,11 @@ interface PollCardProps {
 
 const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps) {
   const [animatedPercentages, setAnimatedPercentages] = useState<Record<string, number>>({});
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // Store hooks
   const voteOnOption = usePollStore((state) => state.voteOnOption);
@@ -97,9 +102,12 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
   const mainImage = poll.options[0]?.imageUrl;
   const isCompact = compact;
   
+  // Fixed card height for consistency
+  const cardHeight = isCompact ? 'h-[280px]' : 'h-full min-h-[400px] md:min-h-[420px]';
+  
   return (
     <motion.div 
-      className={`${isCompact ? 'w-full' : 'w-full h-full min-h-[400px] md:min-h-[420px]'} bg-white rounded-[16px] sm:rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 overflow-hidden border border-[var(--border)] @media(hover:hover):hover:-translate-y-1 active:scale-[0.98] flex flex-col`}
+      className={`${isCompact ? cardHeight : 'w-full h-full min-h-[400px] md:min-h-[420px]'} bg-white rounded-[16px] sm:rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 overflow-hidden border border-[var(--border)] @media(hover:hover):hover:-translate-y-1 active:scale-[0.98] flex flex-col`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -146,7 +154,7 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
               {getCreatorAvatar(poll.createdBy)}
             </div>
             <span className="text-xs sm:text-sm text-[var(--text-muted)]">
-              {poll.createdBy} · {formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}
+              {poll.createdBy} · {mounted ? formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true }) : 'just now'}
             </span>
           </div>
           
@@ -161,8 +169,8 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
           </div>
         </div>
         
-        {/* Options - Fixed responsive min-height */}
-        <div className={`space-y-2 sm:space-y-3 ${isCompact ? 'min-h-[80px] sm:min-h-[100px] md:min-h-[120px]' : 'min-h-[140px] sm:min-h-[160px] md:min-h-[180px]'} flex-1`}>
+        {/* Options - Fixed height for consistency */}
+        <div className={`space-y-2 sm:space-y-3 ${isCompact ? 'h-[100px] overflow-hidden' : 'min-h-[140px] sm:min-h-[160px] md:min-h-[180px]'} flex-1`}>
           {poll.options.map((option: any, index: any) => {
             const percentage = totalVotes > 0 ? Math.round((getPositiveVotes(option.reactions) / totalVotes) * 100) : 0;
             const animatedPercentage = animatedPercentages[option.id] || 0;
@@ -232,7 +240,7 @@ const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps
         {/* Footer - Pinned to bottom */}
         <div className="flex items-center justify-between mt-auto pt-2 sm:pt-3 border-t border-[var(--border)]">
           <div className="text-xs sm:text-sm text-[var(--text-muted)]">
-            {totalVotes} votes · {timeRemaining.replace('in ', '')}
+            {totalVotes} votes · {mounted ? timeRemaining.replace('in ', '') : 'loading'}
           </div>
           
           <Link

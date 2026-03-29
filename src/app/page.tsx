@@ -13,6 +13,7 @@ export default function Home() {
   const [filter, setFilter] = useState<'trending' | 'recent' | 'expiring'>('trending');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [visibleCards, setVisibleCards] = useState(1);
 
   useEffect(() => {
     loadPolls();
@@ -27,10 +28,27 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Responsive card count
+  useEffect(() => {
+    const updateVisibleCards = () => {
+      const width = window.innerWidth;
+      if (width < 768) setVisibleCards(1); // Mobile
+      else if (width < 1024) setVisibleCards(2); // Tablet
+      else setVisibleCards(3); // Desktop
+    };
+
+    updateVisibleCards();
+    window.addEventListener('resize', updateVisibleCards);
+    return () => window.removeEventListener('resize', updateVisibleCards);
+  }, []);
+
   // Get active polls for live strip
   const activePolls = polls.filter(poll => 
     new Date(poll.expiresAt) > new Date() && poll.visibility === 'public'
-  ).slice(0, 3);
+  ).slice(0, 6); // Allow more for carousel
+
+  // Check if carousel should be enabled
+  const shouldUseCarousel = activePolls.length > visibleCards;
 
   // Get filtered polls for main feed
   const filteredPolls = polls.filter(poll => {
@@ -102,50 +120,77 @@ export default function Home() {
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
           </div>
           
-          {/* Navigation Arrows */}
-          {/* Left fade effect */}
-          <div className="hidden md:flex absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent z-5 pointer-events-none" />
-          
-          <button
-            onClick={() => {
-              const container = document.getElementById('live-polls-container');
-              if (container) {
-                container.scrollBy({ left: -320, behavior: 'smooth' });
-              }
-            }}
-            className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          <button
-            onClick={() => {
-              const container = document.getElementById('live-polls-container');
-              if (container) {
-                container.scrollBy({ left: 320, behavior: 'smooth' });
-              }
-            }}
-            className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-          
-          {/* Right fade effect */}
-          <div className="hidden md:flex absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-5 pointer-events-none" />
+          {/* Navigation Arrows - Only show when carousel is active */}
+          {shouldUseCarousel && (
+            <>
+              {/* Left fade effect */}
+              <div className="hidden md:flex absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent z-5 pointer-events-none" />
+              
+              <button
+                onClick={() => {
+                  const container = document.getElementById('live-polls-container');
+                  if (container) {
+                    const cardWidth = visibleCards === 1 ? 
+                      (window.innerWidth < 640 ? window.innerWidth - 128 : window.innerWidth - 192) : 
+                      320;
+                    container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+                  }
+                }}
+                className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => {
+                  const container = document.getElementById('live-polls-container');
+                  if (container) {
+                    const cardWidth = visibleCards === 1 ? 
+                      (window.innerWidth < 640 ? window.innerWidth - 128 : window.innerWidth - 192) : 
+                      320;
+                    container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+                  }
+                }}
+                className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              
+              {/* Right fade effect */}
+              <div className="hidden md:flex absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-5 pointer-events-none" />
+            </>
+          )}
 
+          {/* Container - Responsive layout */}
           <div 
             id="live-polls-container"
-            className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2 snap-x snap-mandatory px-1"
+            className={`${
+              shouldUseCarousel 
+                ? 'flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2 snap-x snap-mandatory px-4 sm:px-6' 
+                : `grid gap-4 md:gap-6 ${
+                    visibleCards === 1 ? 'grid-cols-1' : 
+                    visibleCards === 2 ? 'grid-cols-1 sm:grid-cols-2' : 
+                    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                  }`
+            }`}
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {activePolls.map((poll, index) => (
+            {activePolls.slice(0, shouldUseCarousel ? undefined : visibleCards).map((poll, index) => (
               <motion.div
                 key={poll.id}
-                className="flex-none w-[280px] sm:w-[300px] md:w-[320px] snap-start first:pl-4 last:pr-4"
+                className={`${
+                  shouldUseCarousel 
+                    ? `flex-none snap-start ${
+                        visibleCards === 1 ? 'w-[calc(100vw-8rem)] sm:w-[calc(100vw-12rem)]' : 
+                        visibleCards === 2 ? 'w-[320px]' : 
+                        'w-[320px] lg:w-[384px]'
+                      }`
+                    : 'w-full'
+                }`}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -154,7 +199,7 @@ export default function Home() {
               </motion.div>
             ))}
             {activePolls.length === 0 && !isLoading && (
-              <div className="flex-none w-full text-center py-8 text-[var(--text-muted)]">
+              <div className={`${shouldUseCarousel ? 'flex-none w-full' : 'col-span-full'} text-center py-8 text-[var(--text-muted)]`}>
                 No active polls at the moment.
               </div>
             )}

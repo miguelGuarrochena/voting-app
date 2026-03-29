@@ -18,6 +18,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Handle scroll effect for desktop navbar
   useEffect(() => {
@@ -26,6 +27,16 @@ export default function Navbar() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Handle mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const handleLogout = () => {
@@ -39,7 +50,7 @@ export default function Navbar() {
   }
 
   // Mobile bottom tab bar
-  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+  if (isMobile) {
     return (
       <>
         {/* Top minimal bar */}

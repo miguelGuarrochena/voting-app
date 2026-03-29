@@ -36,6 +36,11 @@ export default function PollDetail({ pollId }: PollDetailProps) {
   const [timeRemaining, setTimeRemaining] = useState('');
   const [showReactionStrip, setShowReactionStrip] = useState<string | null>(null);
   const [selectedReaction, setSelectedReaction] = useState<Record<string, string>>({});
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // Get the poll from the store
   const poll = getPollById(pollId);
@@ -182,7 +187,7 @@ export default function PollDetail({ pollId }: PollDetailProps) {
             <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
               <span>{poll.createdBy}</span>
               <span>•</span>
-              <span>{formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}</span>
+              <span>{mounted ? formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true }) : 'just now'}</span>
               <span>•</span>
               <span>{totalVotes} votes</span>
             </div>
@@ -762,7 +767,7 @@ function ResultsTab({
           <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
             <span>Total participants: {totalVotes}</span>
             <span>Created by {poll.createdBy}</span>
-            <span>{formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}</span>
+            <span>{mounted ? formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true }) : 'just now'}</span>
           </div>
         </div>
       </div>
