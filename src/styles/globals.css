@@ -1,9 +1,52 @@
+@import '@fontsource/sora/400.css';
+@import '@fontsource/sora/600.css';
+@import '@fontsource/sora/700.css';
+@import '@fontsource/dm-sans/400.css';
+@import '@fontsource/dm-sans/500.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-white text-gray-900 min-h-screen;
+:root {
+  --primary: #FF4D6A;
+  --primary-light: #FFE4E9;
+  --primary-dark: #E63050;
+  --bg: #FFF8F5;
+  --surface: #FFFFFF;
+  --surface-2: #F5EDE9;
+  --text: #1A1523;
+  --text-muted: #8B7B87;
+  --border: #EAE0DC;
+  --success: #2DD4A0;
+  --warning: #FFB347;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --shadow-sm: 0 2px 8px rgba(26,21,35,0.06);
+  --shadow-md: 0 8px 24px rgba(26,21,35,0.10);
+  --shadow-lg: 0 20px 48px rgba(26,21,35,0.14);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Sora', sans-serif;
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, var(--primary), #FF8FA3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

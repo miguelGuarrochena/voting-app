@@ -10,6 +10,13 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: "Pickly - Social Voting Made Simple",
   description: "Create and participate in fun polls with your friends",
+  manifest: "/manifest.json",
+  themeColor: "#FF4D6A",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({

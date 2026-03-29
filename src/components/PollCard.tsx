@@ -1,155 +1,227 @@
 'use client';
 
-import { memo, useMemo, useCallback } from 'react';
-import { Poll, getTopReaction, isPositiveReaction, ReactionType } from '@/types/poll';
+import { memo, useMemo, useCallback, useState, useEffect } from 'react';
+import { Poll, ReactionType } from '@/types/poll';
 import usePollStore from '@/store/pollStore';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { getCreatorAvatar } from '@/data/mockPolls';
 
-// Define the reaction emojis as an array of ReactionType
+// Define the reaction emojis
 const REACTION_EMOJIS: ReactionType[] = ['👏', '😄', '❤️', '🔥', '😡', '🤮', '🍅', '😈'];
+
+// Warm gradients for no-image fallbacks
+const GRADIENTS = [
+  'linear-gradient(135deg, #FF6B6B, #FFE66D)',
+  'linear-gradient(135deg, #4ECDC4, #44A08D)',
+  'linear-gradient(135deg, #45B7D1, #2196F3)',
+  'linear-gradient(135deg, #F7DC6F, #F39C12)',
+  'linear-gradient(135deg, #BB8FCE, #8E44AD)',
+  'linear-gradient(135deg, #85C1E2, #3498DB)',
+];
 
 interface PollCardProps {
   poll: Poll;
-  index?: number;
+  compact?: boolean;
 }
 
-const PollCard = memo(function PollCard({ poll, index = 0 }: PollCardProps) {
-  // Memoize derived state to prevent unnecessary recalculations
-  const { isExpired, timeRemaining } = useMemo(() => {
+const PollCard = memo(function PollCard({ poll, compact = false }: PollCardProps) {
+  const [animatedPercentages, setAnimatedPercentages] = useState<Record<string, number>>({});
+  
+  // Store hooks
+  const voteOnOption = usePollStore((state) => state.voteOnOption);
+  const userVotes = usePollStore((state) => state.userVotes);
+  const reactToOption = usePollStore((state) => state.reactToOption);
+  const userReactionsStore = usePollStore((state) => state.userReactions);
+  
+  // Memoize userReactions to prevent infinite re-renders
+  const userReactions = useMemo(() => userReactionsStore[poll.id] || {}, [userReactionsStore, poll.id]);
+  
+  // Memoize calculations
+  const { isExpired, timeRemaining, totalVotes, hasVotes } = useMemo(() => {
     const now = new Date();
     const expiryDate = new Date(poll.expiresAt);
+    const votes = poll.options.reduce((sum, option) => sum + (option.votes || 0), 0);
+    
     return {
       isExpired: expiryDate < now,
-      timeRemaining: formatDistanceToNow(expiryDate, { addSuffix: true })
-    };
-  }, [poll.expiresAt]);
-
-  // Select only the necessary values from the store
-  const reactToOption = usePollStore((state) => state.reactToOption);
-  const userReactionsForPoll = usePollStore(
-    (state) => state.userReactions[poll.id]
-  );
-  const userReactions = userReactionsForPoll || useMemo(() => ({}), []);
-  
-  // Memoize the handleReaction function with stable references
-  const handleReaction = useCallback((optionId: string, emoji: ReactionType) => {
-    reactToOption(poll.id, optionId, emoji);
-  }, [poll.id, reactToOption]);
-  
-  // Memoize vote calculations
-  const { totalVotes, hasVotes } = useMemo(() => {
-    const getOptionVotes = (option: Poll['options'][number]) => {
-      return Object.values(option.reactions).reduce((sum: number, count: number) => sum + count, 0);
-    };
-    
-    const votes = poll.options.reduce((sum, option) => sum + getOptionVotes(option), 0);
-    return {
+      timeRemaining: formatDistanceToNow(expiryDate, { addSuffix: true }),
       totalVotes: votes,
       hasVotes: votes > 0
     };
-  }, [poll.options]);
+  }, [poll.expiresAt, poll.options]);
   
-  // Memoize the options to show to prevent unnecessary re-renders
-  const optionsToShow = useMemo(() => poll.options.slice(0, 3), [poll.options]);
-
-  // Memoize the renderReactionButton function with stable references
-  const renderReactionButton = useCallback((emoji: ReactionType, optionId: string) => {
-    const isActive = userReactions[optionId] === emoji;
-    return (
-      <button
-        key={emoji}
-        onClick={() => handleReaction(optionId, emoji)}
-        className={`text-xl p-1 rounded-full transition-colors ${
-          isActive 
-            ? isPositiveReaction(emoji) 
-              ? 'bg-green-100 text-green-600' 
-              : 'bg-red-100 text-red-600'
-            : 'hover:bg-gray-100'
-        }`}
-        aria-label={`React with ${emoji}`}
-      >
-        {emoji}
-      </button>
-    );
-  }, [handleReaction, userReactions]);
-
+  // Animate progress bars on mount
+  useEffect(() => {
+    if (!hasVotes) return;
+    
+    const percentages: Record<string, number> = {};
+    poll.options.forEach((option) => {
+      const percentage = totalVotes > 0 ? Math.round((option.votes || 0) / totalVotes * 100) : 0;
+      percentages[option.id] = 0;
+      
+      // Animate to actual percentage
+      setTimeout(() => {
+        setAnimatedPercentages(prev => ({ ...prev, [option.id]: percentage }));
+      }, 100);
+    });
+    
+    setAnimatedPercentages(percentages);
+  }, [poll.options, totalVotes, hasVotes]);
+  
+  // Handle voting
+  const handleVote = useCallback((optionId: string) => {
+    if (isExpired) return;
+    if (userVotes[poll.id]) return; // Already voted
+    
+    voteOnOption(poll.id, optionId);
+  }, [poll.id, isExpired, userVotes, voteOnOption]);
+  
+  // Get gradient for no-image fallback
+  const getGradient = useCallback((title: string) => {
+    const index = title.charCodeAt(0) % GRADIENTS.length;
+    return GRADIENTS[index];
+  }, []);
+  
+  // Get top 3 reactions for an option
+  const getTopReactions = useCallback((reactions: Record<ReactionType, number>) => {
+    return Object.entries(reactions)
+      .filter(([_, count]) => count > 0)
+      .sort(([_, a], [__, b]) => b - a)
+      .slice(0, 3);
+  }, []);
+  
+  const userVotedOption = userVotes[poll.id];
+  const mainImage = poll.options[0]?.imageUrl;
+  const isCompact = compact;
+  
   return (
     <motion.div 
-      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+      className={`${isCompact ? 'w-[280px] h-[360px]' : 'w-full h-full'} bg-white rounded-[24px] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-300 overflow-hidden border border-[var(--border)] @media(hover:hover):hover:-translate-y-1 active:scale-[0.98] flex flex-col`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: (index || 0) * 0.1 }}
-      layoutId={`poll-${poll.id}`}
+      transition={{ duration: 0.4 }}
     >
-      {/* Poll image (use first option's image if available) */}
-      {poll.options[0]?.imageUrl && (
-        <div className="relative h-40 w-full">
-          <Image
-            src={poll.options[0].imageUrl}
-            alt={poll.options[0].title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority={index !== undefined && index < 3}
-          />
-        </div>
-      )}
-      
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{poll.title}</h3>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ml-2 ${
-            isExpired 
-              ? 'bg-red-100 text-red-800' 
-              : 'bg-blue-100 text-blue-800'
-          }`}>
-            {isExpired ? 'Ended' : `Ends ${timeRemaining}`}
-          </span>
-        </div>
-        
-        {poll.description && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-            {poll.description}
-          </p>
+      {/* Image Section - Fixed 200px height */}
+      <div className="relative h-[200px] flex-shrink-0">
+        {mainImage ? (
+          <>
+            <Image
+              src={mainImage}
+              alt={poll.options[0]?.title || poll.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
+          </>
+        ) : (
+          <div 
+            className="w-full h-full flex items-center justify-center"
+            style={{ background: getGradient(poll.title) }}
+          >
+            <span className="text-6xl font-bold text-white/80">
+              {poll.title.charAt(0).toUpperCase()}
+            </span>
+          </div>
         )}
         
-        <div className="space-y-3 mt-4">
-          {optionsToShow.map((option) => {
-            const optionVotes = Object.values(option.reactions).reduce(
-              (sum: number, count: number) => sum + count, 
-              0
-            );
-            const percentage = hasVotes ? Math.round((optionVotes / totalVotes) * 100) : 0;
-            const topReaction = getTopReaction(option.reactions);
+        {/* Title on Image */}
+        <div className="absolute bottom-3 left-4 right-4">
+          <h3 className="font-display text-white font-semibold text-base line-clamp-2">
+            {poll.title}
+          </h3>
+        </div>
+      </div>
+      
+      {/* Content Section */}
+      <div className="p-4 flex flex-col flex-1">
+        {/* Creator Info */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-xs font-medium">
+              {getCreatorAvatar(poll.createdBy)}
+            </div>
+            <span className="text-sm text-[var(--text-muted)]">
+              {poll.createdBy} · {formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}
+            </span>
+          </div>
+          
+          {/* Status Badge */}
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+            isExpired 
+              ? 'bg-gray-100 text-gray-600' 
+              : 'bg-green-100 text-green-700'
+          }`}>
+            {!isExpired && <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />}
+            {isExpired ? 'Ended' : 'Active'}
+          </div>
+        </div>
+        
+        {/* Options - Fixed min-height */}
+        <div className={`space-y-3 ${isCompact ? 'min-h-[120px]' : 'min-h-[180px]'} flex-1`}>
+          {poll.options.map((option, index) => {
+            const percentage = totalVotes > 0 ? Math.round((option.votes || 0) / totalVotes * 100) : 0;
+            const animatedPercentage = animatedPercentages[option.id] || 0;
+            const topReactions = getTopReactions(option.reactions);
+            const hasVoted = userVotedOption === option.id;
             
             return (
-              <div key={option.id} className="space-y-1.5">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="font-medium text-gray-900 truncate pr-2">
-                    {option.title}
-                  </span>
-                  {topReaction && (
-                    <span className="flex-shrink-0 text-sm font-medium text-gray-500">
-                      {topReaction.emoji} {topReaction.count}
+              <div
+                key={option.id}
+                className={`cursor-pointer transition-all ${
+                  !isExpired && !userVotedOption ? 'hover:bg-[var(--surface)] rounded-lg p-2 -m-2' : ''
+                } ${hasVoted ? 'border-2 border-[var(--primary)] rounded-lg p-2 -m-2' : ''}`}
+                onClick={() => handleVote(option.id)}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    {option.imageUrl && (
+                      <Image
+                        src={option.imageUrl}
+                        alt={option.title}
+                        width={24}
+                        height={24}
+                        className="rounded object-cover"
+                      />
+                    )}
+                    <span className="font-medium text-sm text-[var(--text)]">
+                      {option.title}
                     </span>
-                  )}
+                    {hasVoted && (
+                      <span className="text-[var(--primary)] text-sm">✓</span>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-[var(--text)]">
+                    {percentage}%
+                  </span>
                 </div>
                 
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  {hasVotes && (
-                    <div 
-                      className="h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600" 
-                      style={{ width: `${percentage}%` }}
-                    />
-                  )}
+                {/* Progress Bar */}
+                <div className="w-full bg-[var(--surface-2)] rounded-full h-2 mb-2 overflow-hidden">
+                  <div 
+                    className="bg-[var(--primary)] h-2 rounded-full transition-all duration-800 ease-out"
+                    style={{ 
+                      width: `${animatedPercentage}%`,
+                      transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  />
                 </div>
                 
-                {!isExpired && (
-                  <div className="flex space-x-1 pt-1 overflow-x-auto pb-2 -mx-1 px-1">
-                    {REACTION_EMOJIS.map((emoji) => renderReactionButton(emoji, option.id))}
+                {/* Reaction Pills */}
+                {topReactions.length > 0 && (
+                  <div className="flex gap-1 flex-wrap">
+                    {topReactions.map(([emoji, count]) => (
+                      <div
+                        key={emoji}
+                        className="bg-[var(--primary-light)] text-[var(--primary)] text-xs px-2 py-0.5 rounded-full"
+                      >
+                        {emoji} {count}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -157,17 +229,17 @@ const PollCard = memo(function PollCard({ poll, index = 0 }: PollCardProps) {
           })}
         </div>
         
-        <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
-          <span>{poll.totalReactions} reactions</span>
+        {/* Footer - Pinned to bottom */}
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-[var(--border)]">
+          <div className="text-sm text-[var(--text-muted)]">
+            {totalVotes} votes · {timeRemaining.replace('in ', '')}
+          </div>
           
-          <Link 
+          <Link
             href={`/polls/${poll.id}`}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center"
+            className="text-sm font-medium text-[var(--primary)] hover:text-[var(--primary-dark)] flex items-center gap-1"
           >
-            View details
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            View →
           </Link>
         </div>
       </div>

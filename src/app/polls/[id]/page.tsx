@@ -3,7 +3,6 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
 import usePollStore from '@/store/pollStore';
 import PollDetail from '@/components/PollDetail';
 
@@ -79,17 +78,12 @@ export default function PollPage() {
     );
   }
 
-  // Calculate total votes for this poll
-  const totalVotes = poll.options.reduce((sum, option) => {
-    return sum + Object.values(option.reactions).reduce((a: number, b: number) => a + b, 0);
-  }, 0);
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6">
         <Link 
           href="/" 
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+          className="inline-flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
         >
           <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -98,37 +92,7 @@ export default function PollPage() {
         </Link>
       </div>
       
-      <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{poll.title}</h1>
-          {poll.description && (
-            <p className="text-gray-600 mb-4">{poll.description}</p>
-          )}
-          
-          <div className="flex items-center text-sm text-gray-500 mb-6">
-            <span>Created by {poll.createdBy}</span>
-            <span className="mx-2">•</span>
-            <span>
-              {formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}
-            </span>
-            <span className="mx-2">•</span>
-            <span>{totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}</span>
-            {new Date(poll.expiresAt) < new Date() ? (
-              <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                Ended
-              </span>
-            ) : (
-              <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                Active
-              </span>
-            )}
-          </div>
-          
-          <div className="space-y-4">
-            <PollDetail pollId={poll.id} />
-          </div>
-        </div>
-      </div>
+      <PollDetail pollId={poll.id} />
     </div>
   );
 }

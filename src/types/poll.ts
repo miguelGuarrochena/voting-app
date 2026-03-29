@@ -23,12 +23,20 @@ export interface UserReaction {
   timestamp: Date;
 }
 
+export interface UserVote {
+  userId: string;
+  pollId: string;
+  optionId: string;
+  timestamp: Date;
+}
+
 export interface PollOption {
   id: string;
   pollId: string;
   title: string;
   imageUrl?: string;
   reactions: ReactionCount;
+  votes: number;
   rank?: number;
 }
 

@@ -3,14 +3,30 @@
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react';
+import { 
+  HomeIcon, 
+  MagnifyingGlassIcon, 
+  FireIcon, 
+  UserCircleIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline';
+import { getCreatorAvatar } from '@/data/mockPolls';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Handle scroll effect for desktop navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -22,128 +38,193 @@ export default function Navbar() {
     return null;
   }
 
+  // Mobile bottom tab bar
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    return (
+      <>
+        {/* Top minimal bar */}
+        <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--border)]">
+          <div className="flex items-center justify-between px-4 py-3">
+            <Link href="/" className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-[var(--primary)] font-display">✨ Pickly</span>
+            </Link>
+            <div className="flex items-center space-x-3">
+              {isAuthenticated && (
+                <div className="w-8 h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-sm font-medium">
+                  {getCreatorAvatar(user?.name || 'User')}
+                </div>
+              )}
+              <Link
+                href="/create"
+                className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center text-white"
+              >
+                <PlusIcon className="w-5 h-5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom tab bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[var(--border)]">
+          <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
+            <Link
+              href="/"
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+                pathname === '/' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+              }`}
+            >
+              <HomeIcon className="w-6 h-6" />
+              <span className="text-xs mt-1">Home</span>
+            </Link>
+
+            <Link
+              href="/explore"
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+                pathname === '/explore' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+              }`}
+            >
+              <MagnifyingGlassIcon className="w-6 h-6" />
+              <span className="text-xs mt-1">Explore</span>
+            </Link>
+
+            {/* Center CREATE button */}
+            <Link
+              href="/create"
+              className="flex flex-col items-center p-3 rounded-full bg-[var(--primary)] text-white shadow-lg -mt-4 border-4 border-white"
+            >
+              <PlusIcon className="w-7 h-7" />
+            </Link>
+
+            <Link
+              href="/trending"
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors relative ${
+                pathname === '/trending' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+              }`}
+            >
+              <FireIcon className="w-6 h-6" />
+              <span className="text-xs mt-1">Trending</span>
+              {pathname === '/trending' && (
+                <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              )}
+            </Link>
+
+            {isAuthenticated ? (
+              <Link
+                href="/profile"
+                className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+                  pathname === '/profile' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                }`}
+              >
+                <UserCircleIcon className="w-6 h-6" />
+                <span className="text-xs mt-1">Profile</span>
+              </Link>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="flex flex-col items-center p-2 rounded-lg transition-colors text-[var(--text-muted)]"
+              >
+                <UserCircleIcon className="w-6 h-6" />
+                <span className="text-xs mt-1">Login</span>
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Add padding to account for fixed elements */}
+        <div className="h-16"></div>
+        <div className="h-20"></div>
+      </>
+    );
+  }
+
+  // Desktop navbar
   return (
-    <nav className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <nav className={`fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--border)] transition-all ${
+      scrolled ? 'backdrop-filter backdrop-blur-lg saturate-180' : ''
+    }`}>
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="text-sky-500 text-xl font-bold">
-              Pickly
+          <Link href="/" className="flex items-center space-x-2">
+            <span className="text-2xl font-bold text-[var(--primary)] font-display">✨ Pickly</span>
+          </Link>
+
+          {/* Center nav links */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link
+              href="/"
+              className={`relative text-lg font-medium transition-colors ${
+                pathname === '/' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              Explore
+              {pathname === '/' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
+              )}
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
+            </Link>
+
+            <Link
+              href="/trending"
+              className={`relative text-lg font-medium transition-colors flex items-center space-x-1 ${
+                pathname === '/trending' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              <span>Trending</span>
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              {pathname === '/trending' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
+              )}
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
+            </Link>
+
+            <Link
+              href="/create"
+              className={`relative text-lg font-medium transition-colors ${
+                pathname === '/create' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              Create
+              {pathname === '/create' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
+              )}
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+          {/* Right side */}
+          <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <Link 
-                  href="/create" 
-                  className="bg-sky-100 text-sky-700 hover:bg-sky-200 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                <div className="w-10 h-10 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] font-medium">
+                  {getCreatorAvatar(user?.name || 'User')}
+                </div>
+                <Link
+                  href="/create"
+                  className="bg-[var(--primary)] text-white px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
                 >
                   Create Poll
                 </Link>
-                <div className="relative ml-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-8 w-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 font-medium">
-                      {user?.name?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                    <span className="text-sm text-gray-700">{user?.name || 'User'}</span>
-                    <button
-                      onClick={handleLogout}
-                      className="text-sm text-gray-500 hover:text-gray-700"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </div>
               </>
             ) : (
               <>
-                <Link 
-                  href="/auth/login" 
-                  className="text-gray-700 hover:text-sky-500 px-3 py-2 text-sm font-medium transition-colors"
+                <Link
+                  href="/auth/login"
+                  className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium transition-colors"
                 >
-                  Log in
+                  Login
                 </Link>
-                <Link 
-                  href="/auth/signup" 
-                  className="bg-sky-500 text-white hover:bg-sky-600 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                <Link
+                  href="/auth/signup"
+                  className="bg-[var(--primary)] text-white px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
                 >
                   Sign up
                 </Link>
               </>
             )}
           </div>
-
-          {/* Mobile menu button */}
-          <div className="flex items-center sm:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-sky-500"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-              )}
-            </button>
-          </div>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden">
-          <div className="pt-2 pb-3 space-y-1">
-            {isAuthenticated ? (
-              <div className="px-4 py-3 border-t border-gray-200">
-                <div className="flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 font-medium">
-                    {user?.name?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">{user?.name || 'User'}</p>
-                    <button
-                      onClick={handleLogout}
-                      className="text-xs text-sky-600 hover:text-sky-800"
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-3 space-y-1">
-                  <Link
-                    href="/create"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Create Poll
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="px-2 pt-2 pb-3 space-y-1">
-                <Link
-                  href="/auth/login"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-sky-700 hover:bg-sky-50"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign up
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }

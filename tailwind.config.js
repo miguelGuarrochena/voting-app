@@ -6,10 +6,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          500: '#3b82f6', // blue-500
-          600: '#2563eb', // blue-600
-        },
+        primary: '#FF4D6A',
+        'primary-light': '#FFE4E9',
+        'primary-dark': '#E63050',
+        bg: '#FFF8F5',
+        surface: '#F5EDE9',
+      },
+      fontFamily: {
+        display: ['Sora', 'sans-serif'],
+        body: ['DM Sans', 'sans-serif'],
+      },
+      borderRadius: {
+        '2xl': '16px',
+        '3xl': '24px',
+        '4xl': '32px',
       },
     },
   },
