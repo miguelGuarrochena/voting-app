@@ -477,6 +477,115 @@ export const mockPolls: Poll[] = [
         rank: 0
       }
     ]
+  },
+  {
+    id: '9',
+    title: 'Best programming language for beginners? 💻',
+    description: 'Which language should new developers learn first?',
+    createdBy: 'Tech Team',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+    visibility: 'public',
+    totalReactions: 245,
+    views: 523,
+    options: [
+      {
+        id: 'opt1',
+        pollId: '9',
+        title: 'Python',
+        imageUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=600&q=80',
+        reactions: {
+          '👍': 45,
+          '❤️': 32,
+          '😂': 8,
+          '🔥': 38,
+          '👎': 2,
+          '😡': 1
+        },
+        votes: 126,
+        rank: 1
+      },
+      {
+        id: 'opt2',
+        pollId: '9',
+        title: 'JavaScript',
+        imageUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=600&q=80',
+        reactions: {
+          '👍': 38,
+          '❤️': 28,
+          '😂': 12,
+          '🔥': 32,
+          '👎': 3,
+          '😡': 2
+        },
+        votes: 115,
+        rank: 2
+      },
+      {
+        id: 'opt3',
+        pollId: '9',
+        title: 'Java',
+        imageUrl: 'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?w=600&q=80',
+        reactions: {
+          '👍': 22,
+          '❤️': 18,
+          '😂': 6,
+          '🔥': 15,
+          '👎': 4,
+          '😡': 3
+        },
+        votes: 68,
+        rank: 3
+      },
+      {
+        id: 'opt4',
+        pollId: '9',
+        title: 'C++',
+        imageUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=600&q=80',
+        reactions: {
+          '👍': 15,
+          '❤️': 12,
+          '😂': 4,
+          '🔥': 8,
+          '👎': 6,
+          '😡': 4
+        },
+        votes: 49,
+        rank: 4
+      },
+      {
+        id: 'opt5',
+        pollId: '9',
+        title: 'Go',
+        imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
+        reactions: {
+          '👍': 12,
+          '❤️': 8,
+          '😂': 3,
+          '🔥': 6,
+          '👎': 2,
+          '😡': 1
+        },
+        votes: 32,
+        rank: 5
+      },
+      {
+        id: 'opt6',
+        pollId: '9',
+        title: 'Rust',
+        imageUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80',
+        reactions: {
+          '👍': 8,
+          '❤️': 6,
+          '😂': 2,
+          '🔥': 4,
+          '👎': 1,
+          '😡': 1
+        },
+        votes: 21,
+        rank: 6
+      }
+    ]
   }
 ];
 

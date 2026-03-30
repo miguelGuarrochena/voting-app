@@ -115,8 +115,15 @@ export default function Home() {
       {/* Live Polls Strip */}
       <div id="live-polls" className="px-4 sm:px-6 lg:px-8 pb-6 md:pb-8">
         <div className="max-w-7xl mx-auto relative">
-          <div className="flex items-center gap-3 mb-4 md:mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-[var(--text)] font-display">Live now</h2>
+          <div className="flex items-center gap-3 mb-4 md:mb-6 relative z-10">
+            <h2 className="text-xl md:text-2xl font-bold text-[var(--text)] font-display antialiased" style={{ 
+              WebkitFontSmoothing: 'antialiased', 
+              MozOsxFontSmoothing: 'grayscale',
+              textRendering: 'optimizeLegibility',
+              filter: 'none',
+              backdropFilter: 'none',
+              opacity: 1
+            }}>Live now</h2>
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
           </div>
           
@@ -124,19 +131,19 @@ export default function Home() {
           {shouldUseCarousel && (
             <>
               {/* Left fade effect */}
-              <div className="hidden md:flex absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent z-5 pointer-events-none" />
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent z-0 pointer-events-none" />
               
               <button
                 onClick={() => {
                   const container = document.getElementById('live-polls-container');
                   if (container) {
                     const cardWidth = visibleCards === 1 ? 
-                      (window.innerWidth < 640 ? window.innerWidth - 128 : window.innerWidth - 192) : 
+                      window.innerWidth - 32 : 
                       320;
                     container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
                   }
                 }}
-                className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors flex"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -148,12 +155,12 @@ export default function Home() {
                   const container = document.getElementById('live-polls-container');
                   if (container) {
                     const cardWidth = visibleCards === 1 ? 
-                      (window.innerWidth < 640 ? window.innerWidth - 128 : window.innerWidth - 192) : 
+                      window.innerWidth - 32 : 
                       320;
                     container.scrollBy({ left: cardWidth, behavior: 'smooth' });
                   }
                 }}
-                className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors flex"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -161,7 +168,7 @@ export default function Home() {
               </button>
               
               {/* Right fade effect */}
-              <div className="hidden md:flex absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-5 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-0 pointer-events-none" />
             </>
           )}
 
@@ -170,7 +177,7 @@ export default function Home() {
             id="live-polls-container"
             className={`${
               shouldUseCarousel 
-                ? 'flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2 snap-x snap-mandatory px-4 sm:px-6' 
+                ? 'flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2 snap-x snap-mandatory px-4' 
                 : `grid gap-4 md:gap-6 ${
                     visibleCards === 1 ? 'grid-cols-1' : 
                     visibleCards === 2 ? 'grid-cols-1 sm:grid-cols-2' : 
@@ -185,7 +192,7 @@ export default function Home() {
                 className={`${
                   shouldUseCarousel 
                     ? `flex-none snap-start ${
-                        visibleCards === 1 ? 'w-[calc(100vw-8rem)] sm:w-[calc(100vw-12rem)]' : 
+                        visibleCards === 1 ? 'w-[calc(100vw-2rem)]' : 
                         visibleCards === 2 ? 'w-[320px]' : 
                         'w-[320px] lg:w-[384px]'
                       }`

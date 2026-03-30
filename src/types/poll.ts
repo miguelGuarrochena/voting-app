@@ -40,6 +40,7 @@ export interface PollOption {
 export interface Poll {
   id: string;
   title: string;
+  titleImage?: string;
   description?: string;
   createdBy: string;
   createdAt: Date;
@@ -100,7 +101,7 @@ export const getPositiveVotes = (reactions: ReactionCount): number => {
 
 // Supported reactions configuration
 export const POSITIVE_REACTIONS = ['👍', '❤️', '😂', '🔥', '👏'] as const;
-export const NEGATIVE_REACTIONS = ['�', '😡'] as const;
+export const NEGATIVE_REACTIONS = ['👎', '😡', '😢'] as const;
 export const ALL_SUPPORTED_REACTIONS = [...POSITIVE_REACTIONS, ...NEGATIVE_REACTIONS] as const;
 
 // Reaction metadata for future features
@@ -112,4 +113,5 @@ export const REACTION_META: Record<string, ReactionMeta> = {
   '👏': { emoji: '👏', type: 'positive' },
   '👎': { emoji: '👎', type: 'negative' },
   '😡': { emoji: '😡', type: 'negative' },
+  '😢': { emoji: '😢', type: 'negative' },
 };

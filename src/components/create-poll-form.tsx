@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { formatForDateTimeInput, addDays } from '@/utils/date';
 import { createEmptyReactions } from '@/types/poll';
 import usePollStore from '@/store/pollStore';
+import ImagePickerModal from './ImagePickerModal';
 
 type FormPollOption = {
   id: string;
@@ -20,6 +21,7 @@ type Participant = {
 
 export function CreatePollForm() {
   const [title, setTitle] = useState('');
+  const [titleImage, setTitleImage] = useState('');
   const [description, setDescription] = useState('');
   const [expirationDate, setExpirationDate] = useState(() => {
     // Set default expiration to 7 days from now
@@ -36,6 +38,11 @@ export function CreatePollForm() {
   const [newParticipant, setNewParticipant] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [imagePickerContext, setImagePickerContext] = useState<{
+    type: 'title' | 'option';
+    optionId?: string;
+  } | null>(null);
   const router = useRouter();
   const { createPoll } = usePollStore();
 
@@ -100,8 +107,60 @@ export function CreatePollForm() {
     reader.readAsDataURL(file);
   };
 
+  const handleTitleImageUpload = (file: File) => {
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      setErrors(prev => ({
+        ...prev,
+        titleImage: 'Only JPG and PNG images are allowed'
+      }));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(prev => ({
+        ...prev,
+        titleImage: 'Image size must be less than 5MB'
+      }));
+      return;
+    }
+
+    // Clear any previous errors for title image
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.titleImage;
+      return newErrors;
+    });
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setTitleImage(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const removeImage = (optionId: string) => {
     updateOption(optionId, { image: '' });
+  };
+
+  const removeTitleImage = () => {
+    setTitleImage('');
+  };
+
+  const openImagePicker = (type: 'title' | 'option', optionId?: string) => {
+    setImagePickerContext({ type, optionId });
+    setImagePickerOpen(true);
+  };
+
+  const handleImageSelect = (imageUrl: string) => {
+    if (imagePickerContext?.type === 'title') {
+      setTitleImage(imageUrl);
+    } else if (imagePickerContext?.type === 'option' && imagePickerContext.optionId) {
+      updateOption(imagePickerContext.optionId, { image: imageUrl });
+    }
+    setImagePickerContext(null);
   };
 
   const removeParticipant = (id: string) => {
@@ -179,6 +238,7 @@ export function CreatePollForm() {
       const newPoll = {
         title: title.trim(),
         description: description.trim() || undefined,
+        titleImage: titleImage || undefined,
         expiresAt: new Date(expirationDate),
         isPublic: !isPrivate,
         createdBy: 'current-user', // In a real app, this would be the logged-in user
@@ -200,7 +260,7 @@ export function CreatePollForm() {
       
       // Redirect to the new poll
       router.push('/'); // Will redirect to home where the new poll will be shown
-    } catch (error) {
+    } catch {
       setErrors({ submit: 'Failed to create poll. Please try again.' });
     } finally {
       setIsSubmitting(false);
@@ -219,22 +279,68 @@ export function CreatePollForm() {
           <label className="block text-gray-700 mb-2" htmlFor="title">
             Poll Title *
           </label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              if (errors.title) {
-                setErrors(prev => ({ ...prev, title: '' }));
-              }
-            }}
-            className={`w-full p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors ${
-              errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : ''
-            }`}
-            placeholder="What's your poll about?"
-            maxLength={100}
-          />
+          <div className="space-y-3">
+            <input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) {
+                  setErrors(prev => ({ ...prev, title: '' }));
+                }
+              }}
+              className={`w-full p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors ${
+                errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : ''
+              }`}
+              placeholder="What's your poll about?"
+              maxLength={100}
+            />
+            
+            {/* Title Image Upload */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleTitleImageUpload(file);
+                  }
+                }}
+                className="text-sm text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <button
+                type="button"
+                onClick={() => openImagePicker('title')}
+                className="text-sm px-3 py-1 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors font-medium"
+              >
+                📷 Search Stock Images
+              </button>
+              {titleImage && (
+                <div className="relative group">
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+                    <img 
+                      src={titleImage} 
+                      alt="Title image preview" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeTitleImage}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs cursor-pointer"
+                    title="Remove title image"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {errors.titleImage && (
+                <p className="text-xs text-red-600">{errors.titleImage}</p>
+              )}
+            </div>
+          </div>
           {errors.title && (
             <p className="mt-1 text-sm text-red-600">{errors.title}</p>
           )}
@@ -315,7 +421,7 @@ export function CreatePollForm() {
                     maxLength={2}
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="file"
                     accept="image/jpeg,image/jpg,image/png"
@@ -327,6 +433,13 @@ export function CreatePollForm() {
                     }}
                     className="text-sm text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
+                  <button
+                    type="button"
+                    onClick={() => openImagePicker('option', option.id)}
+                    className="text-sm px-3 py-1 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors font-medium"
+                  >
+                    📷 Stock Images
+                  </button>
                   {option.image && (
                     <div className="relative group">
                       <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
@@ -339,7 +452,7 @@ export function CreatePollForm() {
                       <button
                         type="button"
                         onClick={() => removeImage(option.id)}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs cursor-pointer"
                         title="Remove image"
                       >
                         ×
@@ -354,7 +467,7 @@ export function CreatePollForm() {
               <button
                 type="button"
                 onClick={() => removeOption(option.id)}
-                className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50"
+                className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 disabled={options.length <= 2}
                 title={options.length <= 2 ? "You need at least 2 options" : "Remove option"}
               >
@@ -367,7 +480,7 @@ export function CreatePollForm() {
         <button
           type="button"
           onClick={addOption}
-          className="mt-4 px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+          className="mt-4 px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors cursor-pointer"
         >
           + Add Option
         </button>
@@ -407,7 +520,7 @@ export function CreatePollForm() {
               </label>
               {isPrivate && participants.length === 0 && (
                 <p className="text-sm text-amber-600 mt-2">
-                  ⚠️ Private polls require at least one participant
+                  &#9888; Private polls require at least one participant
                 </p>
               )}
               {isPrivate && (
@@ -437,7 +550,7 @@ export function CreatePollForm() {
                       />
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                        className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors cursor-pointer"
                       >
                         Add
                       </button>
@@ -453,7 +566,7 @@ export function CreatePollForm() {
                               <button
                                 type="button"
                                 onClick={() => removeParticipant(participant.id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="text-red-500 hover:text-red-700 cursor-pointer"
                                 title="Remove participant"
                               >
                                 ×
@@ -481,7 +594,7 @@ export function CreatePollForm() {
         <button
           type="submit"
           disabled={!isFormValid()}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+          className={`px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
             isFormValid()
               ? 'bg-blue-500 text-white hover:bg-blue-600'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -495,6 +608,14 @@ export function CreatePollForm() {
           <p className="text-sm text-red-600">{errors.submit}</p>
         </div>
       )}
+      
+      {/* Image Picker Modal */}
+      <ImagePickerModal
+        isOpen={imagePickerOpen}
+        onClose={() => setImagePickerOpen(false)}
+        onSelectImage={handleImageSelect}
+        title={imagePickerContext?.type === 'title' ? 'Choose Title Image' : 'Choose Option Image'}
+      />
     </form>
   );
 }
