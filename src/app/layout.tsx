@@ -3,7 +3,11 @@ import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
 import Navbar from '@/components/Navbar';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import StoreProvider from '@/providers/StoreProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import Footer from '@/components/Footer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -15,12 +19,23 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Pickly - Social Voting Made Simple",
-  description: "Create and participate in fun polls with your friends",
+  title: "Polls - Create and Share Polls",
+  description: "Create and share polls with your community. Social voting made fun and easy.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
+    title: "Polls",
+  },
+  openGraph: {
+    title: "Polls - Create and Share Polls",
+    description: "Create and share polls with your community. Social voting made fun and easy.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Polls - Create and Share Polls",
+    description: "Create and share polls with your community. Social voting made fun and easy.",
   },
 };
 
@@ -31,18 +46,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className={`${inter.className} flex flex-col min-h-screen`}>
-        <AuthProvider>
-          <StoreProvider>
-            <Navbar />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <footer className="py-4 text-center text-sm text-slate-500">
-              © {new Date().getFullYear()} Pickly. All rights reserved.
-            </footer>
-          </StoreProvider>
-        </AuthProvider>
+      <body className={inter.className}>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <LanguageProvider>
+              <AuthProvider>
+                <StoreProvider>
+                  <Navbar />
+                  <main className="flex-grow">
+                    <ErrorBoundary>
+                      {children}
+                    </ErrorBoundary>
+                  </main>
+                  <Footer />
+                </StoreProvider>
+              </AuthProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

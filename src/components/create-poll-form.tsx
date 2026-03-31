@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatForDateTimeInput, addDays } from '@/utils/date';
 import { createEmptyReactions } from '@/types/poll';
-import usePollStore from '@/store/pollStore';
+import { useCreatePoll } from '@/hooks/useApi';
 import ImagePickerModal from './ImagePickerModal';
 
 type FormPollOption = {
@@ -37,14 +37,13 @@ export function CreatePollForm() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [newParticipant, setNewParticipant] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [imagePickerContext, setImagePickerContext] = useState<{
     type: 'title' | 'option';
     optionId?: string;
   } | null>(null);
   const router = useRouter();
-  const { createPoll } = usePollStore();
+  const { createPoll, loading, error: submitError } = useCreatePoll();
 
   const addOption = () => {
     setOptions([...options, { id: crypto.randomUUID(), text: '', image: '' }]);
@@ -171,7 +170,7 @@ export function CreatePollForm() {
     return title.trim().length >= 3 && 
            options.filter(opt => opt.text.trim() !== '').length >= 2 &&
            expirationDate &&
-           !isSubmitting;
+           !loading;
   };
 
   // Validation function
@@ -230,392 +229,409 @@ export function CreatePollForm() {
     if (!validateForm()) {
       return;
     }
-
-    setIsSubmitting(true);
     
     try {
       // Create the new poll
-      const newPoll = {
+      const newPoll = await createPoll({
         title: title.trim(),
         description: description.trim() || undefined,
         titleImage: titleImage || undefined,
         expiresAt: new Date(expirationDate),
-        isPublic: !isPrivate,
-        createdBy: 'current-user', // In a real app, this would be the logged-in user
         visibility: (!isPrivate ? 'public' : 'private') as 'public' | 'private',
+        createdBy: 'current-user',
         options: options
           .filter(option => option.text.trim() !== '')
           .map(option => ({
             id: crypto.randomUUID(),
-            pollId: '', // Will be set by the store
+            pollId: '',
             title: option.text.trim(),
             imageUrl: option.image || undefined,
             votes: 0,
             reactions: createEmptyReactions(),
           })),
-      };
-      
-      // Add to store
-      createPoll(newPoll);
+      });
       
       // Redirect to the new poll
-      router.push('/'); // Will redirect to home where the new poll will be shown
-    } catch {
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to create poll:', error);
       setErrors({ submit: 'Failed to create poll. Please try again.' });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const minDate = new Date().toISOString().split('T')[0];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Poll Basics Section */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Poll Basics</h2>
-        
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="title">
-            Poll Title *
-          </label>
-          <div className="space-y-3">
-            <input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (errors.title) {
-                  setErrors(prev => ({ ...prev, title: '' }));
-                }
-              }}
-              className={`w-full p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors ${
-                errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : ''
-              }`}
-              placeholder="What's your poll about?"
-              maxLength={100}
-            />
-            
-            {/* Title Image Upload */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <input
-                type="file"
-                accept="image/jpeg,image/jpg,image/png"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    handleTitleImageUpload(file);
-                  }
-                }}
-                className="text-sm text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-              <button
-                type="button"
-                onClick={() => openImagePicker('title')}
-                className="text-sm px-3 py-1 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors font-medium"
-              >
-                📷 Search Stock Images
-              </button>
-              {titleImage && (
-                <div className="relative group">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src={titleImage} 
-                      alt="Title image preview" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={removeTitleImage}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs cursor-pointer"
-                    title="Remove title image"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {errors.titleImage && (
-                <p className="text-xs text-red-600">{errors.titleImage}</p>
-              )}
-            </div>
-          </div>
-          {errors.title && (
-            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">{title.length}/100 characters</p>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="description">
-            Description (Optional)
-          </label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 min-h-[100px] transition-colors"
-            placeholder="Add more details about your poll..."
-            maxLength={500}
-          />
-          <p className="mt-1 text-xs text-gray-500">{description.length}/500 characters</p>
-        </div>
-
-        <div>
-          <label className="block text-gray-700 mb-2" htmlFor="expiration">
-            Expiration Date *
-          </label>
-          <input
-            id="expiration"
-            type="datetime-local"
-            min={minDate}
-            value={expirationDate}
-            onChange={(e) => {
-              setExpirationDate(e.target.value);
-              if (errors.expiration) {
-                setErrors(prev => ({ ...prev, expiration: '' }));
-              }
-            }}
-            className={`p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors ${
-              errors.expiration ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : ''
-            }`}
-          />
-          {errors.expiration && (
-            <p className="mt-1 text-sm text-red-600">{errors.expiration}</p>
-          )}
-        </div>
-        {errors.options && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{errors.options}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Poll Options Section */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Poll Options</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Add at least 2 options. You can include text, emoji, or upload an image for each option.
-        </p>
-
-        <div className="space-y-4">
-          {options.map((option, index) => (
-            <div key={option.id} className="flex items-start gap-3">
-              <div className="flex-1">
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={option.text}
-                    onChange={(e) => updateOption(option.id, { text: e.target.value })}
-                    className="flex-1 p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
-                    placeholder={`Option ${index + 1}`}
-                    maxLength={50}
-                  />
-                  <input
-                    type="text"
-                    value={option.emoji || ''}
-                    onChange={(e) => updateOption(option.id, { emoji: e.target.value })}
-                    className="w-16 p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
-                    placeholder="😊"
-                    maxLength={2}
-                  />
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Poll Basics Section */}
+        <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Poll Basics</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)] mb-2" htmlFor="title">
+                Poll Title *
+              </label>
+              <div className="space-y-3">
+                <input
+                  id="title"
+                  type="text"
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (errors.title) {
+                      setErrors(prev => ({ ...prev, title: '' }));
+                    }
+                  }}
+                  className={`w-full px-4 py-3 border rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)] ${
+                    errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-[var(--border)]'
+                  }`}
+                  placeholder="What's your poll about?"
+                  maxLength={100}
+                />
+                
+                {/* Title Image Upload */}
+                <div className="flex items-center gap-3 flex-wrap">
                   <input
                     type="file"
                     accept="image/jpeg,image/jpg,image/png"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        handleImageUpload(option.id, file);
+                        handleTitleImageUpload(file);
                       }
                     }}
-                    className="text-sm text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="text-sm text-[var(--text-muted)] file:mr-2 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-[var(--primary-light)] file:text-[var(--primary)] hover:file:bg-[var(--primary)] file:cursor-pointer"
                   />
                   <button
                     type="button"
-                    onClick={() => openImagePicker('option', option.id)}
-                    className="text-sm px-3 py-1 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors font-medium"
+                    onClick={() => openImagePicker('title')}
+                    className="text-sm px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-full hover:bg-[var(--surface)] transition-colors font-medium border border-[var(--primary)]"
                   >
-                    📷 Stock Images
+                    📷 Search Stock Images
                   </button>
-                  {option.image && (
+                  {titleImage && (
                     <div className="relative group">
-                      <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
+                      <div className="w-16 h-16 bg-[var(--surface-2)] rounded-lg overflow-hidden">
                         <img 
-                          src={option.image} 
-                          alt="Option preview" 
+                          src={titleImage} 
+                          alt="Title image preview" 
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <button
                         type="button"
-                        onClick={() => removeImage(option.id)}
+                        onClick={removeTitleImage}
                         className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs cursor-pointer"
-                        title="Remove image"
+                        title="Remove title image"
                       >
                         ×
                       </button>
                     </div>
                   )}
-                  {errors[option.id] && (
-                    <p className="text-xs text-red-600">{errors[option.id]}</p>
+                  {errors.titleImage && (
+                    <p className="text-xs text-red-600">{errors.titleImage}</p>
                   )}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => removeOption(option.id)}
-                className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
-                disabled={options.length <= 2}
-                title={options.length <= 2 ? "You need at least 2 options" : "Remove option"}
-              >
-                ×
-              </button>
+              {errors.title && (
+                <p className="mt-2 text-sm text-red-600">{errors.title}</p>
+              )}
+              <p className="text-xs text-[var(--text-muted)]">{title.length}/100 characters</p>
             </div>
-          ))}
-        </div>
 
-        <button
-          type="button"
-          onClick={addOption}
-          className="mt-4 px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors cursor-pointer"
-        >
-          + Add Option
-        </button>
-      </div>
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)] mb-2" htmlFor="description">
+                Description (Optional)
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-3 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)] min-h-[100px]"
+                placeholder="Add more details about your poll..."
+                maxLength={500}
+              />
+              <p className="text-xs text-[var(--text-muted)] mt-2">{description.length}/500 characters</p>
+            </div>
 
-      {/* Visibility & Privacy Section */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Visibility & Privacy</h2>
-        
-        <div className="space-y-4">
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="public"
-              name="visibility"
-              checked={!isPrivate}
-              onChange={() => setIsPrivate(false)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-            />
-            <label htmlFor="public" className="ml-2 block text-gray-700">
-              Public - Anyone with the link can view and vote
-            </label>
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)] mb-2" htmlFor="expiration">
+                Expiration Date *
+              </label>
+              <input
+                id="expiration"
+                type="datetime-local"
+                min={minDate}
+                value={expirationDate}
+                onChange={(e) => {
+                  setExpirationDate(e.target.value);
+                  if (errors.expiration) {
+                    setErrors(prev => ({ ...prev, expiration: '' }));
+                  }
+                }}
+                className={`w-full px-4 py-3 border rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors ${
+                  errors.expiration ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-[var(--border)]'
+                }`}
+              />
+              {errors.expiration && (
+                <p className="mt-2 text-sm text-red-600">{errors.expiration}</p>
+              )}
+            </div>
           </div>
           
-          <div className="flex items-start">
-            <input
-              type="radio"
-              id="private"
-              name="visibility"
-              checked={isPrivate}
-              onChange={() => setIsPrivate(true)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 mt-1"
-            />
-            <div className="ml-2">
-              <label htmlFor="private" className="block text-gray-700">
-                Private - Only invited participants can view and vote
-              </label>
-              {isPrivate && participants.length === 0 && (
-                <p className="text-sm text-amber-600 mt-2">
-                  &#9888; Private polls require at least one participant
-                </p>
-              )}
-              {isPrivate && (
-                <div className="mt-3 ml-4 space-y-4">
-                  <div className="flex items-center">
+          {errors.options && (
+            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+              <p className="text-sm text-red-600">{errors.options}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Poll Options Section */}
+        <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-4">Poll Options</h2>
+          <p className="font-body text-sm text-[var(--text-muted)] mb-6">
+            Add at least 2 options. You can include text, emoji, or upload an image for each option.
+          </p>
+
+          <div className="space-y-4">
+            {options.map((option, index) => (
+              <div key={option.id} className="flex items-start gap-3">
+                <div className="flex-1">
+                  <div className="flex gap-2 mb-2">
                     <input
-                      type="checkbox"
-                      id="anonymous"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      type="text"
+                      value={option.text}
+                      onChange={(e) => updateOption(option.id, { text: e.target.value })}
+                      className="flex-1 px-4 py-3 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)]"
+                      placeholder={`Option ${index + 1}`}
+                      maxLength={50}
                     />
-                    <label htmlFor="anonymous" className="ml-2 text-gray-700">
-                      Anonymous voting (participants' votes are hidden)
-                    </label>
+                    <input
+                      type="text"
+                      value={option.emoji || ''}
+                      onChange={(e) => updateOption(option.id, { emoji: e.target.value })}
+                      className="w-16 px-3 py-3 border border-[var(--border)] rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors"
+                      placeholder="😊"
+                      maxLength={2}
+                    />
                   </div>
-
-                  <div className="mt-4">
-                    <h3 className="font-medium text-gray-700 mb-2">Invite Participants</h3>
-                    <form onSubmit={addParticipant} className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newParticipant}
-                        onChange={(e) => setNewParticipant(e.target.value)}
-                        className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
-                        placeholder="Enter email or username"
-                      />
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors cursor-pointer"
-                      >
-                        Add
-                      </button>
-                    </form>
-
-                    {participants.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        <h4 className="text-sm font-medium text-gray-700">Invited Participants:</h4>
-                        <ul className="space-y-1">
-                          {participants.map((participant) => (
-                            <li key={participant.id} className="flex justify-between items-center bg-gray-50 p-2 rounded">
-                              <span>{participant.emailOrUsername}</span>
-                              <button
-                                type="button"
-                                onClick={() => removeParticipant(participant.id)}
-                                className="text-red-500 hover:text-red-700 cursor-pointer"
-                                title="Remove participant"
-                              >
-                                ×
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImageUpload(option.id, file);
+                        }
+                      }}
+                      className="text-sm text-[var(--text-muted)] file:mr-2 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-[var(--primary-light)] file:text-[var(--primary)] hover:file:bg-[var(--primary)] file:cursor-pointer"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openImagePicker('option', option.id)}
+                      className="text-sm px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-full hover:bg-[var(--surface)] transition-colors font-medium border border-[var(--primary)]"
+                    >
+                      📷 Stock Images
+                    </button>
+                    {option.image && (
+                      <div className="relative group">
+                        <div className="w-12 h-12 bg-[var(--surface-2)] rounded overflow-hidden">
+                          <img 
+                            src={option.image} 
+                            alt="Option preview" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(option.id)}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs cursor-pointer"
+                          title="Remove image"
+                        >
+                          ×
+                        </button>
                       </div>
+                    )}
+                    {errors[option.id] && (
+                      <p className="text-xs text-red-600">{errors[option.id]}</p>
                     )}
                   </div>
                 </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => removeOption(option.id)}
+                  className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                  disabled={options.length <= 2}
+                  title={options.length <= 2 ? "You need at least 2 options" : "Remove option"}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addOption}
+            className="mt-6 px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-[var(--radius-md)] hover:bg-[var(--primary)] hover:text-white transition-colors font-medium"
+          >
+            + Add Option
+          </button>
+        </div>
+
+        {/* Visibility & Privacy Section */}
+        <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Visibility & Privacy</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="public"
+                name="visibility"
+                checked={!isPrivate}
+                onChange={() => setIsPrivate(false)}
+                className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-[var(--border)]"
+              />
+              <label htmlFor="public" className="ml-2 block text-sm font-medium text-[var(--text)]">
+                Public - Anyone with the link can view and vote
+              </label>
+            </div>
+            
+            <div className="flex items-start">
+              <input
+                type="radio"
+                id="private"
+                name="visibility"
+                checked={isPrivate}
+                onChange={() => setIsPrivate(true)}
+                className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-[var(--border)] mt-1"
+              />
+              <div className="ml-2">
+                <label htmlFor="private" className="block text-sm font-medium text-[var(--text)]">
+                  Private - Only invited participants can view and vote
+                </label>
+                {isPrivate && participants.length === 0 && (
+                  <p className="text-sm text-amber-600 mt-2">
+                    ⚠️ Private polls require at least one participant
+                  </p>
+                )}
+                {isPrivate && (
+                  <div className="mt-3 ml-4 space-y-4">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="anonymous"
+                        checked={isAnonymous}
+                        onChange={(e) => setIsAnonymous(e.target.checked)}
+                        className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-[var(--border)]"
+                      />
+                      <label htmlFor="anonymous" className="ml-2 text-sm text-[var(--text)]">
+                        Anonymous voting (participants' votes are hidden)
+                      </label>
+                    </div>
+
+                    <div className="mt-4">
+                      <h3 className="font-medium text-sm text-[var(--text)] mb-2">Invite Participants</h3>
+                      <form onSubmit={addParticipant} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newParticipant}
+                          onChange={(e) => setNewParticipant(e.target.value)}
+                          className="flex-1 px-4 py-3 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)]"
+                          placeholder="Enter email or username"
+                        />
+                        <button
+                          type="submit"
+                          className="px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-[var(--radius-md)] hover:bg-[var(--primary)] hover:text-white transition-colors font-medium"
+                        >
+                          Add
+                        </button>
+                      </form>
+
+                      {participants.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          <h4 className="text-sm font-medium text-[var(--text)]">Invited Participants:</h4>
+                          <ul className="space-y-1">
+                            {participants.map((participant) => (
+                              <li key={participant.id} className="flex justify-between items-center bg-[var(--surface-2)] p-2 rounded-[var(--radius-sm)]">
+                                <span className="text-sm text-[var(--text)]">{participant.emailOrUsername}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeParticipant(participant.id)}
+                                  className="text-red-500 hover:text-red-700 cursor-pointer"
+                                  title="Remove participant"
+                                >
+                                  ×
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Submit Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="text-sm text-gray-600">
-          <p>• Title is required (min. 3 characters)</p>
-          <p>• At least 2 options required</p>
-          <p>• Images must be JPG or PNG (max 5MB)</p>
+        {/* Submit Button */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="text-sm text-[var(--text-muted)]">
+            <p>• Title is required (min. 3 characters)</p>
+            <p>• At least 2 options required</p>
+            <p>• Images must be JPG or PNG (max 5MB)</p>
+          </div>
+          <button
+            type="submit"
+            disabled={!isFormValid()}
+            className={`px-8 py-3 rounded-[var(--radius-md)] font-medium transition-all ${
+              isFormValid()
+                ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white hover:shadow-lg'
+                : 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed opacity-50'
+            }`}
+          >
+            {loading ? 'Creating...' : 'Create Poll'}
+          </button>
         </div>
-        <button
-          type="submit"
-          disabled={!isFormValid()}
-          className={`px-6 py-3 rounded-lg font-medium transition-colors cursor-pointer ${
-            isFormValid()
-              ? 'bg-blue-500 text-white hover:bg-blue-600'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          {isSubmitting ? 'Creating...' : 'Create Poll'}
-        </button>
-      </div>
-      {errors.submit && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{errors.submit}</p>
-        </div>
-      )}
-      
-      {/* Image Picker Modal */}
-      <ImagePickerModal
-        isOpen={imagePickerOpen}
-        onClose={() => setImagePickerOpen(false)}
-        onSelectImage={handleImageSelect}
-        title={imagePickerContext?.type === 'title' ? 'Choose Title Image' : 'Choose Option Image'}
-      />
-    </form>
+        
+        {(submitError || errors.submit) && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+            <div className="flex items-start gap-3">
+              <div className="text-red-500 mt-0.5">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-800 mb-1">Failed to create poll</p>
+                <p className="text-sm text-red-600">{submitError?.message || errors.submit}</p>
+                <button
+                  onClick={() => {
+                    setErrors(prev => ({ ...prev, submit: '' }));
+                  }}
+                  className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Image Picker Modal */}
+        <ImagePickerModal
+          isOpen={imagePickerOpen}
+          onClose={() => setImagePickerOpen(false)}
+          onSelectImage={handleImageSelect}
+          title={imagePickerContext?.type === 'title' ? 'Choose Title Image' : 'Choose Option Image'}
+        />
+      </form>
+    </div>
   );
 }

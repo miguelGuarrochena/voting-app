@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { 
@@ -9,12 +10,15 @@ import {
   MagnifyingGlassIcon, 
   FireIcon, 
   UserCircleIcon,
-  PlusIcon
+  PlusIcon,
+  CogIcon
 } from '@heroicons/react/24/outline';
 import { getCreatorAvatar } from '@/data/mockPolls';
+import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -54,7 +58,7 @@ export default function Navbar() {
     return (
       <>
         {/* Top minimal bar */}
-        <div className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-b border-[var(--border)]">
+        <div className="fixed top-0 left-0 right-0 z-40 bg-[var(--surface)]/95 backdrop-blur-xl border-b border-[var(--border)]">
           <div className="flex items-center justify-between px-4 py-3">
             <Link href="/" className="flex items-center space-x-2">
               <span className="text-lg sm:text-xl font-bold text-[var(--primary)] font-display">✨ Pickly</span>
@@ -65,6 +69,7 @@ export default function Navbar() {
                   {getCreatorAvatar(user?.name || 'User')}
                 </div>
               )}
+              <ThemeLanguageSwitcher />
               <Link
                 href="/create"
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--primary)] flex items-center justify-center text-white shadow-lg"
@@ -76,7 +81,7 @@ export default function Navbar() {
         </div>
 
         {/* Bottom tab bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-[var(--border)]">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--surface)]/95 backdrop-blur-xl border-t border-[var(--border)]">
           <div className="flex items-center justify-around py-1 sm:py-2 pb-[env(safe-area-inset-bottom)]">
             <Link
               href="/"
@@ -85,7 +90,7 @@ export default function Navbar() {
               }`}
             >
               <HomeIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="text-xs mt-1">Home</span>
+              <span className="text-xs mt-1">{t('nav.home')}</span>
             </Link>
 
             <Link
@@ -95,7 +100,17 @@ export default function Navbar() {
               }`}
             >
               <MagnifyingGlassIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="text-xs mt-1">Explore</span>
+              <span className="text-xs mt-1">{t('nav.explore')}</span>
+            </Link>
+
+            <Link
+              href="/spin"
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+                pathname === '/spin' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+              }`}
+            >
+              <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
+              <span className="text-xs mt-1">{t('nav.spin')}</span>
             </Link>
 
             {/* Center CREATE button */}
@@ -113,7 +128,7 @@ export default function Navbar() {
               }`}
             >
               <FireIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="text-xs mt-1">Trending</span>
+              <span className="text-xs mt-1">{t('nav.trending')}</span>
               {pathname === '/trending' && (
                 <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               )}
@@ -121,13 +136,13 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <Link
-                href="/profile"
+                href="/settings"
                 className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-                  pathname === '/profile' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                  pathname === '/settings' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
                 }`}
               >
-                <UserCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-xs mt-1">Profile</span>
+                <CogIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-xs mt-1">{t('nav.settings')}</span>
               </Link>
             ) : (
               <Link
@@ -135,7 +150,7 @@ export default function Navbar() {
                 className="flex flex-col items-center p-2 rounded-lg transition-colors text-[var(--text-muted)]"
               >
                 <UserCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-xs mt-1">Login</span>
+                <span className="text-xs mt-1">{t('nav.login')}</span>
               </Link>
             )}
           </div>
@@ -150,8 +165,8 @@ export default function Navbar() {
 
   // Desktop navbar
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-b border-[var(--border)] transition-all ${
-      scrolled ? 'shadow-sm' : ''
+    <nav className={`fixed top-0 left-0 right-0 z-40 bg-[var(--surface)]/95 backdrop-blur-xl border-b border-[var(--border)] transition-all ${
+      scrolled ? 'shadow-lg' : ''
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
@@ -168,7 +183,7 @@ export default function Navbar() {
                 pathname === '/' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
-              Explore
+              {t('nav.explore')}
               {pathname === '/' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
@@ -181,9 +196,23 @@ export default function Navbar() {
                 pathname === '/trending' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
-              <span>Trending</span>
+              <span>{t('nav.trending')}</span>
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               {pathname === '/trending' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
+              )}
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
+            </Link>
+
+            <Link
+              href="/spin"
+              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
+                pathname === '/spin' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              <CogIcon className="w-5 h-5 animate-spin" />
+              <span>{t('nav.spin')}</span>
+              {pathname === '/spin' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
@@ -195,7 +224,7 @@ export default function Navbar() {
                 pathname === '/create' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
-              Create
+              {t('nav.create')}
               {pathname === '/create' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
@@ -205,6 +234,7 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center space-x-3 sm:space-x-4">
+            <ThemeLanguageSwitcher />
             {isAuthenticated ? (
               <>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-sm font-medium">
@@ -214,7 +244,7 @@ export default function Navbar() {
                   href="/create"
                   className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base"
                 >
-                  Create Poll
+                  {t('nav.createPoll')}
                 </Link>
               </>
             ) : (
@@ -223,13 +253,13 @@ export default function Navbar() {
                   href="/auth/login"
                   className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium transition-colors text-sm sm:text-base"
                 >
-                  Login
+                  {t('nav.login')}
                 </Link>
                 <Link
                   href="/auth/signup"
                   className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base"
                 >
-                  Sign up
+                  {t('nav.signup')}
                 </Link>
               </>
             )}

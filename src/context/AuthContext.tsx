@@ -1,45 +1,69 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-} | null;
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authService, User } from '@/services/authService';
 
 type AuthContextType = {
-  user: User;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+    setLoading(false);
+  }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock login - in a real app, this would be an API call
-    return new Promise<boolean>((resolve) => {
-      setTimeout(() => {
-        setUser({
-          id: '1',
-          name: 'Test User',
-          email: email,
-        });
-        resolve(true);
-      }, 500);
-    });
+    setLoading(true);
+    try {
+      const result = await authService.signIn({ email, password });
+      setUser(result.user);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
+  const signup = async (name: string, email: string, password: string) => {
+    setLoading(true);
+    try {
+      const result = await authService.signUp({ name, email, password });
+      setUser(result.user);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await authService.signOut();
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      signup, 
+      logout, 
+      isAuthenticated: !!user,
+      loading
+    }}>
       {children}
     </AuthContext.Provider>
   );

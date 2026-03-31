@@ -5,19 +5,25 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { PollCard } from '@/components/PollCard';
-import usePollStore from '@/store/pollStore';
+import { usePolls } from '@/hooks/useApi';
+import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { Poll } from '@/types/poll';
+import EmptyPollsState from '@/components/EmptyPollsState';
 
 export default function Home() {
   const router = useRouter();
-  const { polls, loadPolls, isLoading } = usePollStore();
+  const { polls, loading, error, refreshPolls } = usePolls();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<'trending' | 'recent' | 'expiring'>('trending');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [visibleCards, setVisibleCards] = useState(1);
 
   useEffect(() => {
-    loadPolls();
-  }, [loadPolls]);
+    // Data is automatically loaded by usePolls hook
+  }, []);
 
   // Debounce search query
   useEffect(() => {
@@ -42,21 +48,55 @@ export default function Home() {
     return () => window.removeEventListener('resize', updateVisibleCards);
   }, []);
 
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4">
+            <svg className="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <p className="text-gray-600">{t('home.loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
   // Get active polls for live strip
-  const activePolls = polls.filter(poll => 
+  const activePolls = (polls || []).filter(poll => 
     new Date(poll.expiresAt) > new Date() && poll.visibility === 'public'
-  ).slice(0, 6); // Allow more for carousel
+  ).slice(0, 6);
 
   // Check if carousel should be enabled
   const shouldUseCarousel = activePolls.length > visibleCards;
 
   // Get filtered polls for main feed
-  const filteredPolls = polls.filter(poll => {
+  const filteredPolls = (polls || []).filter(poll => {
     const isPublic = poll.visibility === 'public';
     const matchesSearch = debouncedSearch === '' || 
       poll.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
       poll.description?.toLowerCase().includes(debouncedSearch.toLowerCase());
     return isPublic && matchesSearch;
+  });
+
+  // Apply filter logic
+  const sortedPolls = [...filteredPolls].sort((a, b) => {
+    switch (filter) {
+      case 'trending':
+        // Sort by total votes and reactions
+        const aEngagement = a.options.reduce((sum, opt) => sum + opt.votes + Object.values(opt.reactions).reduce((s, v) => s + v, 0), 0);
+        const bEngagement = b.options.reduce((sum, opt) => sum + opt.votes + Object.values(opt.reactions).reduce((s, v) => s + v, 0), 0);
+        return bEngagement - aEngagement;
+      case 'recent':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'expiring':
+        return new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime();
+      default:
+        return 0;
+    }
   });
 
   const scrollToLivePolls = () => {
@@ -78,7 +118,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            What does <span className="text-gradient">everyone</span> think?
+            {t('home.hero.title')} <span className="text-gradient">{t('home.hero.titleHighlight')}</span>{t('home.hero.titleEnd')}
           </motion.h1>
           
           <motion.p 
@@ -87,7 +127,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            Vote on anything. Share it instantly. See results in real time.
+            {t('home.hero.subtitle')}
           </motion.p>
           
           <motion.div 
@@ -96,17 +136,26 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <Link 
-              href="/create" 
-              className="bg-[var(--primary)] text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm md:text-base"
-            >
-              Create a poll →
-            </Link>
+            {isAuthenticated ? (
+              <Link 
+                href="/create" 
+                className="bg-[var(--primary)] text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm md:text-base"
+              >
+                {t('home.createPoll')}
+              </Link>
+            ) : (
+              <Link 
+                href="/auth/signup" 
+                className="bg-[var(--primary)] text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm md:text-base"
+              >
+                {t('nav.getStarted')} →
+              </Link>
+            )}
             <button 
               onClick={scrollToLivePolls}
               className="border-2 border-[var(--primary)] text-[var(--primary)] px-6 md:px-8 py-3 md:py-4 rounded-full font-medium hover:bg-[var(--primary-light)] transition-colors text-sm md:text-base"
             >
-              Browse polls
+              {t('home.browsePolls')}
             </button>
           </motion.div>
         </div>
@@ -123,7 +172,7 @@ export default function Home() {
               filter: 'none',
               backdropFilter: 'none',
               opacity: 1
-            }}>Live now</h2>
+            }}>{t('home.liveNow')}</h2>
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
           </div>
           
@@ -205,9 +254,9 @@ export default function Home() {
                 <PollCard poll={poll} compact={true} />
               </motion.div>
             ))}
-            {activePolls.length === 0 && !isLoading && (
+            {(activePolls || []).length === 0 && !loading && (
               <div className={`${shouldUseCarousel ? 'flex-none w-full' : 'col-span-full'} text-center py-8 text-[var(--text-muted)]`}>
-                No active polls at the moment.
+                {t('home.noActivePolls')}
               </div>
             )}
           </div>
@@ -218,64 +267,65 @@ export default function Home() {
       <div className="px-4 sm:px-6 lg:px-8 pb-12 md:pb-16">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-4 mb-6">
-            {/* Search Bar */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search polls by title or description..."
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm transition-colors"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            {/* Search and Filter */}
+            <div className="mb-8">
+              <div className="flex flex-col sm:flex-row gap-4 items-center">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t('home.searchPlaceholder')}
+                    className="w-full px-4 py-3 pl-12 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)]"
+                  />
+                  <svg className="absolute left-4 top-3.5 w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-xl md:text-2xl font-bold text-[var(--text)] font-display">
-                {debouncedSearch ? `Search Results (${filteredPolls.length})` : 'What\'s happening'}
-              </h2>
-              
-              {/* Filter Pills */}
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { key: 'trending', label: 'Trending', icon: '🔥' },
-                  { key: 'recent', label: 'Recent', icon: '' },
-                  { key: 'expiring', label: 'Ending Soon', icon: '' }
-                ].map((filterOption) => (
+                </div>
+                
+                <div className="flex gap-2">
                   <button
-                    key={filterOption.key}
-                    onClick={() => setFilter(filterOption.key as any)}
-                    className={`px-3 md:px-4 py-2 rounded-full font-medium transition-colors text-sm md:text-base ${
-                      filter === filterOption.key
+                    onClick={() => setFilter('trending')}
+                    className={`px-4 py-3 rounded-[var(--radius-md)] font-medium transition-colors ${
+                      filter === 'trending'
                         ? 'bg-[var(--primary)] text-white'
-                        : 'bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
+                        : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)]'
                     }`}
                   >
-                    {filterOption.icon && <span className="mr-1">{filterOption.icon}</span>}
-                    {filterOption.label}
+                    {t('home.trending')}
                   </button>
-                ))}
+                  <button
+                    onClick={() => setFilter('recent')}
+                    className={`px-4 py-3 rounded-[var(--radius-md)] font-medium transition-colors ${
+                      filter === 'recent'
+                        ? 'bg-[var(--primary)] text-white'
+                        : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)]'
+                    }`}
+                  >
+                    {t('home.recent')}
+                  </button>
+                  <button
+                    onClick={() => setFilter('expiring')}
+                    className={`px-4 py-3 rounded-[var(--radius-md)] font-medium transition-colors ${
+                      filter === 'expiring'
+                        ? 'bg-[var(--primary)] text-white'
+                        : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)]'
+                    }`}
+                  >
+                    {t('home.expiringSoon')}
+                  </button>
+                </div>
               </div>
             </div>
+
+            <h2 className="text-xl md:text-2xl font-bold text-[var(--text)] font-display">
+              {debouncedSearch ? `${t('home.searchResults')} (${filteredPolls.length})` : t('home.whatsHappening')}
+            </h2>
           </div>
 
           {/* Polls Grid - Responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 items-stretch">
-            {filteredPolls.map((poll, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {sortedPolls.map((poll: Poll, index: number) => (
               <motion.div
                 key={poll.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -287,15 +337,15 @@ export default function Home() {
             ))}
           </div>
 
-          {isLoading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mt-6">
+          {loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mt-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-[var(--border)] animate-pulse">
-                  <div className="h-[200px] bg-gray-200" />
-                  <div className="p-4 space-y-4">
+                <div key={i} className="bg-white rounded-3xl shadow-sm overflow-hidden border border-border animate-pulse">
+                  <div className="h-48 bg-gray-200" />
+                  <div className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gray-200" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-full bg-gray-200" />
                         <div className="h-4 w-24 bg-gray-200 rounded" />
                       </div>
                       <div className="h-6 w-16 bg-gray-200 rounded-full" />
@@ -311,17 +361,30 @@ export default function Home() {
             </div>
           )}
 
-          {!isLoading && filteredPolls.length === 0 && (
-            <div className="text-center py-12 md:py-16">
-              <div className="text-4xl md:text-5xl mb-4">📊</div>
-              <p className="text-[var(--text-muted)] text-base md:text-lg mb-6">No polls found. Be the first to create one!</p>
-              <Link
-                href="/create"
-                className="inline-block bg-[var(--primary)] text-white px-6 py-3 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
-              >
-                Create a Poll
-              </Link>
+          {error && !loading && (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">⚠️</div>
+              <p className="text-text-muted text-lg mb-2">{t('home.failedToLoad')}</p>
+              <p className="text-text-muted text-sm mb-6">{error.message}</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={refreshPolls}
+                  className="inline-block bg-primary text-white px-6 py-3 rounded-full font-medium hover:bg-primary-dark transition-colors"
+                >
+                  {t('home.tryAgain')}
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-block bg-surface text-text px-6 py-3 rounded-full font-medium hover:bg-surface-2 transition-colors"
+                >
+                  {t('home.refreshPage')}
+                </button>
+              </div>
             </div>
+          )}
+
+          {!loading && !error && sortedPolls.length === 0 && (
+            <EmptyPollsState onRefresh={refreshPolls} loading={loading} />
           )}
         </div>
       </div>
