@@ -41,6 +41,7 @@ module.exports = {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'spin-occasional': 'spinOccasional 8s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -50,6 +51,14 @@ module.exports = {
         slideUp: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        spinOccasional: {
+          '0%, 70%': { transform: 'rotate(0deg)' },
+          '75%': { transform: 'rotate(90deg)' },
+          '80%': { transform: 'rotate(180deg)' },
+          '85%': { transform: 'rotate(270deg)' },
+          '90%': { transform: 'rotate(360deg)' },
+          '95%, 100%': { transform: 'rotate(360deg)' },
         },
       },
     },

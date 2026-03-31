@@ -143,7 +143,7 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
     }
   }, [isExpired, handleReaction]);
 
-  const cardHeight = compact ? 'h-[480px] sm:h-[520px]' : 'h-[580px] sm:h-[620px]';
+  const cardHeight = compact ? 'h-[400px] sm:h-[440px]' : 'h-[480px] sm:h-[520px]';
   
   return (
     <div className={`block ${className}`}>
@@ -155,7 +155,7 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
         onClick={() => window.location.href = `/polls/${poll.id}`}
       >
         {/* Image Section */}
-        <div className="relative h-48 sm:h-52 flex-shrink-0 rounded-t-3xl overflow-hidden">
+        <div className="relative h-36 sm:h-40 flex-shrink-0 rounded-t-3xl overflow-hidden">
           {mainImage && !imageError ? (
             <>
               <div 
@@ -202,8 +202,8 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
               style={{ background: getGradient(poll.title) }}
             >
               {/* Avatar Circle */}
-              <div className="w-28 h-28 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
-                <span className="text-6xl font-bold text-white drop-shadow-lg">
+              <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
+                <span className="text-4xl font-bold text-white drop-shadow-lg">
                   {poll.title.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -227,79 +227,80 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
         
         {/* Content Section */}
         <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Title and Meta */}
-          <div className="p-5 sm:p-6 flex-shrink-0">
-            <h3 className="font-display font-bold text-text text-xl sm:text-2xl mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+          {/* Title and Meta - Simplified */}
+          <div className="p-4 sm:p-5 flex-shrink-0">
+            <h3 className="font-display font-bold text-text text-lg sm:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
               {poll.title}
             </h3>
             
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3 text-sm text-text-muted">
-                <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center text-primary text-sm font-medium">
+            {/* Meta info - Minimal */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-xs text-text-muted">
+                <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-primary text-xs font-medium">
                   {getCreatorAvatar(poll.createdBy)}
                 </div>
-                <span className="hidden sm:inline">·</span>
-                <span className="hidden sm:inline">{mounted ? formatDistanceToNow(poll.createdAt, { addSuffix: true }) : 'loading'}</span>
+                <span>{totalVotes} votes</span>
               </div>
               
-              <div className="text-sm font-medium text-primary">
-                {totalVotes} votes
+              {/* Status indicator */}
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                isExpired 
+                  ? 'bg-gray-100 text-gray-600' 
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {!isExpired && <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />}
+                {isExpired ? 'Ended' : 'Active'}
               </div>
             </div>
-
-            {poll.description && (
-              <p className="text-text-muted text-sm line-clamp-2 mb-4">
-                {poll.description}
-              </p>
-            )}
           </div>
           
-          {/* Options */}
-          <div className="flex-1 overflow-y-auto px-5 sm:px-6 pb-4">
+          {/* Options - Cleaner design */}
+          <div className="flex-1 px-4 sm:px-5 pb-4">
             <div className="space-y-3">
-              {poll.options.slice(0, compact ? 3 : undefined).map((option: any, index: any) => {
+              {poll.options.slice(0, compact ? 2 : 3).map((option: any, index: any) => {
                 const percentage = totalVotes > 0 ? Math.min(Math.round((getPositiveVotes(option.reactions) / totalVotes) * 100), 100) : 0;
-                const animatedPercentage = animatedPercentages[option.id] || 0;
                 const topReactions = getTopReactions(option.reactions);
                 const hasVotedForOption = votedOption === option.id;
-                const userReaction = userReactions[option.id];
                 
                 return (
                   <div
                     key={option.id}
-                    className={`relative group transition-all rounded-2xl overflow-hidden ${
-                      !isExpired && !hasVoted ? 'hover:bg-surface-2 cursor-pointer' : ''
+                    className={`relative group transition-all rounded-2xl overflow-hidden border ${
+                      !isExpired && !hasVoted ? 'hover:border-primary hover:shadow-md cursor-pointer' : 'border-transparent'
                     } ${hasVotedForOption ? 'border-2 border-primary bg-primary/5' : 'bg-surface'}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleVoteClick(option.id);
                     }}
                   >
-                    <div className="p-3 sm:p-4">
+                    <div className="p-3">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           {option.imageUrl && !optionImageErrors[option.id] ? (
-                            <Image
-                              src={option.imageUrl}
-                              alt={option.title}
-                              width={24}
-                              height={24}
-                              className="rounded-lg object-cover flex-shrink-0"
-                              onError={() => setOptionImageErrors(prev => ({ ...prev, [option.id]: true }))}
-                            />
+                            <div className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+                              <Image
+                                src={option.imageUrl}
+                                alt={option.title}
+                                fill
+                                className="object-cover"
+                                onError={() => setOptionImageErrors(prev => ({ ...prev, [option.id]: true }))}
+                              />
+                            </div>
                           ) : (
-                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-surface-2 flex items-center justify-center text-xs sm:text-sm font-medium text-text-muted flex-shrink-0">
+                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getGradient(option.title)} flex items-center justify-center text-white font-medium text-sm flex-shrink-0`}>
                               {option.title.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <span className="font-medium text-sm sm:text-base text-text truncate">
+                          <span className="font-medium text-sm text-text truncate">
                             {option.title}
                           </span>
                           {hasVotedForOption && (
-                            <span className="text-primary text-sm sm:text-base">✓</span>
+                            <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs">
+                              ✓
+                            </div>
                           )}
                         </div>
-                        <span className="text-sm sm:text-base font-bold text-primary ml-2">
+                        <span className="text-sm font-bold text-primary">
                           {percentage}%
                         </span>
                       </div>
@@ -310,31 +311,24 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
                           className="bg-gradient-to-r from-primary to-primary-dark h-full rounded-full origin-left"
                           initial={{ scaleX: 0 }}
                           animate={{ scaleX: percentage / 100 }}
-                          transition={{ duration: 0.8, delay: index * 0.1 }}
+                          transition={{ duration: 0.6, delay: index * 0.1 }}
                           style={{ transformOrigin: 'left' }}
                         />
                       </div>
                       
-                      {/* Reaction Pills */}
+                      {/* Top reactions - Minimal */}
                       {topReactions.length > 0 && (
-                        <div className="flex gap-1.5 flex-wrap mt-2">
-                          {topReactions.map(([emoji, count]) => (
-                            <button
-                              key={emoji}
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
-                                userReaction === emoji
-                                  ? 'bg-primary text-white'
-                                  : 'bg-primary-light text-primary hover:bg-primary hover:text-white'
-                              }`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleReactionClick(option.id, emoji);
-                              }}
-                            >
-                              <span>{emoji}</span>
-                              <span>{count}</span>
-                            </button>
-                          ))}
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="flex gap-1">
+                            {topReactions.slice(0, 2).map(([emoji, count]) => (
+                              <span key={emoji} className="text-xs bg-surface-2 px-2 py-1 rounded-full">
+                                {emoji} {count}
+                              </span>
+                            ))}
+                          </div>
+                          {topReactions.length > 2 && (
+                            <span className="text-xs text-text-muted">+{topReactions.length - 2}</span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -342,25 +336,25 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
                 );
               })}
               
-              {compact && poll.options.length > 3 && (
+              {compact && poll.options.length > 2 && (
                 <div className="text-center py-2">
-                  <span className="text-sm text-text-muted">
-                    +{poll.options.length - 3} more options
+                  <span className="text-sm text-primary font-medium cursor-pointer hover:text-primary-dark">
+                    See all {poll.options.length} options →
                   </span>
                 </div>
               )}
             </div>
           </div>
           
-          {/* Footer */}
-          <div className="flex items-center justify-between p-5 sm:p-6 border-t border-border flex-shrink-0 bg-surface/50">
-            <div className="text-sm text-text-muted">
-              {mounted ? timeRemaining.replace('in ', '') : 'loading'}
-            </div>
+          {/* Footer - Minimal */}
+          <div className="flex items-center justify-between p-4 sm:p-5 border-t border-border flex-shrink-0 bg-surface/30">
+            <span className="text-xs text-text-muted">
+              {mounted ? formatDistanceToNow(poll.createdAt, { addSuffix: true }).replace('about ', '') : 'now'}
+            </span>
             
-            <span className="text-sm font-medium text-primary hover:text-primary-dark flex items-center gap-1 transition-colors">
-              View details
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span className="text-xs font-medium text-primary hover:text-primary-dark flex items-center gap-1 transition-colors cursor-pointer">
+              View poll
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </span>

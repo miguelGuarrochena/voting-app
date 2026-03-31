@@ -212,29 +212,89 @@ export default function PollDetail({ pollId }: PollDetailProps) {
       
       {/* Tabs */}
       <div className="bg-white rounded-[24px] shadow-[var(--shadow-sm)] border border-[var(--border)] p-2 mb-6">
-        <div className="flex gap-2">
-          <button
+        <div className="flex gap-2 relative">
+          {/* Animated background indicator */}
+          <motion.div
+            className="absolute inset-y-2 bg-[var(--primary)] rounded-full transition-all duration-300"
+            style={{
+              width: 'calc(50% - 4px)',
+              left: activeTab === 'vote' ? '4px' : 'calc(50% + 4px)',
+            }}
+            layout
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 30 
+            }}
+          />
+          
+          <motion.button
             onClick={() => setActiveTab('vote')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium transition-all min-h-[44px] ${
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium transition-all min-h-[44px] relative z-10 ${
               activeTab === 'vote'
-                ? 'bg-[var(--primary)] text-white'
-                : 'text-[var(--text-muted)] hover:bg-[var(--surface)]'
+                ? 'text-white'
+                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
+            whileTap={{ scale: 0.92 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 400, 
+              damping: 25 
+            }}
           >
-            <span>🗳️</span>
-            <span className="hidden sm:inline">Vote</span>
-          </button>
-          <button
+            <motion.svg 
+              className="w-5 h-5" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+              animate={{ 
+                rotate: activeTab === 'vote' ? [0, -5, 5, 0] : 0 
+              }}
+              transition={{ 
+                duration: 0.5, 
+                repeat: activeTab === 'vote' ? Infinity : 0,
+                repeatDelay: 2
+              }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </motion.svg>
+            <span>Vote</span>
+            <span className="hidden sm:inline">on poll</span>
+          </motion.button>
+          <motion.button
             onClick={() => setActiveTab('results')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium transition-all min-h-[44px] ${
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium transition-all min-h-[44px] relative z-10 ${
               activeTab === 'results'
-                ? 'bg-[var(--primary)] text-white'
-                : 'text-[var(--text-muted)] hover:bg-[var(--surface)]'
+                ? 'text-white'
+                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
+            whileTap={{ scale: 0.92 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 400, 
+              damping: 25 
+            }}
           >
-            <span>🏆</span>
-            <span className="hidden sm:inline">Results</span>
-          </button>
+            <motion.svg 
+              className="w-5 h-5" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+              animate={{ 
+                rotate: activeTab === 'results' ? [0, -5, 5, 0] : 0 
+              }}
+              transition={{ 
+                duration: 0.5, 
+                repeat: activeTab === 'results' ? Infinity : 0,
+                repeatDelay: 2
+              }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </motion.svg>
+            <span>Results</span>
+          </motion.button>
         </div>
       </div>
       
@@ -243,10 +303,13 @@ export default function PollDetail({ pollId }: PollDetailProps) {
         {activeTab === 'vote' && (
           <motion.div
             key="vote"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -30 }}
+            transition={{ 
+              duration: 0.4, 
+              ease: [0.16, 1, 0.3, 1] // More dramatic easing
+            }}
           >
             <VoteTab
               poll={poll}
@@ -268,10 +331,13 @@ export default function PollDetail({ pollId }: PollDetailProps) {
         {activeTab === 'results' && (
           <motion.div
             key="results"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -30 }}
+            transition={{ 
+              duration: 0.4, 
+              ease: [0.16, 1, 0.3, 1] // More dramatic easing
+            }}
           >
             <ResultsTab
               poll={poll}
@@ -711,81 +777,152 @@ function ResultsTab({
       )}
       
       {/* Full Results List */}
-      <div className="bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-sm)] border border-[var(--border)] p-6 flex flex-col max-h-[400px]">
-        <h3 className="font-display text-xl font-bold text-[var(--text)] mb-6 flex-shrink-0">Complete Results</h3>
-        <div className="space-y-4 overflow-y-auto flex-1">
+      <div className="bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4 sm:p-6 flex flex-col max-h-[400px]">
+        <h3 className="font-display text-lg sm:text-xl font-bold text-[var(--text)] mb-4 sm:mb-6 flex-shrink-0">Complete Results</h3>
+        <div className="space-y-3 sm:space-y-4 overflow-y-auto flex-1">
           {sortedOptions.map((option, index) => {
             const optionVotes = getPositiveVotes(option.reactions);
             const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
             const topReactions = getTopReactions(option.reactions);
             
             return (
-              <div key={option.id} className="grid grid-cols-[32px_40px_1fr_50px_160px_40px] items-center gap-4">
+              <div key={option.id} className="grid grid-cols-[32px_1fr_auto] sm:grid-cols-[32px_40px_1fr_50px_160px_40px] items-center gap-2 sm:gap-4">
                 {/* Rank */}
-                <div className="w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-sm">
+                <div className="w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
                   {index + 1}
                 </div>
                 
-                {/* Option Image */}
-                {option.imageUrl ? (
-                  <div className="w-10 h-10 rounded-lg overflow-hidden relative">
-                    <Image
-                      src={option.imageUrl}
-                      alt={option.title}
-                      width={40}
-                      height={40}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Hide broken image and show fallback
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `<div class="w-full h-full rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-sm">${option.title.charAt(0).toUpperCase()}</div>`;
-                        }
-                      }}
-                    />
+                {/* Mobile Layout - Combined content */}
+                <div className="sm:hidden min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    {/* Option Image */}
+                    {option.imageUrl ? (
+                      <div className="w-8 h-8 rounded-lg overflow-hidden relative flex-shrink-0">
+                        <Image
+                          src={option.imageUrl}
+                          alt={option.title}
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `<div class="w-full h-full rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-xs">${option.title.charAt(0).toUpperCase()}</div>`;
+                            }
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-xs flex-shrink-0`}>
+                        {option.title.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    
+                    {/* Option Name */}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-[var(--text)] text-sm truncate">{option.title}</h4>
+                    </div>
+                    
+                    {/* Percentage */}
+                    <div className="text-sm font-bold text-[var(--primary)] flex-shrink-0">
+                      {percentage}%
+                    </div>
                   </div>
-                ) : (
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-sm`}>
-                    {option.title.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                
-                {/* Option Name and Progress */}
-                <div className="min-w-0">
-                  <div className="mb-1">
-                    <h4 className="font-medium text-[var(--text)] truncate">{option.title}</h4>
-                  </div>
-                  <div className="progress-bar-container w-full bg-[var(--surface)] rounded-full h-2">
+                  
+                  {/* Progress Bar */}
+                  <div className="progress-bar-container w-full bg-[var(--surface)] rounded-full h-2 mb-2">
                     <div
                       className="progress-bar-fill bg-[var(--primary)] h-full rounded-full"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                </div>
-                
-                {/* Percentage Column - Fixed width 50px */}
-                <div className="text-sm font-medium text-[var(--text)] text-right pr-2">
-                  {percentage}%
-                </div>
-                
-                {/* Reactions Column - Fixed width 160px */}
-                {topReactions.length > 0 ? (
-                  <div className="flex gap-1 items-center">
-                    {topReactions.map(([emoji, count]) => (
-                      <span key={emoji} className="bg-[var(--primary-light)] text-[var(--primary)] px-2 py-1 rounded-lg text-xs font-medium inline-flex items-center">
-                        {emoji} {count}
-                      </span>
-                    ))}
+                  
+                  {/* Reactions and Vote Count - Centered */}
+                  <div className="flex items-center justify-center gap-3">
+                    {topReactions.length > 0 ? (
+                      <div className="flex gap-1 items-center">
+                        {topReactions.slice(0, 2).map(([emoji, count]) => (
+                          <span key={emoji} className="bg-[var(--primary-light)] text-[var(--primary)] px-1.5 py-0.5 rounded text-xs font-medium">
+                            {emoji} {count}
+                          </span>
+                        ))}
+                        {topReactions.length > 2 && (
+                          <span className="text-[var(--text-muted)] text-xs">+{topReactions.length - 2}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-[var(--text-muted)] text-xs">No reactions</div>
+                    )}
+                    <div className="text-xs text-[var(--text-muted)] font-medium">
+                      {optionVotes} {optionVotes === 1 ? 'vote' : 'votes'}
+                    </div>
                   </div>
-                ) : (
-                  <div></div>
-                )}
+                </div>
                 
-                {/* Vote Count Column - Fixed width 40px */}
-                <div className="text-sm text-[var(--text-muted)] font-medium text-right">
-                  {optionVotes}
+                {/* Desktop Layout - Original structure */}
+                <div className="hidden sm:grid grid-cols-subgrid gap-4 col-span-5 items-center">
+                  {/* Option Image */}
+                  {option.imageUrl ? (
+                    <div className="w-10 h-10 rounded-lg overflow-hidden relative">
+                      <Image
+                        src={option.imageUrl}
+                        alt={option.title}
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `<div class="w-full h-full rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-sm">${option.title.charAt(0).toUpperCase()}</div>`;
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-sm`}>
+                      {option.title.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  
+                  {/* Option Name and Progress */}
+                  <div className="min-w-0">
+                    <div className="mb-1">
+                      <h4 className="font-medium text-[var(--text)] truncate">{option.title}</h4>
+                    </div>
+                    <div className="progress-bar-container w-full bg-[var(--surface)] rounded-full h-2">
+                      <div
+                        className="progress-bar-fill bg-[var(--primary)] h-full rounded-full"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Percentage Column - Fixed width 50px */}
+                  <div className="text-sm font-medium text-[var(--text)] text-right pr-2">
+                    {percentage}%
+                  </div>
+                  
+                  {/* Reactions Column - Fixed width 160px */}
+                  {topReactions.length > 0 ? (
+                    <div className="flex gap-1 items-center">
+                      {topReactions.map(([emoji, count]) => (
+                        <span key={emoji} className="bg-[var(--primary-light)] text-[var(--primary)] px-2 py-1 rounded-lg text-xs font-medium inline-flex items-center">
+                          {emoji} {count}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div></div>
+                  )}
+                  
+                  {/* Vote Count Column - Fixed width 40px */}
+                  <div className="text-sm text-[var(--text-muted)] font-medium text-right">
+                    {optionVotes}
+                  </div>
                 </div>
               </div>
             );
@@ -793,10 +930,10 @@ function ResultsTab({
         </div>
         
         {/* Summary */}
-        <div className="mt-6 pt-4 border-t border-[var(--border)] flex-shrink-0">
-          <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
-            <span>Total participants: {totalVotes}</span>
-            <span>Created by {poll.createdBy}</span>
+        <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-[var(--border)] flex-shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs sm:text-sm text-[var(--text-muted)] text-center sm:text-left">
+            <span>{totalVotes} {totalVotes === 1 ? 'participant' : 'participants'}</span>
+            <span>by {poll.createdBy}</span>
             <span>{mounted ? formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true }) : 'just now'}</span>
           </div>
         </div>

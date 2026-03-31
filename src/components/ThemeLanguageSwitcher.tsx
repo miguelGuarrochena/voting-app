@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { 
   SunIcon, 
   MoonIcon,
-  LanguageIcon,
+  GlobeAltIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 
@@ -41,7 +41,7 @@ export default function ThemeLanguageSwitcher() {
           title={language === 'en' ? 'Cambiar a Español' : 'Switch to English'}
         >
           <div className="flex items-center gap-1.5">
-            <LanguageIcon className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors" />
+            <GlobeAltIcon className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors" />
             <span className="text-sm font-semibold text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors">
               {language === 'en' ? 'EN' : 'ES'}
             </span>

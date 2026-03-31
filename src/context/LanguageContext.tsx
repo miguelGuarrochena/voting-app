@@ -28,6 +28,7 @@ const translations = {
     'nav.signup': 'Sign up',
     'nav.createPoll': 'Create Poll',
     'nav.getStarted': 'Get Started',
+    'nav.logout': 'Log Out',
     
     // Home page
     'home.hero.title': 'What does',
@@ -102,10 +103,11 @@ const translations = {
     'nav.signup': 'Registrarse',
     'nav.createPoll': 'Crear Encuesta',
     'nav.getStarted': 'Comenzar',
+    'nav.logout': 'Cerrar Sesión',
     
     // Home page
-    'home.hero.title': '¿Qué piensa',
-    'home.hero.titleHighlight': 'todos',
+    'home.hero.title': '¿Qué opinas',
+    'home.hero.titleHighlight': 'tú',
     'home.hero.titleEnd': '?',
     'home.hero.subtitle': 'Vota sobre cualquier cosa. Comparte instantáneamente. Ve los resultados en tiempo real.',
     'home.createPoll': 'Crear encuesta →',

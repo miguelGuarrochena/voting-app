@@ -108,9 +108,6 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Hero Section */}
       <div className="relative overflow-hidden pt-24 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 lg:px-8">
-        {/* Decorative blob */}
-        <div className="absolute top-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[400px] bg-[var(--primary-light)] opacity-70 rounded-full blur-3xl transform translate-x-16 md:translate-x-32 -translate-y-20" />
-        
         <div className="relative max-w-4xl mx-auto text-center">
           <motion.h1 
             className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-[var(--text)] mb-4 md:mb-6"
@@ -180,7 +177,7 @@ export default function Home() {
           {shouldUseCarousel && (
             <>
               {/* Left fade effect */}
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent z-0 pointer-events-none" />
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[var(--bg)] via-[var(--bg)]/80 to-transparent z-0 pointer-events-none" />
               
               <button
                 onClick={() => {
@@ -192,7 +189,7 @@ export default function Home() {
                     container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
                   }
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors flex"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-[var(--surface)] rounded-full shadow-lg items-center justify-center border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors flex"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -209,7 +206,7 @@ export default function Home() {
                     container.scrollBy({ left: cardWidth, behavior: 'smooth' });
                   }
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-lg items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors flex"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-[var(--surface)] rounded-full shadow-lg items-center justify-center border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors flex"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -217,7 +214,7 @@ export default function Home() {
               </button>
               
               {/* Right fade effect */}
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent z-0 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--bg)] via-[var(--bg)]/80 to-transparent z-0 pointer-events-none" />
             </>
           )}
 
@@ -340,20 +337,20 @@ export default function Home() {
           {loading && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mt-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-3xl shadow-sm overflow-hidden border border-border animate-pulse">
-                  <div className="h-48 bg-gray-200" />
+                <div key={i} className="bg-[var(--surface)] rounded-3xl shadow-sm overflow-hidden border border-[var(--border)] animate-pulse">
+                  <div className="h-48 bg-[var(--surface-2)]" />
                   <div className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-full bg-gray-200" />
-                        <div className="h-4 w-24 bg-gray-200 rounded" />
+                        <div className="w-7 h-7 rounded-full bg-[var(--surface-2)]" />
+                        <div className="h-4 w-24 bg-[var(--surface-2)] rounded" />
                       </div>
-                      <div className="h-6 w-16 bg-gray-200 rounded-full" />
+                      <div className="h-6 w-16 bg-[var(--surface-2)] rounded-full" />
                     </div>
                     <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 rounded" />
-                      <div className="h-4 bg-gray-200 rounded w-3/4" />
-                      <div className="h-2 bg-gray-200 rounded" />
+                      <div className="h-4 bg-[var(--surface-2)] rounded" />
+                      <div className="h-4 bg-[var(--surface-2)] rounded w-3/4" />
+                      <div className="h-2 bg-[var(--surface-2)] rounded" />
                     </div>
                   </div>
                 </div>

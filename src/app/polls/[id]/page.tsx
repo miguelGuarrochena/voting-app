@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import usePollStore from '@/store/pollStore';
 import PollDetail from '@/components/PollDetail';
 
@@ -80,7 +81,8 @@ export default function PollPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6">
+      {/* Desktop Back Button */}
+      <div className="hidden sm:block mb-6">
         <Link 
           href="/" 
           className="inline-flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
