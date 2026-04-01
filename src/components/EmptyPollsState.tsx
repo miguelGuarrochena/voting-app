@@ -22,7 +22,7 @@ interface EmptyPollsStateProps {
   loading?: boolean;
 }
 
-export default function EmptyPollsState({ onRefresh, loading = false }: EmptyPollsStateProps) {
+const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) => {
   return (
     <motion.div
       className="flex flex-col items-center justify-center min-h-[600px] px-4 py-16 relative"
@@ -227,4 +227,6 @@ export default function EmptyPollsState({ onRefresh, loading = false }: EmptyPol
       </div>
     </motion.div>
   );
-}
+};
+
+export default EmptyPollsState;

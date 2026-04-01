@@ -18,7 +18,7 @@ const DEFAULT_COLORS = [
   '#FF4757', '#5F27CD', '#00D2D3', '#FFA502'
 ];
 
-export function SpinWheel() {
+export const SpinWheel = () => {
   const [options, setOptions] = useState<WheelOption[]>([
     { id: '1', text: 'Option 1', color: DEFAULT_COLORS[0] },
     { id: '2', text: 'Option 2', color: DEFAULT_COLORS[1] },

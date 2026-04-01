@@ -19,7 +19,7 @@ type Participant = {
   emailOrUsername: string;
 };
 
-export function CreatePollForm() {
+export const CreatePollForm = () => {
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState('');
   const [description, setDescription] = useState('');

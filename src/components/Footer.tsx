@@ -2,7 +2,7 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 
-export default function Footer() {
+const Footer = () => {
   const { t } = useLanguage();
 
   return (
@@ -10,4 +10,6 @@ export default function Footer() {
       <p>{t('footer.copyright')}</p>
     </footer>
   );
-}
+};
+
+export default Footer;

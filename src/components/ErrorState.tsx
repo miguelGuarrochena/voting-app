@@ -12,14 +12,14 @@ interface ErrorStateProps {
   compact?: boolean;
 }
 
-export default function ErrorState({
+const ErrorState = ({
   title = 'Something went wrong',
   message = 'We encountered an unexpected error. Please try again.',
   onRetry,
   onGoHome,
   icon = 'error',
   compact = false
-}: ErrorStateProps) {
+}: ErrorStateProps) => {
   const getIcon = () => {
     switch (icon) {
       case 'warning':
@@ -144,4 +144,6 @@ export default function ErrorState({
       </div>
     </motion.div>
   );
-}
+};
+
+export default ErrorState;

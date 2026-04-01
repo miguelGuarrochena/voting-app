@@ -1,7 +1,7 @@
 import { CreatePollForm } from '@/components/create-poll-form';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
-export default function CreatePollPage() {
+const CreatePollPage = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-[var(--bg)] pt-20">
@@ -15,4 +15,6 @@ export default function CreatePollPage() {
       </div>
     </ProtectedRoute>
   );
-}
+};
+
+export default CreatePollPage;

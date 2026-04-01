@@ -5,7 +5,7 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
+export const LoadingSpinner = ({ size = 'md', className = '' }: LoadingSpinnerProps) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-6 h-6',
@@ -42,7 +42,7 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({ message = 'Loading...', size = 'md', className = '' }: LoadingStateProps) {
+export const LoadingState = ({ message = 'Loading...', size = 'md', className = '' }: LoadingStateProps) => {
   return (
     <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4">
@@ -57,7 +57,7 @@ interface SkeletonCardProps {
   className?: string;
 }
 
-export function SkeletonCard({ className = '' }: SkeletonCardProps) {
+export const SkeletonCard = ({ className = '' }: SkeletonCardProps) => {
   return (
     <div className={`bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-200 animate-pulse ${className}`}>
       <div className="h-48 bg-gray-200" />
@@ -90,7 +90,7 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ icon = '📊', title, description, action, className = '' }: EmptyStateProps) {
+export const EmptyState = ({ icon = '📊', title, description, action, className = '' }: EmptyStateProps) => {
   return (
     <div className={`text-center py-16 ${className}`}>
       <div className="text-5xl md:text-6xl mb-6">{icon}</div>

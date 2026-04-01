@@ -17,7 +17,7 @@ import {
   LanguageIcon
 } from '@heroicons/react/24/outline';
 
-export default function SettingsPage() {
+const SettingsPage = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
@@ -327,7 +327,198 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+    </div>
+    <div>
+      <h3 className="text-lg font-medium text-[var(--text)]">{user?.name || 'User'}</h3>
+      <p className="text-sm text-[var(--text-muted)]">{user?.email || 'user@example.com'}</p>
+    </div>
+  </div>
+
+  <div className="space-y-4 pt-4">
+    <div>
+      <label className="block text-sm font-medium text-[var(--text)] mb-2">
+        {t('settings.displayName')}
+      </label>
+      <input
+        type="text"
+        defaultValue={user?.name || ''}
+        className="w-full px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+        placeholder={t('settings.displayNamePlaceholder')}
+      />
+    </div>
+    
+    <div>
+      <label className="block text-sm font-medium text-[var(--text)] mb-2">
+        {t('settings.bio')}
+      </label>
+      <textarea
+        rows={3}
+        className="w-full px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
+        placeholder={t('settings.bioPlaceholder')}
+      />
+    </div>
+  </div>
+</div>
+)}
+
+{activeSection === 'notifications' && (
+  <div className="space-y-6">
+    <h2 className="text-xl font-semibold text-[var(--text)] mb-4">
+      {t('settings.notifications')}
+    </h2>
+    
+    <div className="space-y-4">
+      <div className="flex items-center justify-between py-3">
+        <div>
+          <h3 className="font-medium text-[var(--text)]">{t('settings.emailNotifications')}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t('settings.emailNotificationsDesc')}</p>
+        </div>
+        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--primary)] transition-colors">
+          <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
+        </button>
+      </div>
+      
+      <div className="flex items-center justify-between py-3">
+        <div>
+          <h3 className="font-medium text-[var(--text)]">{t('settings.pushNotifications')}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t('settings.pushNotificationsDesc')}</p>
+        </div>
+        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--surface-2)] transition-colors">
+          <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1" />
+        </button>
+      </div>
+      
+      <div className="flex items-center justify-between py-3">
+        <div>
+          <h3 className="font-medium text-[var(--text)]">{t('settings.pollReminders')}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t('settings.pollRemindersDesc')}</p>
+        </div>
+        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--primary)] transition-colors">
+          <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
+        </button>
       </div>
     </div>
-  );
-}
+  </div>
+)}
+
+{activeSection === 'privacy' && (
+  <div className="space-y-6">
+    <h2 className="text-xl font-semibold text-[var(--text)] mb-4">
+      {t('settings.privacy')}
+    </h2>
+    
+    <div className="space-y-4">
+      <div className="flex items-center justify-between py-3">
+        <div>
+          <h3 className="font-medium text-[var(--text)]">{t('settings.privateProfile')}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t('settings.privateProfileDesc')}</p>
+        </div>
+        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--surface-2)] transition-colors">
+          <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1" />
+        </button>
+      </div>
+      
+      <div className="flex items-center justify-between py-3">
+        <div>
+          <h3 className="font-medium text-[var(--text)]">{t('settings.showActivity')}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t('settings.showActivityDesc')}</p>
+        </div>
+        <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--primary)] transition-colors">
+          <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{activeSection === 'appearance' && (
+  <div className="space-y-6">
+    <h2 className="text-xl font-semibold text-[var(--text)] mb-4">
+      {t('settings.appearance')}
+    </h2>
+    
+    <div>
+      <h3 className="font-medium text-[var(--text)] mb-4">{t('settings.theme')}</h3>
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          onClick={() => theme !== 'light' && toggleTheme()}
+          className={`p-4 rounded-lg border-2 transition-all ${
+            theme === 'light'
+              ? 'border-[var(--primary)] bg-[var(--primary-light)]'
+              : 'border-[var(--border)] hover:border-[var(--primary)]'
+          }`}
+        >
+          <SunIcon className="w-8 h-8 mx-auto mb-2 text-[var(--primary)]" />
+          <div className="text-sm font-medium text-[var(--text)]">{t('theme.light')}</div>
+        </button>
+        
+        <button
+          onClick={() => theme !== 'dark' && toggleTheme()}
+          className={`p-4 rounded-lg border-2 transition-all ${
+            theme === 'dark'
+              ? 'border-[var(--primary)] bg-[var(--primary-light)]'
+              : 'border-[var(--border)] hover:border-[var(--primary)]'
+          }`}
+        >
+          <MoonIcon className="w-8 h-8 mx-auto mb-2 text-[var(--primary)]" />
+          <div className="text-sm font-medium text-[var(--text)]">{t('theme.dark')}</div>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{activeSection === 'language' && (
+  <div className="space-y-6">
+    <h2 className="text-xl font-semibold text-[var(--text)] mb-4">
+      {t('settings.language')}
+    </h2>
+    
+    <div>
+      <h3 className="font-medium text-[var(--text)] mb-4">{t('settings.displayLanguage')}</h3>
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          onClick={() => language !== 'en' && toggleLanguage()}
+          className={`p-4 rounded-lg border-2 transition-all ${
+            language === 'en'
+              ? 'border-[var(--primary)] bg-[var(--primary-light)]'
+              : 'border-[var(--border)] hover:border-[var(--primary)]'
+          }`}
+        >
+          <div className="text-2xl mb-2">🇺🇸</div>
+          <div className="text-sm font-medium text-[var(--text)]">English</div>
+        </button>
+        
+        <button
+          onClick={() => language !== 'es' && toggleLanguage()}
+          className={`p-4 rounded-lg border-2 transition-all ${
+            language === 'es'
+              ? 'border-[var(--primary)] bg-[var(--primary-light)]'
+              : 'border-[var(--border)] hover:border-[var(--primary)]'
+          }`}
+        >
+          <div className="text-2xl mb-2">🇪🇸</div>
+          <div className="text-sm font-medium text-[var(--text)]">Español</div>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Save Button */}
+<div className="pt-6 border-t border-[var(--border)]">
+  <button className="bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors">
+    {t('settings.saveChanges')}
+  </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+);
+
+export default SettingsPage;
+
+const ExplorePage = () => {
+  // ... rest of the code remains the same ...

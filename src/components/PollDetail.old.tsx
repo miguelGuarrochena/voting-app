@@ -13,7 +13,7 @@ type PollDetailProps = {
   pollId: string;
 };
 
-export default function PollDetail({ pollId }: PollDetailProps) {
+const PollDetail = ({ pollId }: PollDetailProps) => {
   const { reactToOption, getPollById } = usePollStore();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [userReactions, setUserReactions] = useState<Record<string, string>>({});
@@ -177,4 +177,6 @@ export default function PollDetail({ pollId }: PollDetailProps) {
       </div>
     </div>
   );
-}
+};
+
+export default PollDetail;

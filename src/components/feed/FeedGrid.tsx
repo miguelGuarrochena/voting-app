@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useCallback } from 'react';
 import usePollStore from '@/store/pollStore';
 import { PollCard } from '@/components/PollCard';
 
-export default function FeedGrid() {
+const FeedGrid = () => {
   // Select individual values from the store to prevent unnecessary re-renders
   const polls = usePollStore((state) => state.polls);
   const filter = usePollStore((state) => state.filter);
@@ -92,4 +92,6 @@ export default function FeedGrid() {
       )}
     </div>
   );
-}
+};
+
+export default FeedGrid;

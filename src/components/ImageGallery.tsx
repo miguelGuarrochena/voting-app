@@ -10,7 +10,7 @@ interface ImageGalleryProps {
   onClose: () => void;
 }
 
-export function ImageGallery({ images, initialIndex = 0, isOpen, onClose }: ImageGalleryProps) {
+export const ImageGallery = ({ images, initialIndex = 0, isOpen, onClose }: ImageGalleryProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   useEffect(() => {

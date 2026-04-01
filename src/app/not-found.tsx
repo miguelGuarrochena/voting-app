@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import ErrorState from '@/components/ErrorState';
 import { HomeIcon, PlusCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
-export default function NotFound() {
+const NotFound = () => {
   const router = useRouter();
 
   useEffect(() => {
@@ -144,4 +144,6 @@ export default function NotFound() {
       </motion.div>
     </div>
   );
-}
+};
+
+export default NotFound;

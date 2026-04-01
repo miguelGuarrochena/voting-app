@@ -33,7 +33,7 @@ const PollCardSkeleton = () => (
 
 type SortOption = 'recent' | 'popular' | 'trending' | 'expiring';
 
-export default function ExplorePage() {
+const ExplorePage = () => {
   const { polls, loadPolls, isLoading } = usePollStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('recent');
@@ -273,4 +273,6 @@ export default function ExplorePage() {
       </div>
     </div>
   );
-}
+};
+
+export default ExplorePage;

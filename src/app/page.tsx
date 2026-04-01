@@ -11,7 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Poll } from '@/types/poll';
 import EmptyPollsState from '@/components/EmptyPollsState';
 
-export default function Home() {
+const Home = () => {
   const router = useRouter();
   const { polls, loading, error, refreshPolls } = usePolls();
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -387,4 +387,6 @@ export default function Home() {
       </div>
     </div>
   );
-}
+};
+
+export default Home;

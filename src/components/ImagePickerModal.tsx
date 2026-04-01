@@ -11,12 +11,12 @@ interface ImagePickerModalProps {
   title?: string;
 }
 
-export default function ImagePickerModal({ 
+const ImagePickerModal = ({ 
   isOpen, 
   onClose, 
   onSelectImage, 
   title = "Choose an image" 
-}: ImagePickerModalProps) {
+}: ImagePickerModalProps) => {
   const [images, setImages] = useState<StockImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -208,4 +208,6 @@ export default function ImagePickerModal({
       </motion.div>
     </AnimatePresence>
   );
-}
+};
+
+export default ImagePickerModal;

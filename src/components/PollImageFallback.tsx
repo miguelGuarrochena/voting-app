@@ -11,13 +11,13 @@ interface PollImageFallbackProps {
   fallbackType?: 'gradient' | 'stock' | 'placeholder';
 }
 
-export default function PollImageFallback({ 
+const PollImageFallback = ({ 
   title, 
   category, 
   className = '', 
   children,
   fallbackType = 'gradient'
-}: PollImageFallbackProps) {
+}: PollImageFallbackProps) => {
   const [fallbackImage, setFallbackImage] = useState<string>('');
   const [imageError, setImageError] = useState(false);
 
@@ -113,4 +113,6 @@ export default function PollImageFallback({
       )}
     </div>
   );
-}
+};
+
+export default PollImageFallback;

@@ -30,7 +30,7 @@ interface PollDetailProps {
   pollId: string;
 }
 
-export default function PollDetail({ pollId }: PollDetailProps) {
+const PollDetail = ({ pollId }: PollDetailProps) => {
   const { voteOnOption, reactToOption, getPollById, userVotes, userReactions: userReactionsStore } = usePollStore();
   const [activeTab, setActiveTab] = useState<TabType>('vote');
   const [timeRemaining, setTimeRemaining] = useState('');
@@ -354,10 +354,12 @@ export default function PollDetail({ pollId }: PollDetailProps) {
       </AnimatePresence>
     </div>
   );
-}
+};
+
+export default PollDetail;
 
 // Vote Tab Component
-function VoteTab({
+const VoteTab = ({
   poll,
   totalVotes,
   hasEnded,
@@ -383,7 +385,7 @@ function VoteTab({
   onToggleReactionStrip: (optionId: string | null) => void;
   getGradient: (title: string) => string;
   getTopReactions: (reactions: Record<string, number>) => [string, number][];
-}) {
+}) => {
   const optionsWithImages = poll.options.filter(option => option.imageUrl);
   
   return (
@@ -602,7 +604,7 @@ const getAvatarColors = (title: string, index: number) => {
 };
 
 // Results Tab Component
-function ResultsTab({
+const ResultsTab = ({
   poll,
   totalVotes,
   hasEnded,
@@ -620,7 +622,7 @@ function ResultsTab({
   isTie: () => boolean;
   getSortedOptions: () => Poll['options'];
   mounted: boolean;
-}) {
+}) => {
   const sortedOptions = getSortedOptions();
   const tie = isTie();
   

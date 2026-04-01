@@ -19,7 +19,7 @@ import {
 import { getCreatorAvatar } from '@/data/mockPolls';
 import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
 
-export default function Navbar() {
+const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
@@ -361,4 +361,6 @@ export default function Navbar() {
       )}
     </nav>
   );
-}
+};
+
+export default Navbar;

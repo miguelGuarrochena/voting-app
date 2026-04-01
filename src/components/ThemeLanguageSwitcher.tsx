@@ -10,7 +10,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 
-export default function ThemeLanguageSwitcher() {
+const ThemeLanguageSwitcher = () => {
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
@@ -105,4 +105,6 @@ export default function ThemeLanguageSwitcher() {
       )}
     </div>
   );
-}
+};
+
+export default ThemeLanguageSwitcher;

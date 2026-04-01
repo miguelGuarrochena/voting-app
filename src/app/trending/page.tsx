@@ -30,7 +30,7 @@ const PollCardSkeleton = () => (
   </div>
 );
 
-export default function TrendingPage() {
+const TrendingPage = () => {
   const { polls, loadPolls, isLoading } = usePollStore();
   const [mounted, setMounted] = useState(false);
 
@@ -169,4 +169,6 @@ export default function TrendingPage() {
       </div>
     </div>
   );
-}
+};
+
+export default TrendingPage;
