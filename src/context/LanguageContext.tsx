@@ -51,7 +51,7 @@ const translations = {
     'home.refreshPage': 'Refresh Page',
     
     // Footer
-    'footer.copyright': '© 2024 Polls. Create and share opinions.',
+    'footer.copyright': `© ${new Date().getFullYear()} Polls. Create and share opinions.`,
     
     // Theme/Language
     'theme.light': 'Light',
@@ -116,6 +116,8 @@ const translations = {
     'spin.addAtLeastTwoOptionsToSpin': 'Add at least 2 options to spin',
     'spin.optionsCount': 'options (minimum 2 required to spin)',
     'spin.enterAnOption': 'Enter an option...',
+    'spin.addOptionAfterThis': 'Add option after this one',
+    'spin.removeOption': 'Remove option',
   },
   es: {
     // Navigation
@@ -153,7 +155,7 @@ const translations = {
     'home.refreshPage': 'Actualizar Página',
     
     // Footer
-    'footer.copyright': '© 2024 Polls. Crea y comparte opiniones.',
+    'footer.copyright': `© ${new Date().getFullYear()} Polls. Crea y comparte opiniones.`,
     
     // Theme/Language
     'theme.light': 'Claro',
@@ -218,6 +220,8 @@ const translations = {
     'spin.addAtLeastTwoOptionsToSpin': 'Agrega al menos 2 opciones para girar',
     'spin.optionsCount': 'opciones (mínimo 2 requeridas para girar)',
     'spin.enterAnOption': 'Ingresa una opción...',
+    'spin.addOptionAfterThis': 'Agregar opción después de esta',
+    'spin.removeOption': 'Eliminar opción',
   }
 };
 

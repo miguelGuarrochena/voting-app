@@ -19,47 +19,30 @@ const ImagePickerModal = ({
 }: ImagePickerModalProps) => {
   const [images, setImages] = useState<StockImage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Load initial images
   useEffect(() => {
     if (isOpen) {
-      setSearchQuery(''); // Clear search when opening
       loadImages();
     }
   }, [isOpen]);
 
-  const loadImages = async (query?: string) => {
+  const loadImages = async () => {
     setLoading(true);
     try {
-      // Use the query parameter directly, fallback to 'poll' if not provided
-      const searchQuery = query && query.trim() !== '' ? query.trim() : 'poll';
-      console.log('Loading images with query:', searchQuery); // Debug log
-      const stockImages = await imageService.searchImages(searchQuery, 20);
+      // Load default images
+      const stockImages = await imageService.searchImages('poll', 20);
       setImages(stockImages);
     } catch (error) {
       console.error('Error loading images:', error);
+      setImages([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    console.log('Search triggered with query:', searchQuery); // Debug log
-    if (searchQuery.trim() === '') {
-      // If search is empty, load default images
-      console.log('Empty search, loading default images'); // Debug log
-      loadImages('poll');
-    } else {
-      console.log('Searching with query:', searchQuery.trim()); // Debug log
-      loadImages(searchQuery.trim());
-    }
-  };
-
   const handleClose = () => {
-    setSearchQuery(''); // Clear search when closing
     onClose();
   };
 
@@ -72,9 +55,8 @@ const ImagePickerModal = ({
   const handleLoadMore = async () => {
     setLoading(true);
     try {
-      // Use the current search query or default to 'poll'
-      const currentQuery = searchQuery.trim() !== '' ? searchQuery.trim() : 'poll';
-      const newImages = await imageService.searchImages(currentQuery, 20);
+      // Load more default images
+      const newImages = await imageService.searchImages('poll', 20);
       setImages(prev => [...prev, ...newImages]);
     } catch (error) {
       console.error('Error loading more images:', error);
@@ -91,19 +73,30 @@ const ImagePickerModal = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+        className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black bg-opacity-75 z-[9999] flex items-center justify-center"
         onClick={handleClose}
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: 0
+        }}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col m-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="border-b border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
               <button
                 onClick={handleClose}
@@ -112,31 +105,6 @@ const ImagePickerModal = ({
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
-            </div>
-            
-            {/* Search Form */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for images (e.g., nature, business, food...)"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSearch(e);
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => handleSearch()}
-                disabled={loading}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
-              >
-                {loading ? 'Searching...' : 'Search'}
               </button>
             </div>
           </div>

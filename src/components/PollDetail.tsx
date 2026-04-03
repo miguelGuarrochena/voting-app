@@ -60,8 +60,10 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   
   const hasEnded = useMemo(() => {
     if (!poll) return true;
-    return new Date(poll.expiresAt) < new Date();
-  }, [poll]);
+    const now = new Date();
+    const expiryDate = new Date(poll.expiresAt);
+    return expiryDate <= now; // Use <= instead of < to catch exact expiry times
+  }, [poll?.expiresAt]); // More specific dependency
   
   const userVotedOption = poll ? userVotes[poll.id] : undefined;
   
@@ -74,7 +76,10 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   
   // Countdown timer
   useEffect(() => {
-    if (hasEnded || !poll) return;
+    if (!poll || hasEnded) {
+      setTimeRemaining(hasEnded ? 'Ended' : '');
+      return;
+    }
     
     const updateTimer = () => {
       const now = new Date();
@@ -83,7 +88,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       
       if (diff <= 0) {
         setTimeRemaining('Ended');
-        return;
+        return; // Don't continue if ended
       }
       
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -98,7 +103,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
     const interval = setInterval(updateTimer, 1000);
     
     return () => clearInterval(interval);
-  }, [poll.expiresAt, hasEnded]);
+  }, [poll?.expiresAt, hasEnded]);
   
   // Handle voting
   const handleVote = (optionId: string) => {

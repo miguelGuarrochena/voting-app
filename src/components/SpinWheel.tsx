@@ -947,7 +947,7 @@ export const SpinWheel = () => {
                             <button 
                               onClick={() => addOptionAfter(option.id)}
                               className="p-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors"
-                              title="Add option after this one"
+                              title={t('spin.addOptionAfterThis')}
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -957,7 +957,7 @@ export const SpinWheel = () => {
                           
                           {/* Botón Delete */}
                           {options.length > 2 && (
-                            <button onClick={() => removeOption(option.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <button onClick={() => removeOption(option.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title={t('spin.removeOption')}>
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                               </svg>
@@ -994,6 +994,9 @@ export const SpinWheel = () => {
                         })); 
                         setOptions(newOptions); 
                         setValidationError(''); 
+                        // Resetear el resultado anterior
+                        setSelectedOption(null);
+                        setShowResult(false);
                       }}
                       className="p-3 bg-[var(--surface-2)] hover:bg-[var(--surface)] rounded-[var(--radius-md)] text-center transition-colors border border-[var(--border)]">
                       <div className="text-lg mb-1">{emoji}</div>

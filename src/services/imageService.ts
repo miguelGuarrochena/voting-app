@@ -18,8 +18,11 @@ class ImageService {
     
     for (let i = 0; i < count; i++) {
       // Create a more unique seed based on query and index to ensure different images
-      const timestamp = Date.now();
-      const seed = query ? `${query.toLowerCase().replace(/\s+/g, '-')}-${timestamp}-${i}` : `poll-${timestamp}-${i}`;
+      // Use a more specific seed generation for better filtering
+      const baseSeed = query ? query.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : 'poll';
+      const randomSuffix = Math.random().toString(36).substring(7);
+      const seed = `${baseSeed}-${randomSuffix}-${i}`;
+      
       const url = `https://picsum.photos/seed/${seed}/800/600.jpg`;
       const thumbnail = `https://picsum.photos/seed/${seed}/200/150.jpg`;
       
@@ -32,7 +35,7 @@ class ImageService {
       });
     }
     
-    console.log('Picsum: Generated', images.length, 'images with seed pattern:', query ? `${query.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}-[index]` : 'poll-[timestamp]-[index]');
+    console.log('Picsum: Generated', images.length, 'images for query:', query || 'default');
     return images;
   }
 
