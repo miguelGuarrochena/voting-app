@@ -160,7 +160,7 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-xs sm:text-sm font-medium hover:bg-[var(--primary)] hover:text-white transition-colors"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:bg-[var(--primary)] transition-colors"
                   >
                     {getCreatorAvatar(user?.name || 'User')}
                   </button>
@@ -294,7 +294,7 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-sm font-medium hover:bg-[var(--primary)] hover:text-white transition-colors"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-white text-sm font-medium hover:bg-[var(--primary)] transition-colors"
                   >
                     {getCreatorAvatar(user?.name || 'User')}
                   </button>
