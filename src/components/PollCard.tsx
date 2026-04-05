@@ -145,6 +145,17 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
 
   const cardHeight = compact ? 'h-[400px] sm:h-[440px]' : 'h-[480px] sm:h-[520px]';
   
+  // Get sorted options for podium display
+  const getSortedOptions = useCallback(() => {
+    return [...poll.options].sort((a, b) => {
+      const aVotes = getPositiveVotes(a.reactions);
+      const bVotes = getPositiveVotes(b.reactions);
+      return bVotes - aVotes;
+    });
+  }, [poll.options]);
+  
+  const sortedOptions = getSortedOptions();
+  
   return (
     <div className={`block ${className}`}>
       <motion.div 
@@ -154,86 +165,86 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
         transition={{ duration: 0.4 }}
         onClick={() => window.location.href = `/polls/${poll.id}`}
       >
-        {/* Image Section */}
-        <div className="relative h-36 sm:h-40 flex-shrink-0 rounded-t-3xl overflow-hidden">
-          {mainImage && !imageError ? (
-            <>
+        {/* TOP ZONE - Fixed: Cover Image + Title + Author Avatar + Vote Count + Status Badge */}
+        <div className="flex-shrink-0">
+          {/* Image Section */}
+          <div className="relative h-36 sm:h-40 rounded-t-3xl overflow-hidden">
+            {mainImage && !imageError ? (
+              <>
+                <div 
+                  className="relative w-full h-full cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleImageClick(0);
+                  }}
+                >
+                  <Image
+                    src={mainImage}
+                    alt={poll.options[0]?.title || poll.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    onError={() => setImageError(true)}
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg className="w-12 h-12 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0h3m-3 0h3" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4">
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
+                    isExpired 
+                      ? 'bg-gray-500/80 text-white' 
+                      : 'bg-green-500/80 text-white'
+                  }`}>
+                    {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+                    {isExpired ? 'Ended' : 'Active'}
+                  </div>
+                </div>
+              </>
+            ) : (
               <div 
-                className="relative w-full h-full cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleImageClick(0);
-                }}
+                className="w-full h-full flex items-center justify-center relative"
+                style={{ background: getGradient(poll.title) }}
               >
-                <Image
-                  src={mainImage}
-                  alt={poll.options[0]?.title || poll.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  onError={() => setImageError(true)}
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <svg className="w-12 h-12 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0h3m-3 0h3" />
-                    </svg>
+                {/* Avatar Circle */}
+                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
+                  <span className="text-4xl font-bold text-white drop-shadow-lg">
+                    {poll.title.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4">
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
+                    isExpired 
+                      ? 'bg-gray-500/80 text-white' 
+                      : 'bg-green-500/80 text-white'
+                  }`}>
+                    {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+                    {isExpired ? 'Ended' : 'Active'}
                   </div>
                 </div>
               </div>
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              
-              {/* Status Badge */}
-              <div className="absolute top-4 right-4">
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
-                  isExpired 
-                    ? 'bg-gray-500/80 text-white' 
-                    : 'bg-green-500/80 text-white'
-                }`}>
-                  {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
-                  {isExpired ? 'Ended' : 'Active'}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div 
-              className="w-full h-full flex items-center justify-center relative"
-              style={{ background: getGradient(poll.title) }}
-            >
-              {/* Avatar Circle */}
-              <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
-                <span className="text-4xl font-bold text-white drop-shadow-lg">
-                  {poll.title.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              
-              {/* Status Badge */}
-              <div className="absolute top-4 right-4">
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
-                  isExpired 
-                    ? 'bg-gray-500/80 text-white' 
-                    : 'bg-green-500/80 text-white'
-                }`}>
-                  {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
-                  {isExpired ? 'Ended' : 'Active'}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Content Section */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Title and Meta - Simplified */}
-          <div className="p-4 sm:p-5 flex-shrink-0">
+            )}
+          </div>
+          
+          {/* Title and Meta Info */}
+          <div className="p-4 sm:p-5 bg-white border-b border-border/50">
             <h3 className="font-display font-bold text-text text-lg sm:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
               {poll.title}
             </h3>
             
-            {/* Meta info - Minimal */}
+            {/* Meta info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-xs text-text-muted">
                 <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-primary text-xs font-medium">
@@ -253,31 +264,39 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
               </div>
             </div>
           </div>
-          
-          {/* Options - Cleaner design */}
-          <div className="flex-1 px-4 sm:px-5 pb-4">
-            <div className="space-y-3">
-              {poll.options.slice(0, compact ? 2 : 3).map((option: any, index: any) => {
-                const percentage = totalVotes > 0 ? Math.min(Math.round((getPositiveVotes(option.reactions) / totalVotes) * 100), 100) : 0;
-                const topReactions = getTopReactions(option.reactions);
-                const hasVotedForOption = votedOption === option.id;
-                
-                return (
-                  <div
-                    key={option.id}
-                    className={`relative group transition-all rounded-2xl overflow-hidden border ${
-                      !isExpired && !hasVoted ? 'hover:border-primary hover:shadow-md cursor-pointer' : 'border-transparent'
-                    } ${hasVotedForOption ? 'border-2 border-primary bg-primary/5' : 'bg-surface'}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleVoteClick(option.id);
-                    }}
-                  >
-                    <div className="p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
+        </div>
+        
+        {/* MIDDLE ZONE - Scrollable: Results List */}
+        <div className="flex-1 relative overflow-hidden bg-white">
+          <div className="h-full overflow-y-auto" style={{ maxHeight: '240px' }}>
+            {hasVotes ? (
+              <div className="p-4 sm:p-5 space-y-2">
+                {sortedOptions.map((option: any, index: number) => {
+                  const percentage = totalVotes > 0 ? Math.min(Math.round((getPositiveVotes(option.reactions) / totalVotes) * 100), 100) : 0;
+                  const topReactions = getTopReactions(option.reactions);
+                  const hasVotedForOption = votedOption === option.id;
+                  
+                  return (
+                    <div
+                      key={option.id}
+                      className={`relative group transition-all rounded-xl overflow-hidden border ${
+                        !isExpired && !hasVoted ? 'hover:border-primary hover:shadow-sm cursor-pointer' : 'border-transparent'
+                      } ${hasVotedForOption ? 'border-2 border-primary bg-primary/5' : 'bg-surface/50'}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleVoteClick(option.id);
+                      }}
+                    >
+                      <div className="p-2 sm:p-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          {/* Rank */}
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            {index + 1}°
+                          </div>
+                          
+                          {/* Option Image */}
                           {option.imageUrl && !optionImageErrors[option.id] ? (
-                            <div className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+                            <div className="relative w-6 h-6 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0">
                               <Image
                                 src={option.imageUrl}
                                 alt={option.title}
@@ -287,70 +306,105 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
                               />
                             </div>
                           ) : (
-                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getGradient(option.title)} flex items-center justify-center text-white font-medium text-sm flex-shrink-0`}>
+                            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br ${getGradient(option.title)} flex items-center justify-center text-white font-medium text-xs flex-shrink-0`}>
                               {option.title.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <span className="font-medium text-sm text-text truncate">
+                          
+                          {/* Option Name */}
+                          <span className="font-medium text-xs sm:text-sm text-text truncate flex-1">
                             {option.title}
                           </span>
+                          
+                          {/* Percentage */}
+                          <span className="text-xs sm:text-sm font-bold text-primary flex-shrink-0">
+                            {percentage}%
+                          </span>
+                          
+                          {/* Vote indicator */}
                           {hasVotedForOption && (
-                            <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs">
+                            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs flex-shrink-0">
                               ✓
                             </div>
                           )}
                         </div>
-                        <span className="text-sm font-bold text-primary">
-                          {percentage}%
-                        </span>
-                      </div>
-                      
-                      {/* Progress Bar */}
-                      <div className="w-full bg-surface-2 rounded-full h-2 overflow-hidden">
-                        <motion.div 
-                          className="bg-gradient-to-r from-primary to-primary-dark h-full rounded-full origin-left"
-                          initial={{ scaleX: 0 }}
-                          animate={{ scaleX: percentage / 100 }}
-                          transition={{ duration: 0.6, delay: index * 0.1 }}
-                          style={{ transformOrigin: 'left' }}
-                        />
-                      </div>
-                      
-                      {/* Top reactions - Minimal */}
-                      {topReactions.length > 0 && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className="flex gap-1">
-                            {topReactions.slice(0, 2).map(([emoji, count]) => (
-                              <span key={emoji} className="text-xs bg-surface-2 px-2 py-1 rounded-full">
-                                {emoji} {count}
-                              </span>
-                            ))}
-                          </div>
-                          {topReactions.length > 2 && (
-                            <span className="text-xs text-text-muted">+{topReactions.length - 2}</span>
-                          )}
+                        
+                        {/* Progress Bar */}
+                        <div className="w-full bg-surface-2 rounded-full h-1.5 mt-2 overflow-hidden">
+                          <motion.div 
+                            className="bg-gradient-to-r from-primary to-primary-dark h-full rounded-full origin-left"
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: percentage / 100 }}
+                            transition={{ duration: 0.6, delay: index * 0.05 }}
+                            style={{ transformOrigin: 'left' }}
+                          />
                         </div>
-                      )}
+                        
+                        {/* Top reactions */}
+                        {topReactions.length > 0 && (
+                          <div className="flex items-center gap-1 mt-1.5">
+                            <div className="flex gap-1">
+                              {topReactions.slice(0, 2).map(([emoji, count]) => (
+                                <span key={emoji} className="bg-surface-2 px-1.5 py-0.5 rounded-full text-xs">
+                                  {emoji} {count}
+                                </span>
+                              ))}
+                            </div>
+                            {topReactions.length > 2 && (
+                              <span className="text-xs text-text-muted">+{topReactions.length - 2}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-              
-              {compact && poll.options.length > 2 && (
-                <div className="text-center py-2">
-                  <span className="text-sm text-primary font-medium cursor-pointer hover:text-primary-dark">
-                    See all {poll.options.length} options →
-                  </span>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center p-4 sm:p-5">
+                <div className="text-center text-text-muted">
+                  <div className="text-2xl mb-2">📊</div>
+                  <p className="text-sm">No votes yet. Be the first!</p>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
           
-          {/* Footer - Minimal */}
-          <div className="flex items-center justify-between p-4 sm:p-5 border-t border-border flex-shrink-0 bg-surface/30">
-            <span className="text-xs text-text-muted">
-              {mounted ? formatDistanceToNow(poll.createdAt, { addSuffix: true }).replace('about ', '') : 'now'}
-            </span>
+          {/* Scroll fade indicator */}
+          {hasVotes && (
+            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+          )}
+        </div>
+        
+        {/* BOTTOM ZONE - Fixed: Aggregated Reactions + View Poll Link */}
+        <div className="flex-shrink-0 bg-white border-t border-border">
+          <div className="flex items-center justify-between p-4 sm:p-5">
+            <div className="flex items-center gap-2">
+              {/* Top reactions summary */}
+              {hasVotes && (() => {
+                const allTopReactions: Record<string, number> = {};
+                poll.options.forEach(option => {
+                  const topReactions = getTopReactions(option.reactions);
+                  topReactions.forEach(([emoji, count]) => {
+                    allTopReactions[emoji] = (allTopReactions[emoji] || 0) + count;
+                  });
+                });
+                
+                const top3 = Object.entries(allTopReactions)
+                  .sort(([_, a], [__, b]) => b - a)
+                  .slice(0, 3);
+                
+                return top3.length > 0 ? (
+                  <div className="flex gap-1">
+                    {top3.map(([emoji, count]) => (
+                      <span key={emoji} className="text-xs bg-surface-2 px-2 py-1 rounded-full">
+                        {emoji} {count}
+                      </span>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            </div>
             
             <span className="text-xs font-medium text-primary hover:text-primary-dark flex items-center gap-1 transition-colors cursor-pointer">
               View poll

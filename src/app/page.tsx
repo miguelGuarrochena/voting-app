@@ -248,7 +248,7 @@ const Home = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
               >
-                <PollCard poll={poll} compact={true} />
+                <PollCard poll={poll} />
               </motion.div>
             ))}
             {(activePolls || []).length === 0 && !loading && (

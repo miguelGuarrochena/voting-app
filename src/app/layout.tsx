@@ -46,14 +46,14 @@ const RootLayout = ({
 }) => {
   return (
     <html lang="en" className="h-full">
-      <body className={inter.className}>
+      <body className={`${inter.className} flex flex-col min-h-screen`}>
         <ErrorBoundary>
           <ThemeProvider>
             <LanguageProvider>
               <AuthProvider>
                 <StoreProvider>
                   <Navbar />
-                  <main className="flex-grow">
+                  <main className="flex-grow flex flex-col">
                     <ErrorBoundary>
                       {children}
                     </ErrorBoundary>

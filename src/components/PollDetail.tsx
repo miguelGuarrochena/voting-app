@@ -391,164 +391,193 @@ const VoteTab = ({
   getGradient: (title: string) => string;
   getTopReactions: (reactions: Record<string, number>) => [string, number][];
 }) => {
-  const optionsWithImages = poll.options.filter(option => option.imageUrl);
+  const [hoveredOption, setHoveredOption] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  
+  // Responsive grid columns - 2 columns on mobile, up to 4 on desktop
+  const gridCols = 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
   
   return (
     <div className="space-y-6">
-      {/* Image Grid for Desktop */}
-      {optionsWithImages.length > 0 && (
-        <div className="hidden md:grid gap-4" style={{
-          gridTemplateColumns: optionsWithImages.length === 2 ? '1fr 1fr' :
-                              optionsWithImages.length === 3 ? 'repeat(3, 1fr)' :
-                              'repeat(2, 1fr)'
-        }}>
-          {optionsWithImages.map((option) => (
-            <div key={option.id} className="relative h-[300px] rounded-[var(--radius-md)] overflow-hidden group">
-              <Image
-                src={option.imageUrl!}
-                alt={option.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <h3 className="text-white font-display font-semibold">{option.title}</h3>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      
-      {/* Mobile Stacked Images */}
-      {optionsWithImages.length > 0 && (
-        <div className="md:hidden space-y-4">
-          {optionsWithImages.map((option) => (
-            <div key={option.id} className="relative h-[200px] min-h-[160px] rounded-[var(--radius-md)] overflow-hidden">
-              <Image
-                src={option.imageUrl!}
-                alt={option.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <h3 className="text-white font-display font-semibold">{option.title}</h3>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      
-      {/* Voting Cards */}
-      <div className="space-y-4 px-4 md:px-0">
+      {/* Options Grid */}
+      <div className={`grid ${gridCols} gap-4 sm:gap-6`}>
         {poll.options.map((option) => {
           const optionVotes = getPositiveVotes(option.reactions);
           const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
           const hasVoted = userVotedOption === option.id;
-          const topReactions = getTopReactions(option.reactions);
           const userReaction = userReactions[option.id];
+          const isHovered = hoveredOption === option.id;
+          const isWinner = totalVotes > 0 && optionVotes === Math.max(...poll.options.map(o => getPositiveVotes(o.reactions)));
           
           return (
-            <div key={option.id} className="space-y-3">
+            <div key={option.id} className="relative">
+              {/* Option Card - Unified voting + reacting */}
               <motion.div
-                className={`bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-sm)] border-2 p-4 cursor-pointer transition-all w-full ${
-                  hasVoted ? 'border-[var(--primary)]' : 'border-[var(--border)] hover:border-[var(--primary-light)]'
-                }`}
+                className={`relative aspect-square rounded-2xl overflow-hidden border-2 cursor-pointer transition-all ${
+                  hasVoted 
+                    ? 'border-primary shadow-lg shadow-primary/20' 
+                    : 'border-border hover:border-primary hover:shadow-lg'
+                } ${isWinner && hasVoted ? 'ring-2 ring-primary/30 ring-offset-2' : ''}`}
                 onClick={() => !hasEnded && onVote(option.id)}
-                onDoubleClick={() => !hasEnded && onToggleReactionStrip(showReactionStrip === option.id ? null : option.id)}
+                onHoverStart={() => setHoveredOption(option.id)}
+                onHoverEnd={() => setHoveredOption(null)}
                 whileHover={!hasEnded ? { scale: 1.02 } : {}}
                 whileTap={!hasEnded ? { scale: 0.98 } : {}}
+                style={{ overflow: 'hidden' }}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    {option.imageUrl && (
-                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                        <Image
-                          src={option.imageUrl}
-                          alt={option.title}
-                          width={64}
-                          height={64}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-display font-semibold text-[var(--text)] mb-1">
-                        {option.title}
-                        {hasVoted && <span className="ml-2 text-[var(--primary)]">✓ {userVotedOption === option.id ? 'Your vote (click to change)' : 'Click to vote'}</span>}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
-                        <span>{optionVotes} votes</span>
-                        <span>{percentage}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="progress-bar-container w-full bg-[var(--surface)] rounded-full h-2">
-                  <motion.div
-                    className="progress-bar-fill bg-[var(--primary)] h-full rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
+                {/* Option Image or Avatar */}
+                {option.imageUrl && !imageErrors[option.id] ? (
+                  <Image
+                    src={option.imageUrl}
+                    alt={option.title}
+                    fill
+                    className="object-cover"
+                    onError={() => setImageErrors(prev => ({ ...prev, [option.id]: true }))}
                   />
-                </div>
-                
-                {/* Selected Reaction Badge - Clickable to change */}
-                {userReaction && (
-                  <div className="flex items-center gap-1 mt-3">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleReactionStrip(showReactionStrip === option.id ? null : option.id);
-                      }}
-                      className="bg-[var(--primary-light)] text-[var(--primary)] px-2 py-1 rounded-full text-sm hover:bg-[var(--primary)] hover:text-white transition-colors"
-                    >
-                      {userReaction}
-                    </button>
+                ) : (
+                  <div 
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ backgroundColor: getAvatarColors(option.title) }}
+                  >
+                    <span className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg">
+                      {option.title.charAt(0).toUpperCase()}
+                    </span>
                   </div>
                 )}
                 
-                {/* Add Reaction Button - When no reaction exists */}
-                {!userReaction && !hasEnded && (
-                  <div className="flex items-center gap-1 mt-3">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleReactionStrip(showReactionStrip === option.id ? null : option.id);
-                      }}
-                      className="bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] rounded-full px-2 py-1 text-sm transition-colors flex items-center gap-1"
-                    >
-                      <span className="text-base">😊</span>
-                      <span>React</span>
-                    </button>
+                {/* Selected overlay */}
+                {hasVoted && (
+                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
+                      <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Winner crown - positioned inside card */}
+                {isWinner && totalVotes > 0 && (
+                  <div className="absolute top-2 right-2 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm">
+                    <span className="text-lg">👑</span>
+                  </div>
+                )}
+                
+                {/* Post-vote percentage overlay - show for all options after user has voted */}
+                {userVotedOption && totalVotes > 0 && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2 sm:p-3">
+                    <div className="flex items-center justify-between text-white">
+                      <span className="text-xs sm:text-sm font-medium truncate">
+                        {option.title}
+                      </span>
+                      <span className="text-sm sm:text-base font-bold">
+                        {percentage}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-white/30 rounded-full h-1.5 mt-1.5">
+                      <div 
+                        className="bg-white h-full rounded-full transition-all duration-500"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Hover overlay for voting */}
+                {!hasVoted && !hasEnded && isHovered && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2">
+                        <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-xs sm:text-sm font-medium">Click to vote</p>
+                    </div>
                   </div>
                 )}
               </motion.div>
               
-              {/* Reaction Strip - WhatsApp style */}
+              {/* Option title below card */}
+              <div className="mt-2 text-center">
+                <h3 className="font-medium text-sm text-text truncate">
+                  {option.title}
+                </h3>
+                {hasVoted && (
+                  <p className="text-xs text-primary font-medium mt-1">
+                    Your choice
+                  </p>
+                )}
+              </div>
+              
+              {/* Reactions - Per-option below each card */}
+              <div className="mt-3 flex flex-col items-center gap-2">
+                {/* Show reaction counts as pill badges */}
+                {(() => {
+                  const topReactions = getTopReactions(option.reactions);
+                  return topReactions.length > 0 ? (
+                    <div className="flex gap-1 flex-wrap justify-center">
+                      {topReactions.slice(0, 3).map(([emoji, count]) => (
+                        <span key={emoji} className="text-xs bg-surface-2 px-2 py-1 rounded-full">
+                          {emoji} {count}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
+                
+                {/* Show React button if user hasn't reacted to this option yet */}
+                {hasVoted && !userReaction && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleReactionStrip(showReactionStrip === option.id ? null : option.id);
+                    }}
+                    className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors flex items-center gap-1"
+                  >
+                    <span>😊</span>
+                    <span>React</span>
+                  </button>
+                )}
+                
+                {/* Show selected reaction if user has reacted */}
+                {hasVoted && userReaction && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleReactionStrip(showReactionStrip === option.id ? null : option.id);
+                    }}
+                    className="text-lg hover:scale-110 transition-transform"
+                  >
+                    {userReaction}
+                  </button>
+                )}
+              </div>
+              
+              {/* Reaction Strip - Popup */}
               <AnimatePresence>
                 {showReactionStrip === option.id && !hasEnded && (
                   <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
+                    initial={{ scale: 0.8, opacity: 0, y: 10 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.8, opacity: 0, y: 10 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-white rounded-[16px] shadow-lg border border-[var(--border)] p-3"
+                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-10"
                   >
-                    <div className="flex gap-2 justify-center">
-                      {REACTION_EMOJIS.map((emoji) => (
-                        <motion.button
-                          key={emoji}
-                          onClick={() => onReaction(option.id, emoji)}
-                          className="w-10 h-10 rounded-full hover:bg-[var(--surface)] flex items-center justify-center text-2xl transition-all hover:scale-110"
-                          whileHover={{ scale: 1.2 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          {emoji}
-                        </motion.button>
-                      ))}
+                    <div className="bg-white rounded-2xl shadow-xl border border-border p-3">
+                      <div className="flex gap-2">
+                        {REACTION_EMOJIS.map((emoji) => (
+                          <motion.button
+                            key={emoji}
+                            onClick={() => onReaction(option.id, emoji)}
+                            className="w-10 h-10 rounded-full hover:bg-surface flex items-center justify-center text-2xl transition-all hover:scale-110"
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {emoji}
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -557,41 +586,27 @@ const VoteTab = ({
           );
         })}
       </div>
-      
-      {/* Simple Reaction Summary */}
-      {totalVotes > 0 && (
-        <div className="bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4">
-          <h3 className="font-display font-semibold text-[var(--text)] mb-3">Reactions</h3>
-          <div className="flex gap-2 flex-wrap">
-            {(() => {
-              const allReactions: Record<string, number> = {};
-              REACTION_EMOJIS.forEach(emoji => {
-                allReactions[emoji] = 0;
-              });
-              poll.options.forEach(option => {
-                REACTION_EMOJIS.forEach(emoji => {
-                  allReactions[emoji] += option.reactions[emoji];
-                });
-              });
-              
-              return Object.entries(allReactions)
-                .filter(([_, count]) => count > 0)
-                .sort(([_, a], [__, b]) => b - a)
-                .map(([emoji, count]) => (
-                  <div key={emoji} className="bg-[var(--primary-light)] text-[var(--primary)] px-3 py-1 rounded-full text-sm font-medium">
-                    {emoji} {count}
-                  </div>
-                ));
-            })()}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-// Get avatar colors for options
-const getAvatarColors = (title: string, index: number) => {
+// Get deterministic avatar colors from string hash
+const getAvatarColors = (title: string) => {
+  // Create a simple hash from the string
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) {
+    const char = title.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  // Use hash to generate HSL values with fixed saturation and lightness
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 60%)`;
+};
+
+// Get avatar colors for options (legacy function)
+const getAvatarColorsWithIndex = (title: string, index: number) => {
   const gradients = [
     'from-purple-500 to-purple-700',
     'from-blue-500 to-blue-700', 
@@ -670,13 +685,13 @@ const ResultsTab = ({
                         target.style.display = 'none';
                         const parent = target.parentElement;
                         if (parent) {
-                          parent.innerHTML = `<div class="w-full h-full rounded-full bg-gradient-to-br ${getAvatarColors(sortedOptions[1].title, 1)} flex items-center justify-center text-white font-bold text-2xl">${sortedOptions[1].title.charAt(0).toUpperCase()}</div>`;
+                          parent.innerHTML = `<div class="w-full h-full rounded-full bg-gradient-to-br ${getAvatarColorsWithIndex(sortedOptions[1].title, 1)} flex items-center justify-center text-white font-bold text-2xl">${sortedOptions[1].title.charAt(0).toUpperCase()}</div>`;
                         }
                       }}
                     />
                   </div>
                 ) : (
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getAvatarColors(sortedOptions[1].title, 1)} flex items-center justify-center text-white font-bold text-2xl mb-2`}>
+                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getAvatarColorsWithIndex(sortedOptions[1].title, 1)} flex items-center justify-center text-white font-bold text-2xl mb-2`}>
                     {sortedOptions[1].title.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -711,13 +726,13 @@ const ResultsTab = ({
                         target.style.display = 'none';
                         const parent = target.parentElement;
                         if (parent) {
-                          parent.innerHTML = `<div class="w-full h-full rounded-full bg-gradient-to-br ${getAvatarColors(sortedOptions[0].title, 0)} flex items-center justify-center text-white font-bold text-3xl">${sortedOptions[0].title.charAt(0).toUpperCase()}</div>`;
+                          parent.innerHTML = `<div class="w-full h-full rounded-full bg-gradient-to-br ${getAvatarColorsWithIndex(sortedOptions[0].title, 0)} flex items-center justify-center text-white font-bold text-3xl">${sortedOptions[0].title.charAt(0).toUpperCase()}</div>`;
                         }
                       }}
                     />
                   </div>
                 ) : (
-                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getAvatarColors(sortedOptions[0].title, 0)} flex items-center justify-center text-white font-bold text-3xl mb-2`}>
+                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getAvatarColorsWithIndex(sortedOptions[0].title, 0)} flex items-center justify-center text-white font-bold text-3xl mb-2`}>
                     {sortedOptions[0].title.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -752,13 +767,13 @@ const ResultsTab = ({
                         target.style.display = 'none';
                         const parent = target.parentElement;
                         if (parent) {
-                          parent.innerHTML = `<div class="w-full h-full rounded-full bg-gradient-to-br ${getAvatarColors(sortedOptions[2].title, 2)} flex items-center justify-center text-white font-bold text-2xl">${sortedOptions[2].title.charAt(0).toUpperCase()}</div>`;
+                          parent.innerHTML = `<div class="w-full h-full rounded-full bg-gradient-to-br ${getAvatarColorsWithIndex(sortedOptions[2].title, 2)} flex items-center justify-center text-white font-bold text-2xl">${sortedOptions[2].title.charAt(0).toUpperCase()}</div>`;
                         }
                       }}
                     />
                   </div>
                 ) : (
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getAvatarColors(sortedOptions[2].title, 2)} flex items-center justify-center text-white font-bold text-2xl mb-2`}>
+                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getAvatarColorsWithIndex(sortedOptions[2].title, 2)} flex items-center justify-center text-white font-bold text-2xl mb-2`}>
                     {sortedOptions[2].title.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -816,13 +831,13 @@ const ResultsTab = ({
                             target.style.display = 'none';
                             const parent = target.parentElement;
                             if (parent) {
-                              parent.innerHTML = `<div class="w-full h-full rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-xs">${option.title.charAt(0).toUpperCase()}</div>`;
+                              parent.innerHTML = `<div class="w-full h-full rounded-lg bg-gradient-to-br ${getAvatarColorsWithIndex(option.title, index)} flex items-center justify-center text-white font-medium text-xs">${option.title.charAt(0).toUpperCase()}</div>`;
                             }
                           }}
                         />
                       </div>
                     ) : (
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-xs flex-shrink-0`}>
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColorsWithIndex(option.title, index)} flex items-center justify-center text-white font-medium text-xs flex-shrink-0`}>
                         {option.title.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -884,13 +899,13 @@ const ResultsTab = ({
                           target.style.display = 'none';
                           const parent = target.parentElement;
                           if (parent) {
-                            parent.innerHTML = `<div class="w-full h-full rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-sm">${option.title.charAt(0).toUpperCase()}</div>`;
+                            parent.innerHTML = `<div class="w-full h-full rounded-lg bg-gradient-to-br ${getAvatarColorsWithIndex(option.title, index)} flex items-center justify-center text-white font-medium text-sm">${option.title.charAt(0).toUpperCase()}</div>`;
                           }
                         }}
                       />
                     </div>
                   ) : (
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getAvatarColors(option.title, index)} flex items-center justify-center text-white font-medium text-sm`}>
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getAvatarColorsWithIndex(option.title, index)} flex items-center justify-center text-white font-medium text-sm`}>
                       {option.title.charAt(0).toUpperCase()}
                     </div>
                   )}
