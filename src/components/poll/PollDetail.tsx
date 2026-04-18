@@ -7,6 +7,8 @@ import confetti from 'canvas-confetti';
 import usePollStore from '@/store/pollStore';
 import { Poll, PollOption, getPositiveVotes } from '@/types/poll';
 import { getCreatorAvatar } from '@/data/mockPolls';
+import { RankPollVote } from './RankPollVote';
+import { RankPollResults } from './RankPollResults';
 
 
 interface PollDetailProps {
@@ -107,7 +109,7 @@ const EmojiPicker = ({ onSelect, onClose, position }: { onSelect: (emoji: string
 };
 
 const PollDetail = ({ pollId }: PollDetailProps) => {
-  const { voteOnOption, reactToOption, getPollById, userVotes, userReactions: userReactionsStore } = usePollStore();
+  const { voteOnOption, reactToOption, getPollById, userVotes, userReactions: userReactionsStore, userRankings, rankOptions, canUserAccessPoll } = usePollStore();
   const [activeTab, setActiveTab] = useState<'vote' | 'results'>('vote');
   const [timeRemaining, setTimeRemaining] = useState('');
   const [selectedReaction, setSelectedReaction] = useState<Record<string, string>>({});
@@ -128,9 +130,47 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
 
   // Memoize userReactions to prevent infinite re-renders
   const userReactions = useMemo(() => poll ? userReactionsStore[poll.id] || {} : {}, [userReactionsStore, poll?.id]);
-  
+
+  // Get poll type with default to 'vote'
+  const pollType = poll?.type ?? 'vote';
+
+  // Get user ranking for this poll
+  const currentUser = 'current-user'; // In a real app, this would come from auth context
+  const userRanking = userRankings[pollId]?.[currentUser];
+
+  // Check if user has ranked this poll
+  const hasRanked = !!userRanking;
+
+  // Check if current user is the creator
+  const isCreator = poll?.createdBy === currentUser;
+
+  // Generate invite link for private polls
+  const inviteLink = poll?.inviteToken ? `${typeof window !== 'undefined' ? window.location.origin : ''}/invite/${poll.inviteToken}` : null;
+
   if (!poll) {
     return <div className="text-center py-8">Poll not found</div>;
+  }
+
+  // Check if user has access to this poll
+  const canAccess = canUserAccessPoll(pollId, currentUser);
+  if (!canAccess) {
+    return (
+      <div className="max-w-md mx-auto mt-16 px-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-6">
+            You don't have permission to view this poll. This is a private poll and you need an invite link to access it.
+          </p>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+          >
+            Back to Feed
+          </button>
+        </div>
+      </div>
+    );
   }
   
   // Calculate total votes and check if poll has ended (only positive reactions count)
@@ -251,6 +291,24 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       setHasVoted(true);
     }
   };
+
+  // Handle ranking submission
+  const handleRanking = (rankedOptionIds: string[]) => {
+    rankOptions(poll.id, currentUser, rankedOptionIds);
+  };
+
+  // Handle copying invite link to clipboard
+  const handleCopyInviteLink = async () => {
+    if (inviteLink) {
+      try {
+        await navigator.clipboard.writeText(inviteLink);
+        // You could add a toast notification here
+        alert('Invite link copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    }
+  };
   
   // Handle reaction
   const handleReaction = (optionId: string, emoji: string) => {
@@ -331,6 +389,29 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             </div>
           )}
         </div>
+
+        {/* Invite Link Section - Only for creator of private polls */}
+        {isCreator && poll.isPrivate && inviteLink && (
+          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-blue-800 font-medium">🔒 Invite Link</span>
+                </div>
+                <p className="text-xs text-blue-600 mb-2">Only people with this link can see this poll</p>
+                <div className="bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm text-gray-700 break-all">
+                  {inviteLink}
+                </div>
+              </div>
+              <button
+                onClick={handleCopyInviteLink}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex-shrink-0"
+              >
+                Copy Link
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Tabs */}
@@ -367,41 +448,62 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       
       {/* Tab Content */}
       {activeTab === 'vote' && (
-        <VoteContent
-          poll={poll}
-          totalVotes={totalVotes}
-          hasEnded={hasEnded}
-          userVotedOption={userVotedOption}
-          userReactions={userReactions}
-          hasVoted={hasVoted}
-          onVote={handleVote}
-          onReaction={handleReaction}
-          imageErrors={imageErrors}
-          setImageErrors={setImageErrors}
-          winningOption={winningOption}
-          lightboxImage={lightboxImage}
-          setLightboxImage={setLightboxImage}
-          showEmojiPicker={showEmojiPicker}
-          setShowEmojiPicker={setShowEmojiPicker}
-        />
+        <>
+          {pollType === 'rank' ? (
+            <RankPollVote
+              poll={poll}
+              onSubmitRanking={handleRanking}
+              hasRanked={hasRanked}
+              userRanking={userRanking}
+            />
+          ) : (
+            <VoteContent
+              poll={poll}
+              totalVotes={totalVotes}
+              hasEnded={hasEnded}
+              userVotedOption={userVotedOption}
+              userReactions={userReactions}
+              hasVoted={hasVoted}
+              onVote={handleVote}
+              onReaction={handleReaction}
+              imageErrors={imageErrors}
+              setImageErrors={setImageErrors}
+              winningOption={winningOption}
+              lightboxImage={lightboxImage}
+              setLightboxImage={setLightboxImage}
+              showEmojiPicker={showEmojiPicker}
+              setShowEmojiPicker={setShowEmojiPicker}
+            />
+          )}
+        </>
       )}
-      
+
       {activeTab === 'results' && (
-        <ResultsContent
-          poll={poll}
-          totalVotes={totalVotes}
-          hasEnded={hasEnded}
-          userVotedOption={userVotedOption}
-          userReactions={userReactions}
-          winningOption={winningOption}
-          imageErrors={imageErrors}
-          setImageErrors={setImageErrors}
-          lightboxImage={lightboxImage}
-          setLightboxImage={setLightboxImage}
-          onReaction={handleReaction}
-          showEmojiPicker={showEmojiPicker}
-          setShowEmojiPicker={setShowEmojiPicker}
-        />
+        <>
+          {pollType === 'rank' ? (
+            <RankPollResults
+              poll={poll}
+              allRankings={userRankings[pollId] || {}}
+              totalParticipants={Object.keys(userRankings[pollId] || {}).length}
+            />
+          ) : (
+            <ResultsContent
+              poll={poll}
+              totalVotes={totalVotes}
+              hasEnded={hasEnded}
+              userVotedOption={userVotedOption}
+              userReactions={userReactions}
+              winningOption={winningOption}
+              imageErrors={imageErrors}
+              setImageErrors={setImageErrors}
+              lightboxImage={lightboxImage}
+              setLightboxImage={setLightboxImage}
+              onReaction={handleReaction}
+              showEmojiPicker={showEmojiPicker}
+              setShowEmojiPicker={setShowEmojiPicker}
+            />
+          )}
+        </>
       )}
     </div>
   );

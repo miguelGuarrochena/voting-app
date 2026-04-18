@@ -20,6 +20,7 @@ type Participant = {
 };
 
 export const CreatePollForm = () => {
+  const [pollType, setPollType] = useState<'vote' | 'rank'>('vote');
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState('');
   const [description, setDescription] = useState('');
@@ -239,6 +240,8 @@ export const CreatePollForm = () => {
         expiresAt: new Date(expirationDate),
         visibility: (!isPrivate ? 'public' : 'private') as 'public' | 'private',
         createdBy: 'current-user',
+        type: pollType,
+        isPrivate: isPrivate,
         options: options
           .filter(option => option.text.trim() !== '')
           .map(option => ({
@@ -267,8 +270,47 @@ export const CreatePollForm = () => {
         {/* Poll Basics Section */}
         <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6 md:p-8">
           <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Poll Basics</h2>
-          
+
           <div className="space-y-6">
+            {/* Poll Type Selector */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)] mb-3">
+                Poll Type *
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setPollType('vote')}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    pollType === 'vote'
+                      ? 'border-[var(--primary)] bg-[var(--primary-light)]'
+                      : 'border-[var(--border)] hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🗳️</div>
+                    <div className="font-medium text-[var(--text)]">Vote Poll</div>
+                    <div className="text-xs text-[var(--text-muted)] mt-1">Each person picks one option</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPollType('rank')}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    pollType === 'rank'
+                      ? 'border-[var(--primary)] bg-[var(--primary-light)]'
+                      : 'border-[var(--border)] hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🏆</div>
+                    <div className="font-medium text-[var(--text)]">Rank Poll</div>
+                    <div className="text-xs text-[var(--text-muted)] mt-1">Order all options by preference</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-[var(--text)] mb-2" htmlFor="title">
                 Poll Title *
@@ -514,6 +556,11 @@ export const CreatePollForm = () => {
                 <label htmlFor="private" className="block text-sm font-medium text-[var(--text)]">
                   Private - Only invited participants can view and vote
                 </label>
+                {isPrivate && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    🔒 Only people you share the invite link with can see this poll
+                  </p>
+                )}
                 {isPrivate && participants.length === 0 && (
                   <p className="text-sm text-amber-600 mt-2">
                     ⚠️ Private polls require at least one participant

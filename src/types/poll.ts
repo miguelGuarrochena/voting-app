@@ -49,6 +49,10 @@ export interface Poll {
   options: PollOption[];
   totalReactions: number;
   views: number;
+  type?: 'vote' | 'rank';       // default: 'vote' (existing behavior)
+  isPrivate?: boolean;           // default: false (existing behavior)
+  invitedUsers?: string[];       // list of userIds or emails who have access
+  inviteToken?: string;          // unique token for shareable invite link
 }
 
 export interface FeedState {

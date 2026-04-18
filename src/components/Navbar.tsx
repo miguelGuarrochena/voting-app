@@ -157,39 +157,50 @@ const Navbar = () => {
               </Link>
 
               {isAuthenticated ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:bg-[var(--primary)] transition-colors"
+                <>
+                  <Link
+                    href="/my-polls"
+                    className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+                      pathname === '/my-polls' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                    }`}
                   >
-                    {getCreatorAvatar(user?.name || 'User')}
-                  </button>
-                  
-                  {showUserMenu && (
-                    <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
-                      <div className="py-1">
-                        <Link
-                          href="/settings"
-                          onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                        >
-                          <CogIcon className="w-4 h-4" />
-                          <span>{t('nav.settings')}</span>
-                        </Link>
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            setShowUserMenu(false);
-                          }}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                        >
-                          <UserCircleIcon className="w-4 h-4" />
-                          <span>{t('nav.logout')}</span>
-                        </button>
+                    <UserCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="text-xs mt-1">My Polls</span>
+                  </Link>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:bg-[var(--primary)] transition-colors"
+                    >
+                      {getCreatorAvatar(user?.name || 'User')}
+                    </button>
+
+                    {showUserMenu && (
+                      <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
+                        <div className="py-1">
+                          <Link
+                            href="/settings"
+                            onClick={() => setShowUserMenu(false)}
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          >
+                            <CogIcon className="w-4 h-4" />
+                            <span>{t('nav.settings')}</span>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              handleLogout();
+                              setShowUserMenu(false);
+                            }}
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          >
+                            <UserCircleIcon className="w-4 h-4" />
+                            <span>{t('nav.logout')}</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </>
               ) : (
                 <Link
                   href="/auth/login"
@@ -268,6 +279,19 @@ const Navbar = () => {
               <CogIcon className="w-5 h-5 animate-spin-occasional" />
               <span>{t('nav.spin')}</span>
               {pathname === '/spin' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
+              )}
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
+            </Link>
+
+            <Link
+              href="/my-polls"
+              className={`relative text-base lg:text-lg font-medium transition-colors ${
+                pathname === '/my-polls' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              My Polls
+              {pathname === '/my-polls' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />

@@ -14,6 +14,8 @@ export const defaultPolls: Poll[] = [
     createdBy: 'Sarah M.',
     totalReactions: 245,
     views: 523,
+    type: 'vote',
+    isPrivate: false,
     options: [
       {
         id: 'opt1',
@@ -92,6 +94,8 @@ export const defaultPolls: Poll[] = [
     createdBy: 'Mike R.',
     totalReactions: 189,
     views: 412,
+    type: 'vote',
+    isPrivate: false,
     options: [
       {
         id: 'opt1',
@@ -170,6 +174,8 @@ export const defaultPolls: Poll[] = [
     createdBy: 'Emma L.',
     totalReactions: 367,
     views: 892,
+    type: 'rank',
+    isPrivate: false,
     options: [
       {
         id: 'opt1',
@@ -264,6 +270,8 @@ export const defaultPolls: Poll[] = [
     createdBy: 'DevTeam',
     totalReactions: 423,
     views: 1256,
+    type: 'vote',
+    isPrivate: true,
     options: [
       {
         id: 'opt1',
@@ -358,6 +366,8 @@ export const defaultPolls: Poll[] = [
     createdBy: 'Lisa M.',
     totalReactions: 156,
     views: 387,
+    type: 'vote',
+    isPrivate: false,
     options: [
       {
         id: 'opt1',
@@ -436,6 +446,8 @@ export const defaultPolls: Poll[] = [
     createdBy: 'Peter S.',
     totalReactions: 298,
     views: 645,
+    type: 'vote',
+    isPrivate: false,
     options: [
       {
         id: 'opt1',
