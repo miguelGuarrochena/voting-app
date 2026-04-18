@@ -125,7 +125,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   
   // Get the poll from the store
   const poll = getPollById(pollId);
-  
+
   // Memoize userReactions to prevent infinite re-renders
   const userReactions = useMemo(() => poll ? userReactionsStore[poll.id] || {} : {}, [userReactionsStore, poll?.id]);
   

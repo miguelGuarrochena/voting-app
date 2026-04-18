@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Poll, PollOption, ReactionCount, UserReaction, UserVote, createEmptyReactions } from '@/types/poll';
-import { mockPolls } from '@/data/mockPolls';
+import { initializeDefaultPolls } from '@/data/defaultPolls';
 
 // Helper function to create a new empty reaction count
 const createEmptyReactionsLocal = (): ReactionCount => ({});
@@ -29,8 +29,8 @@ interface PollStore {
 const usePollStore = create<PollStore>()(
   persist(
     (set, get) => ({
-      // Initial state
-      polls: mockPolls,
+      // Initial state - load from localStorage to match API
+      polls: typeof window !== 'undefined' ? initializeDefaultPolls() : [],
       filter: 'trending',
       currentPoll: null,
       userReactions: {},
@@ -58,7 +58,7 @@ const usePollStore = create<PollStore>()(
           // In a real app, this would be an API call
           // For now, we'll use a small timeout to simulate network request
           await new Promise(resolve => setTimeout(resolve, 100));
-          set({ polls: mockPolls });
+          set({ polls: initializeDefaultPolls() });
         } finally {
           set({ isLoading: false });
         }
@@ -66,9 +66,9 @@ const usePollStore = create<PollStore>()(
       
       loadPoll: async (pollId: string) => {
         // In a real app, this would be an API call
-        const poll = mockPolls.find(p => p.id === pollId) || null;
+        const poll = initializeDefaultPolls().find((p: Poll) => p.id === pollId) || null;
         set({ currentPoll: poll });
-        
+
         // Track view
         if (poll) {
           get().addView(pollId);
@@ -131,7 +131,7 @@ const usePollStore = create<PollStore>()(
           })),
         };
         
-        // Only update the store state, don't modify mockPolls
+        // Only update the store state, don't modify default polls
         set((state) => {
           // Check if poll with this ID already exists
           if (state.polls.some(poll => poll.id === newPoll.id)) {

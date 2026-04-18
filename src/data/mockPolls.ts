@@ -16,7 +16,7 @@ export const mockPolls: Poll[] = [
         id: 'opt1',
         pollId: '1',
         title: 'Vampire',
-        imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 28,
           '❤️': 12,
@@ -32,7 +32,7 @@ export const mockPolls: Poll[] = [
         id: 'opt2',
         pollId: '1',
         title: 'Witch',
-        imageUrl: 'https://images.unsplash.com/photo-1574362848147-3d7b1966467e?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1574362848147-3d7b1966467e?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 18,
           '❤️': 8,
@@ -48,7 +48,7 @@ export const mockPolls: Poll[] = [
         id: 'opt3',
         pollId: '1',
         title: 'Superhero',
-        imageUrl: 'https://images.unsplash.com/photo-1604053576264-d6996eea3a1d?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1604053576264-d6996eea3a1d?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 12,
           '❤️': 6,
@@ -77,7 +77,7 @@ export const mockPolls: Poll[] = [
         id: 'opt1',
         pollId: '2',
         title: 'Miami',
-        imageUrl: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 22,
           '❤️': 8,
@@ -93,7 +93,7 @@ export const mockPolls: Poll[] = [
         id: 'opt2',
         pollId: '2',
         title: 'Bali',
-        imageUrl: 'https://images.unsplash.com/photo-1518548419970-5823dfd2cd30?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1518548419970-5823dfd2cd30?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 15,
           '❤️': 6,
@@ -109,7 +109,7 @@ export const mockPolls: Poll[] = [
         id: 'opt3',
         pollId: '2',
         title: 'Barcelona',
-        imageUrl: 'https://images.unsplash.com/photo-1583894217816-65e281134209?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1583894217816-65e281134209?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 8,
           '❤️': 4,
@@ -196,7 +196,7 @@ export const mockPolls: Poll[] = [
         id: 'opt1',
         pollId: '4',
         title: 'Drama Masterpiece',
-        imageUrl: 'https://images.unsplash.com/photo-1489599809568-352b6a1a5a8c?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1489599809568-352b6a1a5a8c?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 35,
           '❤️': 22,
@@ -212,7 +212,7 @@ export const mockPolls: Poll[] = [
         id: 'opt2',
         pollId: '4',
         title: 'Action Thriller',
-        imageUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d2abc40?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d2abc40?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 28,
           '❤️': 18,
@@ -228,7 +228,7 @@ export const mockPolls: Poll[] = [
         id: 'opt3',
         pollId: '4',
         title: 'Sci-Fi Epic',
-        imageUrl: 'https://images.unsplash.com/photo-1485949023787-4c3125afaccc?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1485949023787-4c3125afaccc?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 18,
           '❤️': 12,
@@ -244,7 +244,7 @@ export const mockPolls: Poll[] = [
         id: 'opt4',
         pollId: '4',
         title: 'Comedy Hit',
-        imageUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 12,
           '❤️': 6,
@@ -374,7 +374,7 @@ export const mockPolls: Poll[] = [
         id: 'opt1',
         pollId: '7',
         title: 'Modern Minimalist',
-        imageUrl: 'https://images.unsplash.com/photo-1497366214047-f369c0f1a4c5?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1497366214047-f369c0f1a4c5?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 8,
           '❤️': 4,
@@ -390,7 +390,7 @@ export const mockPolls: Poll[] = [
         id: 'opt2',
         pollId: '7',
         title: 'Industrial Chic',
-        imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 6,
           '❤️': 3,
@@ -406,7 +406,7 @@ export const mockPolls: Poll[] = [
         id: 'opt3',
         pollId: '7',
         title: 'Cozy Traditional',
-        imageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 4,
           '❤️': 2,
@@ -493,7 +493,7 @@ export const mockPolls: Poll[] = [
         id: 'opt1',
         pollId: '9',
         title: 'Python',
-        imageUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 45,
           '❤️': 32,
@@ -509,7 +509,7 @@ export const mockPolls: Poll[] = [
         id: 'opt2',
         pollId: '9',
         title: 'JavaScript',
-        imageUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 38,
           '❤️': 28,
@@ -525,7 +525,7 @@ export const mockPolls: Poll[] = [
         id: 'opt3',
         pollId: '9',
         title: 'Java',
-        imageUrl: 'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 22,
           '❤️': 18,
@@ -541,7 +541,7 @@ export const mockPolls: Poll[] = [
         id: 'opt4',
         pollId: '9',
         title: 'C++',
-        imageUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 15,
           '❤️': 12,
@@ -557,7 +557,7 @@ export const mockPolls: Poll[] = [
         id: 'opt5',
         pollId: '9',
         title: 'Go',
-        imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 12,
           '❤️': 8,
@@ -573,7 +573,7 @@ export const mockPolls: Poll[] = [
         id: 'opt6',
         pollId: '9',
         title: 'Rust',
-        imageUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80',
+        imageUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80',
         reactions: {
           '👍': 8,
           '❤️': 6,

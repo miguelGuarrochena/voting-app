@@ -12,11 +12,11 @@ export default function PollPage() {
   const { id: pollId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Get the poll from the store
   const { getPollById } = usePollStore();
   const poll = getPollById(pollId as string);
-  
+
   useEffect(() => {
     // Simulate loading
     const timer = setTimeout(() => {
@@ -25,7 +25,7 @@ export default function PollPage() {
         setError('Poll not found');
       }
     }, 300);
-    
+
     return () => clearTimeout(timer);
   }, [poll]);
 
@@ -36,7 +36,7 @@ export default function PollPage() {
           <div className="h-8 bg-gray-200 rounded w-3/4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-          
+
           <div className="mt-8 space-y-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="space-y-2">
@@ -65,8 +65,8 @@ export default function PollPage() {
                 {error || 'Poll not found. It may have been deleted or never existed.'}
               </p>
               <div className="mt-4">
-                <Link 
-                  href="/" 
+                <Link
+                  href="/"
                   className="text-sm font-medium text-red-700 hover:text-red-600 underline"
                 >
                   ← Back to home
@@ -83,8 +83,8 @@ export default function PollPage() {
     <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* Desktop Back Button */}
       <div className="hidden sm:block mb-6">
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
         >
           <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -93,7 +93,7 @@ export default function PollPage() {
           Back to polls
         </Link>
       </div>
-      
+
       <PollDetail pollId={poll.id} />
     </div>
   );
