@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useCallback } from 'react';
 import usePollStore from '@/store/pollStore';
-import { PollCard } from '@/components/PollCard';
+import { PollCard } from '@/components/poll/PollCard';
 
 const FeedGrid = () => {
   // Select individual values from the store to prevent unnecessary re-renders

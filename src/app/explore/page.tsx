@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { PollCard } from '@/components/PollCard';
+import { PollCard } from '@/components/poll/PollCard';
 import usePollStore from '@/store/pollStore';
 import { motion } from 'framer-motion';
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';

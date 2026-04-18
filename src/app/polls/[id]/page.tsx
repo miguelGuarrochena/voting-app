@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import usePollStore from '@/store/pollStore';
-import PollDetail from '@/components/PollDetail';
+import PollDetail from '@/components/poll/PollDetail';
 
 export default function PollPage() {
   const router = useRouter();

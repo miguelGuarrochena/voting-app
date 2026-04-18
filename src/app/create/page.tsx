@@ -1,4 +1,4 @@
-import { CreatePollForm } from '@/components/create-poll-form';
+import { CreatePollForm } from '@/components/create/create-poll-form';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 const CreatePollPage = () => {

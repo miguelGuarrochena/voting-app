@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { PollCard } from '@/components/PollCard';
+import { PollCard } from '@/components/poll/PollCard';
 import { usePolls } from '@/hooks/useApi';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';

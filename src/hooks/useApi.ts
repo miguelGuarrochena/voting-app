@@ -54,7 +54,7 @@ export function useApiCall<T, P extends any[] = []>(
   useEffect(() => {
     hasMounted.current = true;
     if (stableOptions.immediate) {
-      execute();
+      execute(...([] as unknown as P));
     }
     return () => {
       hasMounted.current = false;
