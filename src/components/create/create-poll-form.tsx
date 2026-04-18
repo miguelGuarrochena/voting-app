@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatForDateTimeInput, addDays } from '@/utils/date';
 import { createEmptyReactions } from '@/types/poll';
@@ -43,7 +43,33 @@ export const CreatePollForm = () => {
     type: 'title' | 'option';
     optionId?: string;
   } | null>(null);
+  const [openEmojiPicker, setOpenEmojiPicker] = useState<string | null>(null);
   const router = useRouter();
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  // Emoji categories
+  const emojiCategories = {
+    smileys: ['😀', '😂', '😍', '🥰', '😎', '🤔', '😅', '😭', '😤', '🤩'],
+    gestures: ['👍', '👎', '👏', '🙌', '🤝', '🫶', '👋', '✌️', '🤞', '💪'],
+    objects: ['🔥', '⭐', '💡', '🎯', '🏆', '🎉', '🎊', '💎', '🚀', '⚡'],
+    food: ['🍕', '🍔', '🍣', '🍜', '🌮', '🍦', '🍩', '🍺', '🥤', '🧁'],
+    nature: ['🐶', '🐱', '🦁', '🐼', '🦊', '🌸', '🌊', '🌙', '⛅', '🌈']
+  };
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setOpenEmojiPicker(null);
+      }
+    };
+
+    if (openEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [openEmojiPicker]);
+
   const { createPoll, loading, error: submitError } = useCreatePoll();
 
   const addOption = () => {
@@ -63,8 +89,8 @@ export const CreatePollForm = () => {
     );
   };
 
-  const addParticipant = (e: React.FormEvent) => {
-    e.preventDefault();
+  const addParticipant = (e?: React.FormEvent | React.KeyboardEvent) => {
+    e?.preventDefault();
     if (!newParticipant.trim()) return;
     setParticipants([
       ...participants,
@@ -231,6 +257,15 @@ export const CreatePollForm = () => {
       return;
     }
     
+    // Log submission data for debugging
+    console.log('[CreatePoll] Submitting poll data:', {
+      title: title.trim(),
+      options: options.filter(option => option.text.trim() !== ''),
+      type: pollType,
+      isPrivate: isPrivate,
+      invitedUsers: participants.map(p => p.emailOrUsername)
+    });
+    
     try {
       // Create the new poll
       const newPoll = await createPoll({
@@ -242,6 +277,7 @@ export const CreatePollForm = () => {
         createdBy: 'current-user',
         type: pollType,
         isPrivate: isPrivate,
+        invitedUsers: participants.map(p => p.emailOrUsername),
         options: options
           .filter(option => option.text.trim() !== '')
           .map(option => ({
@@ -254,10 +290,12 @@ export const CreatePollForm = () => {
           })),
       });
       
+      console.log('[CreatePoll] Poll created successfully:', newPoll);
+      
       // Redirect to the new poll
       router.push('/');
     } catch (error) {
-      console.error('Failed to create poll:', error);
+      console.error('[CreatePoll] Failed to create poll:', error);
       setErrors({ submit: 'Failed to create poll. Please try again.' });
     }
   };
@@ -450,14 +488,56 @@ export const CreatePollForm = () => {
                       placeholder={`Option ${index + 1}`}
                       maxLength={50}
                     />
-                    <input
-                      type="text"
-                      value={option.emoji || ''}
-                      onChange={(e) => updateOption(option.id, { emoji: e.target.value })}
-                      className="w-16 px-3 py-3 border border-[var(--border)] rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors"
-                      placeholder="😊"
-                      maxLength={2}
-                    />
+                    <div className="relative" ref={openEmojiPicker === option.id ? emojiPickerRef : null}>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-[var(--text-muted)] mb-1">Emoji (optional)</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setOpenEmojiPicker(openEmojiPicker === option.id ? null : option.id)}
+                            className="w-12 h-12 px-2 py-2 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] hover:bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-2xl flex items-center justify-center"
+                          >
+                            {option.emoji || '😶'}
+                          </button>
+                          {option.emoji && (
+                            <button
+                              type="button"
+                              onClick={() => updateOption(option.id, { emoji: '' })}
+                              className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-700 text-sm font-bold rounded-full hover:bg-red-50 transition-colors"
+                              title="Clear emoji"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {openEmojiPicker === option.id && (
+                        <div className="absolute top-full left-0 mt-2 z-50 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] shadow-lg p-3 w-64">
+                          <div className="space-y-2">
+                            {Object.entries(emojiCategories).map(([category, emojis]) => (
+                              <div key={category}>
+                                <div className="text-xs text-[var(--text-muted)] capitalize mb-1">{category}</div>
+                                <div className="grid grid-cols-5 gap-1">
+                                  {emojis.map((emoji) => (
+                                    <button
+                                      key={emoji}
+                                      type="button"
+                                      onClick={() => {
+                                        updateOption(option.id, { emoji });
+                                        setOpenEmojiPicker(null);
+                                      }}
+                                      className="w-10 h-10 text-xl hover:bg-[var(--surface-2)] rounded transition-colors flex items-center justify-center"
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <input
@@ -583,21 +663,27 @@ export const CreatePollForm = () => {
 
                     <div className="mt-4">
                       <h3 className="font-medium text-sm text-[var(--text)] mb-2">Invite Participants</h3>
-                      <form onSubmit={addParticipant} className="flex gap-2">
+                      <div className="flex gap-2">
                         <input
                           type="text"
                           value={newParticipant}
                           onChange={(e) => setNewParticipant(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              addParticipant(e);
+                            }
+                          }}
                           className="flex-1 px-4 py-3 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)]"
                           placeholder="Enter email or username"
                         />
                         <button
-                          type="submit"
+                          type="button"
+                          onClick={() => addParticipant()}
                           className="px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-[var(--radius-md)] hover:bg-[var(--primary)] hover:text-white transition-colors font-medium"
                         >
                           Add
                         </button>
-                      </form>
+                      </div>
 
                       {participants.length > 0 && (
                         <div className="mt-3 space-y-2">
