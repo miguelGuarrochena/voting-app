@@ -11,6 +11,7 @@ interface RankPollVoteProps {
   onSubmitRanking: (rankedOptionIds: string[]) => void;
   hasRanked: boolean;
   userRanking: string[] | undefined;
+  className?: string;
 }
 
 // Sortable item component
@@ -34,7 +35,7 @@ function SortableOption({ option, index }: { option: Poll['options'][0]; index: 
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-white border-2 border-gray-200 rounded-xl p-4 mb-3 cursor-move hover:border-gray-300 hover:shadow-md transition-all flex items-center gap-4"
+      className="bg-white border-2 border-gray-200 rounded-xl p-4 mb-3 cursor-move hover:border-gray-300 hover:shadow-md transition-all flex items-center gap-4 w-full"
     >
       <div className="flex-shrink-0 w-8 h-8 bg-[var(--primary)] text-white rounded-full flex items-center justify-center font-bold text-sm">
         {index + 1}
@@ -58,7 +59,7 @@ function SortableOption({ option, index }: { option: Poll['options'][0]; index: 
   );
 }
 
-export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking }: RankPollVoteProps) => {
+export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, className = '' }: RankPollVoteProps) => {
   const [options, setOptions] = useState(poll.options);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,14 +97,14 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking }: 
       .filter((opt): opt is Poll['options'][0] => opt !== undefined);
 
     return (
-      <div className="space-y-3">
+      <div className={`w-full space-y-3 ${className}`}>
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
           <p className="text-green-800 font-medium">✓ You have submitted your ranking</p>
         </div>
         {rankedOptions.map((option, index) => (
           <div
             key={option.id}
-            className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4"
+            className="bg-white border-2 border-gray-200 rounded-xl p-4 flex items-center gap-4"
           >
             <div className="flex-shrink-0 w-8 h-8 bg-[var(--primary)] text-white rounded-full flex items-center justify-center font-bold text-sm">
               {index + 1}
@@ -125,7 +126,7 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking }: 
   }
 
   return (
-    <div>
+    <div className={`w-full ${className}`}>
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
         <p className="text-blue-800 text-sm">
           <strong>How to rank:</strong> Drag the options to reorder them. Your top choice should be at the top (position 1).

@@ -115,7 +115,7 @@ const ExplorePage = () => {
             <div className="h-8 w-32 bg-gray-200 rounded mx-auto mb-4" />
             <div className="h-6 w-64 bg-gray-200 rounded mx-auto" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(9)].map((_, i) => (
               <PollCardSkeleton key={i} />
             ))}
@@ -206,7 +206,7 @@ const ExplorePage = () => {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(9)].map((_, i) => (
               <PollCardSkeleton key={i} />
             ))}
@@ -253,7 +253,7 @@ const ExplorePage = () => {
         {/* Polls Grid */}
         {!isLoading && filteredPolls.length > 0 && (
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}

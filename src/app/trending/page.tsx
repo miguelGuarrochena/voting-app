@@ -57,7 +57,7 @@ const TrendingPage = () => {
             <div className="h-8 w-32 bg-gray-200 rounded mx-auto mb-4" />
             <div className="h-6 w-64 bg-gray-200 rounded mx-auto" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
               <PollCardSkeleton key={i} />
             ))}
@@ -117,7 +117,7 @@ const TrendingPage = () => {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
               <PollCardSkeleton key={i} />
             ))}
@@ -149,7 +149,7 @@ const TrendingPage = () => {
         {/* Trending Polls Grid */}
         {!isLoading && trendingPolls.length > 0 && (
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}

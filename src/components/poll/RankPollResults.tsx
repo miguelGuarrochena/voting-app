@@ -7,9 +7,10 @@ interface RankPollResultsProps {
   poll: Poll;
   allRankings: Record<string, string[]>; // userId -> rankedOptionIds
   totalParticipants: number;
+  className?: string;
 }
 
-export const RankPollResults = ({ poll, allRankings, totalParticipants }: RankPollResultsProps) => {
+export const RankPollResults = ({ poll, allRankings, totalParticipants, className = '' }: RankPollResultsProps) => {
   // Calculate Borda count scores for each option
   const optionScores = useMemo(() => {
     const scores: Record<string, number> = {};
@@ -50,7 +51,7 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants }: RankPo
 
   if (!hasRankings) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
+      <div className="w-full bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
         <p className="text-gray-600 text-lg">No rankings submitted yet</p>
         <p className="text-gray-500 text-sm mt-2">Be the first to rank these options!</p>
       </div>
@@ -58,7 +59,7 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants }: RankPo
   }
 
   return (
-    <div className="space-y-4">
+    <div className={`w-full space-y-4 ${className}`}>
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
         <p className="text-blue-800 text-sm">
           <strong>Borda Count Results:</strong> Options are ranked by total points. First place gets {poll.options.length - 1} points, second gets {poll.options.length - 2}, etc.

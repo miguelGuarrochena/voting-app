@@ -370,7 +370,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   const winningOption = getWinningOption();
 
   return (
-    <div className="w-full pb-20 md:pb-0">
+    <div className="w-full max-w-2xl mx-auto pb-20 md:pb-0">
       {/* Poll Header */}
       <div className="bg-white rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4 md:p-6 mb-4 md:mb-6">
         <div className="flex flex-row items-start justify-between gap-3 mb-4">
@@ -393,7 +393,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             <span className="hidden md:inline text-sm font-medium ml-2">{shareCopied ? t('poll.copied') : t('poll.share')}</span>
           </button>
         </div>
-        
+
         {/* Creator Info */}
         <div className="flex flex-col gap-1">
           {/* Line 1: avatar + username + Active badge */}
@@ -447,7 +447,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
           </div>
         )}
       </div>
-      
+
       {/* Tabs */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-1 mb-4 md:mb-6">
         <div className="flex gap-1">
@@ -479,66 +479,68 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
           </button>
         </div>
       </div>
-      
-      {/* Tab Content */}
-      {activeTab === 'vote' && (
-        <>
-          {pollType === 'rank' ? (
-            <RankPollVote
-              poll={poll}
-              onSubmitRanking={handleRanking}
-              hasRanked={hasRanked}
-              userRanking={userRanking}
-            />
-          ) : (
-            <VoteContent
-              poll={poll}
-              totalVotes={totalVotes}
-              hasEnded={hasEnded}
-              userVotedOption={userVotedOption}
-              userReactions={userReactions}
-              hasVoted={hasVoted}
-              onVote={handleVote}
-              onReaction={handleReaction}
-              imageErrors={imageErrors}
-              setImageErrors={setImageErrors}
-              winningOption={winningOption}
-              lightboxImage={lightboxImage}
-              setLightboxImage={setLightboxImage}
-              showEmojiPicker={showEmojiPicker}
-              setShowEmojiPicker={setShowEmojiPicker}
-            />
-          )}
-        </>
-      )}
 
-      {activeTab === 'results' && (
-        <>
-          {pollType === 'rank' ? (
-            <RankPollResults
-              poll={poll}
-              allRankings={userRankings[pollId] || {}}
-              totalParticipants={Object.keys(userRankings[pollId] || {}).length}
-            />
-          ) : (
-            <ResultsContent
-              poll={poll}
-              totalVotes={totalVotes}
-              hasEnded={hasEnded}
-              userVotedOption={userVotedOption}
-              userReactions={userReactions}
-              winningOption={winningOption}
-              imageErrors={imageErrors}
-              setImageErrors={setImageErrors}
-              lightboxImage={lightboxImage}
-              setLightboxImage={setLightboxImage}
-              onReaction={handleReaction}
-              showEmojiPicker={showEmojiPicker}
-              setShowEmojiPicker={setShowEmojiPicker}
-            />
-          )}
-        </>
-      )}
+      {/* Tab Content */}
+      <div className="w-full">
+        {activeTab === 'vote' && (
+          <>
+            {pollType === 'rank' ? (
+              <RankPollVote
+                poll={poll}
+                onSubmitRanking={handleRanking}
+                hasRanked={hasRanked}
+                userRanking={userRanking}
+              />
+            ) : (
+              <VoteContent
+                poll={poll}
+                totalVotes={totalVotes}
+                hasEnded={hasEnded}
+                userVotedOption={userVotedOption}
+                userReactions={userReactions}
+                hasVoted={hasVoted}
+                onVote={handleVote}
+                onReaction={handleReaction}
+                imageErrors={imageErrors}
+                setImageErrors={setImageErrors}
+                winningOption={winningOption}
+                lightboxImage={lightboxImage}
+                setLightboxImage={setLightboxImage}
+                showEmojiPicker={showEmojiPicker}
+                setShowEmojiPicker={setShowEmojiPicker}
+              />
+            )}
+          </>
+        )}
+
+        {activeTab === 'results' && (
+          <>
+            {pollType === 'rank' ? (
+              <RankPollResults
+                poll={poll}
+                allRankings={userRankings[pollId] || {}}
+                totalParticipants={Object.keys(userRankings[pollId] || {}).length}
+              />
+            ) : (
+              <ResultsContent
+                poll={poll}
+                totalVotes={totalVotes}
+                hasEnded={hasEnded}
+                userVotedOption={userVotedOption}
+                userReactions={userReactions}
+                winningOption={winningOption}
+                imageErrors={imageErrors}
+                setImageErrors={setImageErrors}
+                lightboxImage={lightboxImage}
+                setLightboxImage={setLightboxImage}
+                onReaction={handleReaction}
+                showEmojiPicker={showEmojiPicker}
+                setShowEmojiPicker={setShowEmojiPicker}
+              />
+            )}
+          </>
+        )}
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <AnimatePresence>

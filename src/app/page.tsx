@@ -107,7 +107,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Hero Section */}
-      <div className="relative overflow-hidden pt-24 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="relative overflow-hidden pt-0 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="relative max-w-4xl mx-auto text-center">
           <motion.h1 
             className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-[var(--text)] mb-4 md:mb-6"

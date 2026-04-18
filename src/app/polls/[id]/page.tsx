@@ -31,8 +31,8 @@ export default function PollPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-screen-xl mx-auto px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
-        <div className="max-w-3xl mx-auto animate-pulse space-y-4">
+      <div className="px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
+        <div className="max-w-2xl mx-auto animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-3/4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -52,8 +52,8 @@ export default function PollPage() {
 
   if (error || !poll) {
     return (
-      <div className="max-w-screen-xl mx-auto px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
-        <div className="max-w-3xl mx-auto bg-red-50 border-l-4 border-red-400 p-4">
+      <div className="px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
+        <div className="max-w-2xl mx-auto bg-red-50 border-l-4 border-red-400 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -80,10 +80,8 @@ export default function PollPage() {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
-      <div className="max-w-3xl mx-auto">
-        <PollDetail pollId={poll.id} />
-      </div>
+    <div className="px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
+      <PollDetail pollId={poll.id} />
     </div>
   );
 }

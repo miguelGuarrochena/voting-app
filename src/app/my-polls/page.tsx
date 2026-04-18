@@ -46,7 +46,7 @@ export default function MyPollsPage() {
 
   return (
     <>
-    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8">
+    <div className="px-3 sm:px-6 py-8 pb-24 md:pb-8">
         <h1 className="font-display text-3xl font-bold text-[var(--text)] mb-8">{t('poll.myPolls')}</h1>
 
       {/* Public Polls Section */}
@@ -70,7 +70,7 @@ export default function MyPollsPage() {
             </a>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {publicPolls.map(poll => {
               const hasEnded = new Date(poll.expiresAt) <= new Date();
               return (
@@ -109,7 +109,7 @@ export default function MyPollsPage() {
             </a>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {privatePolls.map(poll => {
               const hasEnded = new Date(poll.expiresAt) <= new Date();
               return (
@@ -146,7 +146,7 @@ export default function MyPollsPage() {
             <p className="text-[var(--text-muted)]">When someone invites you to a private poll, it will appear here.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {invitedPolls.map(poll => (
               <div key={poll.id} className="relative">
                 <div className="absolute top-2 right-2 z-10 bg-blue-600/90 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
