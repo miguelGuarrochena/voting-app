@@ -30,6 +30,7 @@ interface PollStore {
   inviteUserToPoll: (pollId: string, userId: string) => void;
   canUserAccessPoll: (pollId: string, userId: string) => boolean;
   getPollByInviteToken: (token: string) => Poll | undefined;
+  deletePoll: (pollId: string) => void;
 }
 
 // Create the store with localStorage persistence
@@ -371,6 +372,13 @@ const usePollStore = create<PollStore>()(
 
       getPollByInviteToken: (token: string) => {
         return get().polls.find(p => p.inviteToken === token);
+      },
+
+      deletePoll: (pollId: string) => {
+        set(state => ({
+          polls: state.polls.filter(p => p.id !== pollId),
+          currentPoll: state.currentPoll?.id === pollId ? null : state.currentPoll
+        }));
       },
 
       isPositiveReaction: (emoji: string): boolean => {

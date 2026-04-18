@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -23,6 +23,59 @@ const SettingsPage = () => {
   const { language, toggleLanguage, t } = useLanguage();
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('profile');
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
+  // Settings state
+  const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(false);
+  const [pollReminders, setPollReminders] = useState(true);
+  const [privateProfile, setPrivateProfile] = useState(false);
+  const [showActivity, setShowActivity] = useState(true);
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('pickly_settings');
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        setDisplayName(parsed.displayName || user?.name || '');
+        setBio(parsed.bio || '');
+        setEmailNotifications(parsed.emailNotifications ?? true);
+        setPushNotifications(parsed.pushNotifications ?? false);
+        setPollReminders(parsed.pollReminders ?? true);
+        setPrivateProfile(parsed.privateProfile ?? false);
+        setShowActivity(parsed.showActivity ?? true);
+      } catch (e) {
+        console.error('Failed to parse settings:', e);
+      }
+    } else {
+      setDisplayName(user?.name || '');
+    }
+  }, [user]);
+
+  // Save settings to localStorage
+  const saveSettings = () => {
+    const settings = {
+      displayName,
+      bio,
+      language,
+      theme,
+      notifications: {
+        email: emailNotifications,
+        push: pushNotifications,
+        pollReminders,
+      },
+      privacy: {
+        showProfile: privateProfile,
+        showVotes: showActivity,
+      },
+    };
+    localStorage.setItem('pickly_settings', JSON.stringify(settings));
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 2000);
+  };
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
@@ -72,7 +125,7 @@ const SettingsPage = () => {
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
       <div className="bg-[var(--surface)] border-b border-[var(--border)]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <button
@@ -89,7 +142,7 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
@@ -154,18 +207,21 @@ const SettingsPage = () => {
                       </label>
                       <input
                         type="text"
-                        defaultValue={user?.name || ''}
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
                         className="w-full px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                         placeholder={t('settings.displayNamePlaceholder')}
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-[var(--text)] mb-2">
                         {t('settings.bio')}
                       </label>
                       <textarea
                         rows={3}
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
                         className="w-full px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                         placeholder={t('settings.bioPlaceholder')}
                       />
@@ -179,35 +235,44 @@ const SettingsPage = () => {
                   <h2 className="text-xl font-semibold text-[var(--text)] mb-4">
                     {t('settings.notifications')}
                   </h2>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-3">
                       <div>
                         <h3 className="font-medium text-[var(--text)]">{t('settings.emailNotifications')}</h3>
                         <p className="text-sm text-[var(--text-muted)]">{t('settings.emailNotificationsDesc')}</p>
                       </div>
-                      <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--primary)] transition-colors">
-                        <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
+                      <button
+                        onClick={() => setEmailNotifications(!emailNotifications)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${emailNotifications ? 'bg-[var(--primary)]' : 'bg-[var(--surface-2)]'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                     </div>
-                    
+
                     <div className="flex items-center justify-between py-3">
                       <div>
                         <h3 className="font-medium text-[var(--text)]">{t('settings.pushNotifications')}</h3>
                         <p className="text-sm text-[var(--text-muted)]">{t('settings.pushNotificationsDesc')}</p>
                       </div>
-                      <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--surface-2)] transition-colors">
-                        <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1" />
+                      <button
+                        onClick={() => setPushNotifications(!pushNotifications)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${pushNotifications ? 'bg-[var(--primary)]' : 'bg-[var(--surface-2)]'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${pushNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                     </div>
-                    
+
                     <div className="flex items-center justify-between py-3">
                       <div>
                         <h3 className="font-medium text-[var(--text)]">{t('settings.pollReminders')}</h3>
                         <p className="text-sm text-[var(--text-muted)]">{t('settings.pollRemindersDesc')}</p>
                       </div>
-                      <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--primary)] transition-colors">
-                        <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
+                      <button
+                        onClick={() => setPollReminders(!pollReminders)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${pollReminders ? 'bg-[var(--primary)]' : 'bg-[var(--surface-2)]'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${pollReminders ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                     </div>
                   </div>
@@ -219,25 +284,31 @@ const SettingsPage = () => {
                   <h2 className="text-xl font-semibold text-[var(--text)] mb-4">
                     {t('settings.privacy')}
                   </h2>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-3">
                       <div>
                         <h3 className="font-medium text-[var(--text)]">{t('settings.privateProfile')}</h3>
                         <p className="text-sm text-[var(--text-muted)]">{t('settings.privateProfileDesc')}</p>
                       </div>
-                      <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--surface-2)] transition-colors">
-                        <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1" />
+                      <button
+                        onClick={() => setPrivateProfile(!privateProfile)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${privateProfile ? 'bg-[var(--primary)]' : 'bg-[var(--surface-2)]'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${privateProfile ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                     </div>
-                    
+
                     <div className="flex items-center justify-between py-3">
                       <div>
                         <h3 className="font-medium text-[var(--text)]">{t('settings.showActivity')}</h3>
                         <p className="text-sm text-[var(--text-muted)]">{t('settings.showActivityDesc')}</p>
                       </div>
-                      <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-[var(--primary)] transition-colors">
-                        <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
+                      <button
+                        onClick={() => setShowActivity(!showActivity)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showActivity ? 'bg-[var(--primary)]' : 'bg-[var(--surface-2)]'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showActivity ? 'translate-x-6' : 'translate-x-1'}`} />
                       </button>
                     </div>
                   </div>
@@ -320,8 +391,11 @@ const SettingsPage = () => {
 
               {/* Save Button */}
               <div className="pt-6 border-t border-[var(--border)]">
-                <button className="bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors">
-                  {t('settings.saveChanges')}
+                <button
+                  onClick={saveSettings}
+                  className="bg-[var(--primary)] text-white px-6 py-2 rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors"
+                >
+                  {settingsSaved ? 'Changes saved ✓' : t('settings.saveChanges')}
                 </button>
               </div>
             </div>

@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { getCreatorAvatar } from '@/data/mockPolls';
 import { ImageGallery } from './ImageGallery';
+import { useLanguage } from '@/context/LanguageContext';
 
 // Define the reaction emojis
 const REACTION_EMOJIS = ALL_SUPPORTED_REACTIONS;
@@ -27,9 +28,11 @@ interface PollCardProps {
   poll: Poll;
   compact?: boolean;
   className?: string;
+  onDelete?: (pollId: string) => void;
 }
 
-export const PollCard = memo(({ poll, compact = false, className = "" }: PollCardProps) => {
+export const PollCard = memo(({ poll, compact = false, className = "", onDelete }: PollCardProps) => {
+  const { t } = useLanguage();
   const { handleVote, handleReaction, hasVoted, votedOption, userReactions, isInteracting } = usePollInteractions(poll.id);
   const [mounted, setMounted] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -205,7 +208,7 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
                       : 'bg-green-500/80 text-white'
                   }`}>
                     {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
-                    {isExpired ? 'Ended' : 'Active'}
+                    {isExpired ? t('poll.ended') : t('poll.active')}
                   </div>
                 </div>
               </>
@@ -231,7 +234,7 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
                       : 'bg-green-500/80 text-white'
                   }`}>
                     {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
-                    {isExpired ? 'Ended' : 'Active'}
+                    {isExpired ? t('poll.ended') : t('poll.active')}
                   </div>
                 </div>
               </div>
@@ -260,7 +263,7 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
                   : 'bg-green-100 text-green-700'
               }`}>
                 {!isExpired && <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />}
-                {isExpired ? 'Ended' : 'Active'}
+                {isExpired ? t('poll.ended') : t('poll.active')}
               </div>
             </div>
           </div>
@@ -364,7 +367,7 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
               <div className="flex-1 flex items-center justify-center p-4 sm:p-5">
                 <div className="text-center text-text-muted">
                   <div className="text-2xl mb-2">📊</div>
-                  <p className="text-sm">No votes yet. Be the first!</p>
+                  <p className="text-sm">{t('poll.noVotesYet')}</p>
                 </div>
               </div>
             )}
@@ -380,6 +383,21 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
         <div className="flex-shrink-0 bg-white border-t border-border">
           <div className="flex items-center justify-between p-4 sm:p-5">
             <div className="flex items-center gap-2">
+              {/* Delete button (if provided) */}
+              {onDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(poll.id);
+                  }}
+                  className="text-xs text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>{t('poll.eliminar')}</span>
+                </button>
+              )}
               {/* Top reactions summary */}
               {hasVotes && (() => {
                 const allTopReactions: Record<string, number> = {};
@@ -407,7 +425,7 @@ export const PollCard = memo(({ poll, compact = false, className = "" }: PollCar
             </div>
             
             <span className="text-xs font-medium text-primary hover:text-primary-dark flex items-center gap-1 transition-colors cursor-pointer">
-              View poll
+              {t('poll.viewPoll')}
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>

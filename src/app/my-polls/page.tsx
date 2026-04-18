@@ -1,12 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import usePollStore from '@/store/pollStore';
 import { PollCard } from '@/components/poll/PollCard';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function MyPollsPage() {
-  const { getMyPolls, polls } = usePollStore();
+  const { getMyPolls, polls, deletePoll } = usePollStore();
+  const { t } = useLanguage();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [pollToDelete, setPollToDelete] = useState<string | null>(null);
 
   // Current user ID (in a real app, this would come from auth context)
   const currentUserId = 'current-user';
@@ -18,6 +24,14 @@ export default function MyPollsPage() {
   if (!mounted) {
     return null;
   }
+
+  const handleDelete = () => {
+    if (pollToDelete) {
+      deletePoll(pollToDelete);
+      setShowDeleteDialog(false);
+      setPollToDelete(null);
+    }
+  };
 
   const myPolls = getMyPolls(currentUserId);
   const publicPolls = myPolls.filter(p => !p.isPrivate);
@@ -31,14 +45,15 @@ export default function MyPollsPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="font-display text-3xl font-bold text-[var(--text)] mb-8">My Polls</h1>
+    <>
+    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 pb-24 md:pb-8">
+        <h1 className="font-display text-3xl font-bold text-[var(--text)] mb-8">{t('poll.myPolls')}</h1>
 
       {/* Public Polls Section */}
       <div className="mb-12">
         <h2 className="font-display text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
           <span>🌍</span>
-          <span>My Public Polls</span>
+          <span>{t('poll.myPublicPolls')}</span>
           <span className="text-sm font-normal text-[var(--text-muted)]">({publicPolls.length})</span>
         </h2>
 
@@ -55,10 +70,20 @@ export default function MyPollsPage() {
             </a>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {publicPolls.map(poll => (
-              <PollCard key={poll.id} poll={poll} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {publicPolls.map(poll => {
+              const hasEnded = new Date(poll.expiresAt) <= new Date();
+              return (
+                <PollCard 
+                  key={poll.id} 
+                  poll={poll} 
+                  onDelete={poll.createdBy === currentUserId && !hasEnded ? (pollId) => {
+                    setPollToDelete(pollId);
+                    setShowDeleteDialog(true);
+                  } : undefined}
+                />
+              );
+            })}
           </div>
         )}
       </div>
@@ -67,7 +92,7 @@ export default function MyPollsPage() {
       <div className="mb-12">
         <h2 className="font-display text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
           <span>🔒</span>
-          <span>My Private Polls</span>
+          <span>{t('poll.myPrivatePolls')}</span>
           <span className="text-sm font-normal text-[var(--text-muted)]">({privatePolls.length})</span>
         </h2>
 
@@ -84,15 +109,24 @@ export default function MyPollsPage() {
             </a>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {privatePolls.map(poll => (
-              <div key={poll.id} className="relative">
-                <div className="absolute top-2 right-2 z-10 bg-gray-900/80 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                  🔒 Private
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {privatePolls.map(poll => {
+              const hasEnded = new Date(poll.expiresAt) <= new Date();
+              return (
+                <div key={poll.id} className="relative">
+                  <div className="absolute top-2 right-2 z-10 bg-gray-900/80 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    🔒 {t('poll.private')}
+                  </div>
+                  <PollCard 
+                    poll={poll} 
+                    onDelete={poll.createdBy === currentUserId && !hasEnded ? (pollId) => {
+                      setPollToDelete(pollId);
+                      setShowDeleteDialog(true);
+                    } : undefined}
+                  />
                 </div>
-                <PollCard poll={poll} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -112,7 +146,7 @@ export default function MyPollsPage() {
             <p className="text-[var(--text-muted)]">When someone invites you to a private poll, it will appear here.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {invitedPolls.map(poll => (
               <div key={poll.id} className="relative">
                 <div className="absolute top-2 right-2 z-10 bg-blue-600/90 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
@@ -143,5 +177,35 @@ export default function MyPollsPage() {
         </div>
       )}
     </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{t('poll.deletePoll')}</h3>
+            <p className="text-gray-600 mb-6">
+              {t('poll.deleteConfirm')}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setPollToDelete(null);
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+              >
+                {t('poll.cancel')}
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg font-medium transition-colors"
+              >
+                {t('poll.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

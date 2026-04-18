@@ -61,16 +61,18 @@ export default function InvitePage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
-          <div className="text-6xl mb-4">🔗</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Invalid Invite Link</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => router.push('/')}
-            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
-          >
-            Go to Home
-          </button>
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
+            <div className="text-6xl mb-4">🔗</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Invalid Invite Link</h1>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button
+              onClick={() => router.push('/')}
+              className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+            >
+              Go to Home
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -78,35 +80,37 @@ export default function InvitePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-        <div className="text-center">
-          <div className="text-6xl mb-4">📨</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">You're Invited!</h1>
-          <p className="text-gray-600 mb-6">
-            <strong>{poll.createdBy}</strong> has invited you to participate in a poll.
-          </p>
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+          <div className="text-center">
+            <div className="text-6xl mb-4">📨</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">You're Invited!</h1>
+            <p className="text-gray-600 mb-6">
+              <strong>{poll.createdBy}</strong> has invited you to participate in a poll.
+            </p>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-left">
-            <h2 className="font-semibold text-gray-900 mb-2">{poll.title}</h2>
-            {poll.description && (
-              <p className="text-sm text-gray-600">{poll.description}</p>
-            )}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-left">
+              <h2 className="font-semibold text-gray-900 mb-2">{poll.title}</h2>
+              {poll.description && (
+                <p className="text-sm text-gray-600">{poll.description}</p>
+              )}
+            </div>
+
+            <button
+              onClick={handleAcceptInvite}
+              disabled={isAccepting}
+              className="w-full px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAccepting ? 'Accepting...' : 'Accept Invite & View Poll'}
+            </button>
+
+            <button
+              onClick={() => router.push('/')}
+              className="w-full mt-3 px-6 py-3 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            >
+              Decline
+            </button>
           </div>
-
-          <button
-            onClick={handleAcceptInvite}
-            disabled={isAccepting}
-            className="w-full px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isAccepting ? 'Accepting...' : 'Accept Invite & View Poll'}
-          </button>
-
-          <button
-            onClick={() => router.push('/')}
-            className="w-full mt-3 px-6 py-3 text-gray-600 hover:text-gray-900 font-medium transition-colors"
-          >
-            Decline
-          </button>
         </div>
       </div>
     </div>

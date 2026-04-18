@@ -549,6 +549,7 @@ export const SpinWheel = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const [addingAfterId, setAddingAfterId] = useState<string | null>(null);
+  const [step, setStep] = useState(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
   const currentAngleRef = useRef<number>(0);
@@ -569,8 +570,8 @@ export const SpinWheel = () => {
     if (!ctx) return;
 
     const scale = window.devicePixelRatio || 1;
-    const actualWidth = 400;
-    const actualHeight = 400;
+    const actualWidth = window.innerWidth < 1024 ? 280 : 400;
+    const actualHeight = actualWidth;
     canvas.width = actualWidth * scale;
     canvas.height = actualHeight * scale;
     canvas.style.width = actualWidth + 'px';
@@ -629,14 +630,19 @@ export const SpinWheel = () => {
       ctx.rotate(startAngle + anglePerOption / 2);
       ctx.textAlign = 'center';
       ctx.fillStyle = isSelected ? '#ffffff' : '#ffffff';
-      
-      // Adjust font size based on text length
-      const maxTextLength = 12;
-      const fontSize = isSelected ? 
-        (option.text.length > maxTextLength ? 'bold 16px Sora' : 'bold 20px Sora') : 
-        (option.text.length > maxTextLength ? 'bold 12px Sora' : 'bold 16px Sora');
+
+      // Truncate text if too long and adjust font size
+      const maxTextLength = 10;
+      let displayText = option.text;
+      if (displayText.length > maxTextLength) {
+        displayText = displayText.substring(0, maxTextLength - 1) + '...';
+      }
+
+      const fontSize = isSelected ?
+        (displayText.length > 8 ? 'bold 14px Sora' : 'bold 18px Sora') :
+        (displayText.length > 8 ? 'bold 11px Sora' : 'bold 14px Sora');
       ctx.font = fontSize;
-      
+
       if (isSelected) {
         // Texto resaltado para opción seleccionada
         ctx.shadowColor = option.color;
@@ -645,10 +651,10 @@ export const SpinWheel = () => {
         ctx.shadowColor = 'rgba(0,0,0,0.5)';
         ctx.shadowBlur = 4;
       }
-      
+
       // Position text closer to center to prevent overflow
-      const textRadius = radius * 0.55; // Reduced from 0.65
-      ctx.fillText(option.text, textRadius, 0);
+      const textRadius = radius * 0.5; // Further reduced to prevent overflow
+      ctx.fillText(displayText, textRadius, 0);
       ctx.restore();
     });
 
@@ -664,6 +670,15 @@ export const SpinWheel = () => {
   useEffect(() => {
     drawWheel(options, selectedOption, showResult);
   }, [options, selectedOption, showResult, drawWheel]);
+
+  useEffect(() => {
+    // Redraw wheel when step changes to ensure it's visible
+    if (step === 2) {
+      setTimeout(() => {
+        drawWheel(options, selectedOption, showResult);
+      }, 100);
+    }
+  }, [step, options, selectedOption, showResult]);
 
   useEffect(() => {
     if (addingAfterId) {
@@ -817,7 +832,7 @@ export const SpinWheel = () => {
   }, [spin]);
 
   const isFormValid = newOptionText.trim().length > 0 && options.length < 12;
-  const canSpin = options.length >= 2 && !isSpinning;
+  const canSpin = options.filter(opt => opt.text.trim().length > 0).length >= 2 && !isSpinning;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
@@ -841,10 +856,26 @@ export const SpinWheel = () => {
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
+          {/* Mobile Stepper Indicator */}
+          <div className="lg:hidden flex justify-center mb-4">
+            <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium ${step === 1 ? 'bg-[var(--primary)] text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
+                <span className="font-bold">1</span>
+                <span>{t('spin.configureOptions')}</span>
+              </div>
+              <div className="w-4 h-0.5 bg-[var(--border)]" />
+              <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium ${step === 2 ? 'bg-[var(--primary)] text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
+                <span className="font-bold">2</span>
+                <span>{t('spin.spinWheel')}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop: Show both wheel and options side by side */}
+          <div className="hidden lg:grid lg:grid-cols-2 gap-12 items-start">
             <motion.div className="flex flex-col items-center" initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }}>
-              <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] border border-[var(--border)] p-8 w-full">
-                <div className="relative w-[400px] h-[400px] max-w-full mx-auto">
+              <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] border border-[var(--border)] p-4 lg:p-8 w-full">
+                <div className="relative w-[280px] h-[280px] lg:w-[400px] lg:h-[400px] max-w-full mx-auto">
 
                   <div ref={wheelRef} style={{ width: '100%', height: '100%' }}>
                     <canvas ref={canvasRef} className="w-full h-full" />
@@ -890,7 +921,7 @@ export const SpinWheel = () => {
               </div>
             </motion.div>
 
-            <motion.div className="space-y-6" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }}>
+            <motion.div className="space-y-6 order-1 lg:order-2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }}>
               {/* Add Option - Eliminado, ahora está integrado en cada opción */}
 
               <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6">
@@ -1006,6 +1037,197 @@ export const SpinWheel = () => {
                 </div>
               </div>
             </motion.div>
+          </div>
+
+          {/* Mobile: Stepper flow */}
+          <div className="lg:hidden space-y-4">
+            {step === 1 && (
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-4"
+              >
+                <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-4">
+                  <h3 className="font-display text-base font-bold text-[var(--text)] mb-3">{t('spin.currentOptions')}</h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {options.map((option, index) => (
+                      <div key={option.id}>
+                        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                          className="flex items-center gap-3 p-2 bg-[var(--surface-2)] rounded-[var(--radius-md)]">
+                          <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: option.color }} />
+
+                          <div className="flex-1 flex gap-2">
+                            <input
+                              type="text"
+                              value={editingId === option.id ? editingText : option.text}
+                              onChange={(e) => {
+                                if (editingId === option.id) {
+                                  setEditingText(e.target.value);
+                                } else {
+                                  setEditingId(option.id);
+                                  setEditingText(e.target.value);
+                                }
+                              }}
+                              onBlur={() => {
+                                if (editingId === option.id && option.text.trim()) {
+                                  saveEditing();
+                                }
+                              }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' && editingId === option.id) {
+                                  saveEditing();
+                                }
+                              }}
+                              placeholder={`${t('spin.optionPlaceholder')} ${index + 1}`}
+                              className="flex-1 px-3 py-2 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm"
+                              maxLength={30}
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {editingId === option.id && !option.text.trim() && (
+                              <button
+                                onClick={saveEditing}
+                                className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                title={t('spin.addToWheel')}
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </button>
+                            )}
+
+                            {options.length < 12 && (
+                              <button
+                                onClick={() => addOptionAfter(option.id)}
+                                className="p-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors"
+                                title={t('spin.addOptionAfterThis')}
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                              </button>
+                            )}
+
+                            {options.length > 2 && (
+                              <button onClick={() => removeOption(option.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title={t('spin.removeOption')}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        </motion.div>
+                      </div>
+                    ))}
+                  </div>
+                  {options.length < 2 && (
+                    <div className="text-center py-4 text-[var(--text-muted)]">
+                      <div className="text-3xl mb-1">🎯</div>
+                      <p className="text-sm">{t('spin.enterAtLeastTwoOptions')}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-4">
+                  <h3 className="font-display text-base font-bold text-[var(--text)] mb-3">{t('spin.quickTemplates')}</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { emoji: '🤔', label: t('spin.yesOrNo'), opts: language === 'es' ? ['Sí', 'No'] : ['Yes', 'No'] },
+                      { emoji: '🍕', label: t('spin.foodChoice'), opts: language === 'es' ? ['Pizza', 'Sushi', 'Hamburguesa', 'Pasta'] : ['Pizza', 'Sushi', 'Burger', 'Pasta'] },
+                      { emoji: '🎮', label: t('spin.activities'), opts: language === 'es' ? ['Película', 'Videojuegos', 'Leer', 'Caminar', 'Música', 'Ejercicio'] : ['Movie', 'Gaming', 'Reading', 'Walk', 'Music', 'Exercise'] },
+                      { emoji: '🎲', label: t('spin.numbers'), opts: ['1','2','3','4','5','6'].map(n => language === 'es' ? `Número ${n}` : `Number ${n}`) },
+                    ].map(({ emoji, label, opts }) => (
+                      <button key={label}
+                        onClick={() => {
+                          const newOptions = opts.map((text, i) => ({
+                            id: (i+1).toString(),
+                            text,
+                            color: DEFAULT_COLORS[i % DEFAULT_COLORS.length]
+                          }));
+                          setOptions(newOptions);
+                          setValidationError('');
+                        }}
+                        className="p-2 bg-[var(--surface-2)] hover:bg-[var(--surface)] rounded-[var(--radius-md)] text-center transition-colors border border-[var(--border)]">
+                        <div className="text-lg mb-1">{emoji}</div>
+                        <div className="text-sm font-medium text-[var(--text)]">{label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {options.length >= 2 && (
+                  <button
+                    onClick={() => setStep(2)}
+                    className="w-full py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-transform"
+                  >
+                    {t('spin.continueToWheel')}
+                  </button>
+                )}
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex flex-col items-center"
+              >
+                <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] border border-[var(--border)] p-4 w-full">
+                  <div className="relative mx-auto" style={{ width: 280, height: 280 }}>
+                    <div ref={wheelRef} style={{ width: '100%', height: '100%' }}>
+                      <canvas ref={canvasRef} className="w-full h-full" />
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <button
+                      onClick={spin}
+                      disabled={!canSpin}
+                      className="w-full py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white font-bold text-base rounded-2xl shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSpinning ? t('spin.spinning') : showResult ? t('spin.spinAgain') : t('spin.spin')}
+                    </button>
+                    {!canSpin && !isSpinning && (
+                      <p className="text-xs text-center text-gray-400 mt-2">
+                        {t('spin.enterAtLeastTwoOptions')}
+                      </p>
+                    )}
+                  </div>
+
+                  <AnimatePresence>
+                    {validationError && (
+                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[var(--radius-md)] text-red-700 text-sm text-center">
+                        {validationError}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence>
+                    {showResult && selectedOption && (
+                      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                        className="mt-3 p-3 bg-gradient-to-r from-[var(--primary-light)] to-[var(--primary-light)/50] rounded-[var(--radius-lg)] text-center border border-[var(--primary-light)]">
+                        <div className="text-2xl mb-2">🎉</div>
+                        <h3 className="font-display text-lg font-bold text-[var(--text)] mb-1">{t('spin.theWheelHasSpoken')}</h3>
+                        <div className="text-xl font-bold text-[var(--primary)] mb-2">{selectedOption.text}</div>
+                        <button onClick={spinAgain}
+                          className="px-4 py-1.5 bg-[var(--surface)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--surface-2)] transition-colors border border-[var(--primary)] text-sm">
+                          {t('spin.spinAgain')}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <button
+                  onClick={() => setStep(1)}
+                  className="mt-4 px-5 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-full font-medium hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)] text-sm"
+                >
+                  ← {t('spin.editOptions')}
+                </button>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>

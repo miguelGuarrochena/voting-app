@@ -5,10 +5,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { 
-  HomeIcon, 
-  MagnifyingGlassIcon, 
-  FireIcon, 
+import {
+  HomeIcon,
+  MagnifyingGlassIcon,
+  FireIcon,
   UserCircleIcon,
   PlusIcon,
   CogIcon,
@@ -16,6 +16,7 @@ import {
   EllipsisHorizontalIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import { IconLayoutList, IconUser, IconLock, IconLogout } from '@tabler/icons-react';
 import { getCreatorAvatar } from '@/data/mockPolls';
 import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
 
@@ -28,6 +29,7 @@ const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Handle scroll effect for desktop navbar
   useEffect(() => {
@@ -69,10 +71,20 @@ const Navbar = () => {
           <div className="flex items-center justify-between px-4 py-3">
             {/* Left side - Back button or spacer */}
             <div className="flex-1">
-              {pathname?.startsWith('/polls/') ? (
-                <Link href="/" className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors">
+              {pathname !== '/' ? (
+                <button
+                  onClick={() => {
+                    if (pathname === '/spin') {
+                      // Dispatch custom event for spin page to handle step navigation
+                      window.dispatchEvent(new CustomEvent('spin-back'));
+                    } else {
+                      router.back();
+                    }
+                  }}
+                  className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors"
+                >
                   <ArrowLeftIcon className="w-4 h-4" />
-                </Link>
+                </button>
               ) : (
                 <div className="w-8" />
               )}
@@ -123,13 +135,16 @@ const Navbar = () => {
               </Link>
 
               <Link
-                href="/spin"
-                className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-                  pathname === '/spin' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                href="/trending"
+                className={`flex flex-col items-center p-2 rounded-lg transition-colors relative ${
+                  pathname === '/trending' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
                 }`}
               >
-                <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-occasional" />
-                <span className="text-xs mt-1">{t('nav.spin')}</span>
+                <div className="relative">
+                  <FireIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                </div>
+                <span className="text-xs mt-1">{t('nav.trending')}</span>
               </Link>
             </div>
 
@@ -144,63 +159,23 @@ const Navbar = () => {
             {/* Right side */}
             <div className="flex items-center gap-2">
               <Link
-                href="/trending"
-                className={`flex flex-col items-center p-2 rounded-lg transition-colors relative ${
-                  pathname === '/trending' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                href="/spin"
+                className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+                  pathname === '/spin' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
                 }`}
               >
-                <FireIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-xs mt-1">{t('nav.trending')}</span>
-                {pathname === '/trending' && (
-                  <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                )}
+                <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-occasional" />
+                <span className="text-xs mt-1">{t('nav.spin')}</span>
               </Link>
-
               {isAuthenticated ? (
-                <>
-                  <Link
-                    href="/my-polls"
-                    className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-                      pathname === '/my-polls' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
-                    }`}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsProfileMenuOpen(true)}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:bg-[var(--primary)] transition-colors"
                   >
-                    <UserCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                    <span className="text-xs mt-1">My Polls</span>
-                  </Link>
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:bg-[var(--primary)] transition-colors"
-                    >
-                      {getCreatorAvatar(user?.name || 'User')}
-                    </button>
-
-                    {showUserMenu && (
-                      <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
-                        <div className="py-1">
-                          <Link
-                            href="/settings"
-                            onClick={() => setShowUserMenu(false)}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                          >
-                            <CogIcon className="w-4 h-4" />
-                            <span>{t('nav.settings')}</span>
-                          </Link>
-                          <button
-                            onClick={() => {
-                              handleLogout();
-                              setShowUserMenu(false);
-                            }}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                          >
-                            <UserCircleIcon className="w-4 h-4" />
-                            <span>{t('nav.logout')}</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
+                    {getCreatorAvatar(user?.name || 'User')}
+                  </button>
+                </div>
               ) : (
                 <Link
                   href="/auth/login"
@@ -217,6 +192,55 @@ const Navbar = () => {
         {/* Add padding to account for fixed elements */}
         <div className="h-14 sm:h-16"></div>
         <div className="h-16 sm:h-20"></div>
+
+        {/* Profile Menu Slide-up Bottom Sheet */}
+        {isProfileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-40 bg-black/30"
+              onClick={() => setIsProfileMenuOpen(false)}
+            />
+            {/* Sheet */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl p-4 pb-8 shadow-xl">
+              <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+              <Link
+                href="/settings"
+                onClick={() => setIsProfileMenuOpen(false)}
+                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl"
+              >
+                <IconUser size={20} stroke={1.5} className="text-gray-500" />
+                <span>Perfil y Configuración</span>
+              </Link>
+              <Link
+                href="/my-polls"
+                onClick={() => setIsProfileMenuOpen(false)}
+                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl"
+              >
+                <IconLayoutList size={20} stroke={1.5} className="text-gray-500" />
+                <span>Mis Encuestas</span>
+              </Link>
+              <Link
+                href="/my-polls?tab=private"
+                onClick={() => setIsProfileMenuOpen(false)}
+                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl"
+              >
+                <IconLock size={20} stroke={1.5} className="text-gray-500" />
+                <span>Encuestas Privadas</span>
+              </Link>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsProfileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl text-red-400"
+              >
+                <IconLogout size={20} stroke={1.5} className="text-red-400" />
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
+          </>
+        )}
 
         {/* Click outside to close mobile menu */}
         {showMobileMenu && (
@@ -292,19 +316,6 @@ const Navbar = () => {
             >
               My Polls
               {pathname === '/my-polls' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
-              )}
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
-            </Link>
-
-            <Link
-              href="/create"
-              className={`relative text-base lg:text-lg font-medium transition-colors ${
-                pathname === '/create' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-              }`}
-            >
-              {t('nav.create')}
-              {pathname === '/create' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />

@@ -261,7 +261,7 @@ const Home = () => {
       </div>
 
       {/* Feed Section */}
-      <div className="px-4 sm:px-6 lg:px-8 pb-12 md:pb-16">
+      <div className="px-4 sm:px-6 lg:px-8 pb-24 md:pb-16">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-4 mb-6">
             {/* Search and Filter */}

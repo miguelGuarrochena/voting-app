@@ -31,8 +31,8 @@ export default function PollPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="animate-pulse space-y-4">
+      <div className="max-w-screen-xl mx-auto px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
+        <div className="max-w-3xl mx-auto animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-3/4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -52,8 +52,8 @@ export default function PollPage() {
 
   if (error || !poll) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+      <div className="max-w-screen-xl mx-auto px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
+        <div className="max-w-3xl mx-auto bg-red-50 border-l-4 border-red-400 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -80,21 +80,10 @@ export default function PollPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      {/* Desktop Back Button */}
-      <div className="hidden sm:block mb-6">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
-        >
-          <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to polls
-        </Link>
+    <div className="max-w-screen-xl mx-auto px-3 sm:px-6 py-2 md:py-8 pb-20 md:pb-8">
+      <div className="max-w-3xl mx-auto">
+        <PollDetail pollId={poll.id} />
       </div>
-
-      <PollDetail pollId={poll.id} />
     </div>
   );
 }

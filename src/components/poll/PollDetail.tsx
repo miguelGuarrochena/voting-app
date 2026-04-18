@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { IconMoodHeart } from '@tabler/icons-react';
 import usePollStore from '@/store/pollStore';
 import { Poll, PollOption, getPositiveVotes } from '@/types/poll';
+import { useLanguage } from '@/context/LanguageContext';
 import { getCreatorAvatar } from '@/data/mockPolls';
 import { RankPollVote } from './RankPollVote';
 import { RankPollResults } from './RankPollResults';
@@ -109,7 +112,8 @@ const EmojiPicker = ({ onSelect, onClose, position }: { onSelect: (emoji: string
 };
 
 const PollDetail = ({ pollId }: PollDetailProps) => {
-  const { voteOnOption, reactToOption, getPollById, userVotes, userReactions: userReactionsStore, userRankings, rankOptions, canUserAccessPoll } = usePollStore();
+  const { t } = useLanguage();
+  const { voteOnOption, reactToOption, getPollById, userVotes, userReactions: userReactionsStore, userRankings, rankOptions, canUserAccessPoll, deletePoll } = usePollStore();
   const [activeTab, setActiveTab] = useState<'vote' | 'results'>('vote');
   const [timeRemaining, setTimeRemaining] = useState('');
   const [selectedReaction, setSelectedReaction] = useState<Record<string, string>>({});
@@ -120,7 +124,10 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   const [hasVoted, setHasVoted] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [confettiFired, setConfettiFired] = useState(false);
-  
+  const [shareCopied, setShareCopied] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const router = useRouter();
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -309,7 +316,39 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       }
     }
   };
-  
+
+  // Handle share
+  const handleShare = async () => {
+    const url = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: poll.title,
+          text: `Vote on: ${poll.title}`,
+          url: url,
+        });
+        return;
+      } catch (err) {
+        // User cancelled or not supported, fall through to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch (err) {
+      console.error('Share failed:', err);
+    }
+  };
+
+  // Handle delete
+  const handleDelete = () => {
+    deletePoll(poll.id);
+    router.push('/');
+  };
+
   // Handle reaction
   const handleReaction = (optionId: string, emoji: string) => {
     reactToOption(poll.id, optionId, emoji);
@@ -329,12 +368,12 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   };
   
   const winningOption = getWinningOption();
-  
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full pb-20 md:pb-0">
       {/* Poll Header */}
-      <div className="bg-white rounded-[24px] shadow-[var(--shadow-sm)] border border-[var(--border)] p-6 mb-6">
-        <div className="flex justify-between items-start mb-4">
+      <div className="bg-white rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4 md:p-6 mb-4 md:mb-6">
+        <div className="flex flex-row items-start justify-between gap-3 mb-4">
           <div className="flex-1">
             <h1 className="font-display text-2xl md:text-3xl font-bold text-[var(--text)] mb-2">
               {poll.title}
@@ -345,49 +384,44 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
               </p>
             )}
           </div>
-          
-          {/* Share Button - Classic Share Icon */}
-          <button className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white hover:shadow-lg transition-all rounded-full font-medium">
+
+          {/* Share Button - Icon only on mobile, full button on desktop */}
+          <button onClick={handleShare} className="flex items-center justify-center w-10 h-10 md:w-auto md:px-5 md:py-2.5 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white hover:shadow-lg transition-all rounded-full font-medium flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            <span className="text-sm font-medium">Share</span>
-          </button>
-          <button className="md:hidden p-2.5 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white hover:shadow-lg transition-all rounded-full">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
+            <span className="hidden md:inline text-sm font-medium ml-2">{shareCopied ? t('poll.copied') : t('poll.share')}</span>
           </button>
         </div>
         
         {/* Creator Info */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-1">
+          {/* Line 1: avatar + username + Active badge */}
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="w-8 h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-sm font-medium">
               {getCreatorAvatar(poll.createdBy)}
             </div>
-            <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-              <span>{poll.createdBy}</span>
-              <span>•</span>
-              <span>{mounted ? formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true }) : 'just now'}</span>
-              <span>•</span>
-              <span>{totalVotes} votes</span>
-            </div>
+            <span className="text-sm text-[var(--text-muted)]">{poll.createdBy}</span>
             <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-              hasEnded 
-                ? 'bg-gray-100 text-gray-600' 
+              hasEnded
+                ? 'bg-gray-100 text-gray-600'
                 : 'bg-green-100 text-green-700'
             }`}>
-              {hasEnded ? 'Ended' : 'Active'}
+              {hasEnded ? t('poll.ended') : t('poll.active')}
             </div>
           </div>
-          
-          {/* Countdown Timer - Subtle Design */}
-          {!hasEnded && timeRemaining && (
-            <div className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] px-3 py-1.5 rounded-full text-xs font-medium">
-              ⏰ {timeRemaining}
-            </div>
-          )}
+          {/* Line 2: time • votes • timer */}
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] flex-wrap">
+            <span>{mounted ? formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true }) : 'just now'}</span>
+            <span>•</span>
+            <span>{totalVotes} votes</span>
+            {!hasEnded && timeRemaining && (
+              <>
+                <span>•</span>
+                <span>⏰ {timeRemaining}</span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Invite Link Section - Only for creator of private polls */}
@@ -415,7 +449,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       </div>
       
       {/* Tabs */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-1 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-1 mb-4 md:mb-6">
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTab('vote')}
@@ -428,7 +462,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>Vote on poll</span>
+            <span>{t('poll.voteOnPoll')}</span>
           </button>
           <button
             onClick={() => setActiveTab('results')}
@@ -441,7 +475,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            <span>Results</span>
+            <span>{t('poll.results')}</span>
           </button>
         </div>
       </div>
@@ -504,6 +538,66 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             />
           )}
         </>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AnimatePresence>
+        {showDeleteDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={() => setShowDeleteDialog(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{t('poll.deletePoll')}</h3>
+              <p className="text-gray-600 mb-6">
+                {t('poll.deleteConfirm')}
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteDialog(false)}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                >
+                  {t('poll.cancel')}
+                </button>
+                <button
+                  onClick={() => {
+                    handleDelete();
+                    setShowDeleteDialog(false);
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg font-medium transition-colors"
+                >
+                  {t('poll.delete')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Danger Zone - Delete Button */}
+      {isCreator && !hasEnded && (
+        <div className="mt-16 pt-8 border-t border-gray-200 pb-32 md:pb-0">
+          <p className="text-xs text-gray-400 uppercase tracking-wide text-center mb-4">
+            {t('poll.dangerZone')}
+          </p>
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-red-300 text-red-500 text-sm font-medium hover:bg-red-50 hover:border-red-400 transition-all"
+            >
+              🗑️ {t('poll.deletePoll')}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -933,10 +1027,7 @@ const VoteContent = ({
                       {userReaction ? (
                         <span className="text-xl sm:text-2xl">{userReaction}</span>
                       ) : allZeroVotes ? (
-                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
+                        <IconMoodHeart size={22} stroke={1.5} className="text-gray-400" />
                       ) : (
                         <span className="text-xl sm:text-2xl">😐</span>
                       )}
