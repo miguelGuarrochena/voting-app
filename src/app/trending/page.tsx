@@ -41,7 +41,7 @@ const TrendingPage = () => {
 
   // Get trending polls (most voted in the last 24 hours)
   const trendingPolls = polls
-    .filter(poll => poll.visibility === 'public')
+    .filter(poll => poll.visibility === 'public' && !poll.isPrivate)
     .sort((a, b) => {
       const aVotes = a.options.reduce((sum, option) => sum + (option.votes || 0), 0);
       const bVotes = b.options.reduce((sum, option) => sum + (option.votes || 0), 0);

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { IconMoodHeart } from '@tabler/icons-react';
 import usePollStore from '@/store/pollStore';
 import { Poll, PollOption, getPositiveVotes } from '@/types/poll';
 import { useLanguage } from '@/context/LanguageContext';
@@ -26,14 +25,6 @@ const getAvatarColor = (name: string): string => {
   }
   const hue = Math.abs(hash) % 360;
   return `hsl(${hue}, 55%, 50%)`;
-};
-
-// Get top reactions for an option
-const getTopReactions = (reactions: Record<string, number>): [string, number][] => {
-  return Object.entries(reactions)
-    .filter(([_, count]) => count > 0)
-    .sort(([_, a], [__, b]) => b - a)
-    .slice(0, 3) as [string, number][];
 };
 
 // Lightbox component
@@ -73,53 +64,13 @@ const Lightbox = ({ imageUrl, onClose }: { imageUrl: string; onClose: () => void
   );
 };
 
-// Emoji picker component
-const EmojiPicker = ({ onSelect, onClose, position }: { onSelect: (emoji: string) => void; onClose: () => void; position: { x: number; y: number } }) => {
-  const emojis = ['👍', '❤️', '😂', '🔥', '👏', '👎', '😮', '😢'];
-  
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-10"
-        onClick={onClose}
-      />
-      {/* Picker */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0, y: 10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.8, opacity: 0, y: 10 }}
-        transition={{ duration: 0.15 }}
-        className="fixed z-50"
-        style={{ left: position.x, top: position.y, transform: 'translate(-50%, -100%)' }}
-      >
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2">
-          <div className="grid grid-cols-4 gap-1">
-            {emojis.map((emoji) => (
-              <button
-                key={emoji}
-                onClick={() => onSelect(emoji)}
-                className="w-10 h-10 hover:bg-gray-100 rounded flex items-center justify-center text-xl transition-colors"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-    </>
-  );
-};
-
 const PollDetail = ({ pollId }: PollDetailProps) => {
   const { t } = useLanguage();
-  const { voteOnOption, reactToOption, getPollById, userVotes, userReactions: userReactionsStore, userRankings, rankOptions, canUserAccessPoll, deletePoll } = usePollStore();
+  const { voteOnOption, getPollById, userVotes, userRankings, rankOptions, canUserAccessPoll, deletePoll } = usePollStore();
   const [activeTab, setActiveTab] = useState<'vote' | 'results'>('vote');
   const [timeRemaining, setTimeRemaining] = useState('');
-  const [selectedReaction, setSelectedReaction] = useState<Record<string, string>>({});
   const [mounted, setMounted] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
   const [hasVoted, setHasVoted] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
@@ -134,9 +85,6 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   
   // Get the poll from the store
   const poll = getPollById(pollId);
-
-  // Memoize userReactions to prevent infinite re-renders
-  const userReactions = useMemo(() => poll ? userReactionsStore[poll.id] || {} : {}, [userReactionsStore, poll?.id]);
 
   // Get poll type with default to 'vote'
   const pollType = poll?.type ?? 'vote';
@@ -165,7 +113,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       <div className="max-w-md mx-auto mt-16 px-4">
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Access Denied</h1>
           <p className="text-gray-600 mb-6">
             You don't have permission to view this poll. This is a private poll and you need an invite link to access it.
           </p>
@@ -349,14 +297,6 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
     router.push('/');
   };
 
-  // Handle reaction
-  const handleReaction = (optionId: string, emoji: string) => {
-    reactToOption(poll.id, optionId, emoji);
-    setSelectedReaction(prev => ({ ...prev, [optionId]: emoji }));
-    setShowEmojiPicker(null);
-  };
-  
-  
   // Check if option is winner
   const getWinningOption = () => {
     if (!poll || totalVotes === 0) return null;
@@ -456,7 +396,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'vote'
                 ? 'bg-[#f43f5e] text-white'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -469,7 +409,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'results'
                 ? 'bg-[#f43f5e] text-white'
-                : 'text-gray-600 hover:text-gray-900'
+                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -497,17 +437,13 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
                 totalVotes={totalVotes}
                 hasEnded={hasEnded}
                 userVotedOption={userVotedOption}
-                userReactions={userReactions}
                 hasVoted={hasVoted}
                 onVote={handleVote}
-                onReaction={handleReaction}
                 imageErrors={imageErrors}
                 setImageErrors={setImageErrors}
                 winningOption={winningOption}
                 lightboxImage={lightboxImage}
                 setLightboxImage={setLightboxImage}
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
               />
             )}
           </>
@@ -527,15 +463,11 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
                 totalVotes={totalVotes}
                 hasEnded={hasEnded}
                 userVotedOption={userVotedOption}
-                userReactions={userReactions}
                 winningOption={winningOption}
                 imageErrors={imageErrors}
                 setImageErrors={setImageErrors}
                 lightboxImage={lightboxImage}
                 setLightboxImage={setLightboxImage}
-                onReaction={handleReaction}
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
               />
             )}
           </>
@@ -559,7 +491,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
               className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{t('poll.deletePoll')}</h3>
+              <h3 className="text-xl font-bold text-[var(--text)] mb-2">{t('poll.deletePoll')}</h3>
               <p className="text-gray-600 mb-6">
                 {t('poll.deleteConfirm')}
               </p>
@@ -611,29 +543,21 @@ const ResultsContent = ({
   totalVotes,
   hasEnded,
   userVotedOption,
-  userReactions,
   winningOption,
   imageErrors,
   setImageErrors,
   lightboxImage,
-  setLightboxImage,
-  onReaction,
-  showEmojiPicker,
-  setShowEmojiPicker
+  setLightboxImage
 }: {
   poll: Poll;
   totalVotes: number;
   hasEnded: boolean;
   userVotedOption: string | undefined;
-  userReactions: Record<string, string>;
   winningOption: Poll['options'][0] | null;
   imageErrors: Record<string, boolean>;
   setImageErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   lightboxImage: string | null;
   setLightboxImage: React.Dispatch<React.SetStateAction<string | null>>;
-  onReaction: (optionId: string, emoji: string) => void;
-  showEmojiPicker: string | null;
-  setShowEmojiPicker: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   // Get letter from option title (first letter)
   const getOptionLetter = (title: string): string => {
@@ -650,9 +574,6 @@ const ResultsContent = ({
     };
     return colors[letter] || getAvatarColor(letter);
   };
-
-  // Check if all percentages are zero
-  const allZeroVotes = poll.options.every(option => getPositiveVotes(option.reactions) === 0);
 
   // Sort options by votes for podium
   const sortedOptions = useMemo(() => {
@@ -681,7 +602,6 @@ const ResultsContent = ({
             const option = top3[sortedIndex];
             const optionVotes = getPositiveVotes(option.reactions);
             const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
-            const userReaction = userReactions[option.id];
             const letter = getOptionLetter(option.title);
             const letterColor = getOptionColor(letter);
             const isFirst = sortedIndex === 0;
@@ -730,7 +650,7 @@ const ResultsContent = ({
                   </span>
 
                   {/* Percentage */}
-                  <span className="text-lg sm:text-xl font-bold text-gray-900">
+                  <span className="text-lg sm:text-xl font-bold text-[var(--text)]">
                     {percentage}%
                   </span>
 
@@ -794,7 +714,7 @@ const ResultsContent = ({
 
                 {/* Name and Progress */}
                 <div className="flex-1 min-w-0">
-                  <span className={`font-medium text-sm truncate block ${isUserChoice ? 'text-[#f43f5e]' : 'text-gray-800'}`}>
+                  <span className={`font-medium text-sm truncate block ${isUserChoice ? 'text-[#f43f5e]' : 'text-[var(--text)]'}`}>
                     {option.title}
                   </span>
                   <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
@@ -806,7 +726,7 @@ const ResultsContent = ({
                 </div>
 
                 {/* Percentage */}
-                <span className={`text-lg font-bold flex-shrink-0 ${isUserChoice ? 'text-[#f43f5e]' : 'text-gray-600'}`}>
+                <span className={`text-lg font-bold flex-shrink-0 ${isUserChoice ? 'text-[#f43f5e]' : 'text-[var(--text-muted)]'}`}>
                   {percentage}%
                 </span>
               </motion.div>
@@ -834,38 +754,28 @@ const VoteContent = ({
   totalVotes,
   hasEnded,
   userVotedOption,
-  userReactions,
   hasVoted,
   onVote,
-  onReaction,
   imageErrors,
   setImageErrors,
   winningOption,
   lightboxImage,
-  setLightboxImage,
-  showEmojiPicker,
-  setShowEmojiPicker
+  setLightboxImage
 }: {
   poll: Poll;
   totalVotes: number;
   hasEnded: boolean;
   userVotedOption: string | undefined;
-  userReactions: Record<string, string>;
   hasVoted: boolean;
   onVote: (optionId: string) => void;
-  onReaction: (optionId: string, emoji: string) => void;
   imageErrors: Record<string, boolean>;
   setImageErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   winningOption: Poll['options'][0] | null;
   lightboxImage: string | null;
   setLightboxImage: React.Dispatch<React.SetStateAction<string | null>>;
-  showEmojiPicker: string | null;
-  setShowEmojiPicker: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   // Local state for tracking which option is currently selected (before voting)
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(userVotedOption || null);
-  const [emojiPickerPosition, setEmojiPickerPosition] = useState<{ x: number; y: number } | null>(null);
-  const emojiButtonRef = useRef<HTMLDivElement>(null);
 
   // Get letter from option title (first letter)
   const getOptionLetter = (title: string): string => {
@@ -883,9 +793,6 @@ const VoteContent = ({
     return colors[letter] || getAvatarColor(letter);
   };
 
-  // Check if all percentages are zero
-  const allZeroVotes = poll.options.every(option => getPositiveVotes(option.reactions) === 0);
-
   // Handle card click - select the option
   const handleCardClick = (optionId: string) => {
     if (hasEnded) return;
@@ -895,40 +802,14 @@ const VoteContent = ({
 
   return (
     <>
-      {/* Emoji Picker Overlay */}
-      <AnimatePresence>
-        {showEmojiPicker && emojiPickerPosition && (
-          <EmojiPicker
-            position={emojiPickerPosition}
-            onSelect={(emoji) => {
-              onReaction(showEmojiPicker, emoji);
-              setShowEmojiPicker(null);
-              setEmojiPickerPosition(null);
-            }}
-            onClose={() => {
-              setShowEmojiPicker(null);
-              setEmojiPickerPosition(null);
-            }}
-          />
-        )}
-      </AnimatePresence>
       <div className="space-y-3">
         {poll.options.map((option, index) => {
           const optionVotes = getPositiveVotes(option.reactions);
           const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
-          const userReaction = userReactions[option.id];
           const hasImage = option.imageUrl && !imageErrors[option.id];
           const letter = getOptionLetter(option.title);
           const letterColor = getOptionColor(letter);
           const isSelected = selectedOptionId === option.id;
-
-          // Get reaction counts
-          const reactions = option.reactions || {};
-          const reactionCounts = [
-            { emoji: '👍', count: reactions['👍'] || 0 },
-            { emoji: '🔥', count: reactions['🔥'] || 0 },
-            { emoji: '❤️', count: reactions['❤️'] || 0 },
-          ].filter(r => r.count > 0);
 
           return (
             <motion.div
@@ -991,11 +872,11 @@ const VoteContent = ({
                 {/* Right - Content Block */}
                 <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
                   {/* Top row: Option Name */}
-                  <h3 className="font-bold text-base sm:text-lg text-gray-900 truncate">
+                  <h3 className="font-bold text-base sm:text-lg text-[var(--text)] truncate">
                     {option.title}
                   </h3>
 
-                  {/* Middle row: Progress bar, user emoji, percentage */}
+                  {/* Middle row: Progress bar and percentage */}
                   <div className="flex items-center gap-2">
                     {/* Progress Bar */}
                     <div className="flex-1 bg-gray-200 rounded-full h-2">
@@ -1007,55 +888,12 @@ const VoteContent = ({
                       />
                     </div>
 
-                    {/* User emoji / picker trigger */}
-                    <div
-                      ref={emojiButtonRef}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (showEmojiPicker === option.id) {
-                          setShowEmojiPicker(null);
-                          setEmojiPickerPosition(null);
-                        } else {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setEmojiPickerPosition({
-                            x: rect.left + rect.width / 2,
-                            y: rect.top
-                          });
-                          setShowEmojiPicker(option.id);
-                        }
-                      }}
-                      className="relative flex items-center justify-center cursor-pointer flex-shrink-0"
-                    >
-                      {userReaction ? (
-                        <span className="text-xl sm:text-2xl">{userReaction}</span>
-                      ) : allZeroVotes ? (
-                        <IconMoodHeart size={22} stroke={1.5} className="text-gray-400" />
-                      ) : (
-                        <span className="text-xl sm:text-2xl">😐</span>
-                      )}
-                    </div>
-
                     {/* Percentage - bold, green if selected, gray otherwise */}
                     <span className={`text-lg sm:text-xl font-bold flex-shrink-0 ${
                       isSelected ? 'text-green-600' : 'text-gray-600'
                     }`}>
                       {percentage}%
                     </span>
-                  </div>
-
-                  {/* Bottom row: Reaction counts, right-aligned */}
-                  <div className="flex justify-end items-center gap-2">
-                    {/* Reaction counts (aggregate from other users) */}
-                    {reactionCounts.length > 0 ? (
-                      reactionCounts.map(({ emoji, count }) => (
-                        <div key={emoji} className="flex items-center gap-1">
-                          <span className="text-base sm:text-lg">{emoji}</span>
-                          <span className="text-xs sm:text-sm font-medium text-gray-600">{count}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <span className="text-xs text-gray-400 italic">No reactions yet</span>
-                    )}
                   </div>
                 </div>
               </div>

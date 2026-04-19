@@ -2,6 +2,34 @@
 
 export type ReactionType = string; // Allow any emoji string
 
+// Rating types
+export interface StarVote {
+  id: string;
+  itemId: string;
+  userId: string;
+  stars: number; // 1 to 5
+  timestamp: Date;
+}
+
+export interface RatingItem {
+  id: string;
+  ratingId: string;
+  label: string;
+  imageUrl?: string;
+  votes: StarVote[];
+}
+
+export interface Rating {
+  id: string;
+  title: string;
+  description?: string;
+  createdBy: string;
+  createdAt: Date;
+  isPrivate: boolean;
+  visibility: 'public' | 'private';
+  items: RatingItem[];
+}
+
 export type ReactionCategory = 'positive' | 'negative';
 
 export interface ReactionMeta {

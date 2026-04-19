@@ -19,8 +19,12 @@ type Participant = {
   emailOrUsername: string;
 };
 
-export const CreatePollForm = () => {
-  const [pollType, setPollType] = useState<'vote' | 'rank'>('vote');
+interface CreatePollFormProps {
+  defaultType?: 'vote' | 'rank';
+}
+
+export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
+  const [pollType, setPollType] = useState<'vote' | 'rank'>(defaultType || 'vote');
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState('');
   const [description, setDescription] = useState('');
@@ -310,44 +314,46 @@ export const CreatePollForm = () => {
           <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Poll Basics</h2>
 
           <div className="space-y-6">
-            {/* Poll Type Selector */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-3">
-                Poll Type *
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setPollType('vote')}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    pollType === 'vote'
-                      ? 'border-[var(--primary)] bg-[var(--primary-light)]'
-                      : 'border-[var(--border)] hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">🗳️</div>
-                    <div className="font-medium text-[var(--text)]">Vote Poll</div>
-                    <div className="text-xs text-[var(--text-muted)] mt-1">Each person picks one option</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPollType('rank')}
-                  className={`p-4 rounded-xl border-2 transition-all ${
-                    pollType === 'rank'
-                      ? 'border-[var(--primary)] bg-[var(--primary-light)]'
-                      : 'border-[var(--border)] hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">🏆</div>
-                    <div className="font-medium text-[var(--text)]">Rank Poll</div>
-                    <div className="text-xs text-[var(--text-muted)] mt-1">Order all options by preference</div>
-                  </div>
-                </button>
+            {/* Poll Type Selector - Only show if defaultType is not provided */}
+            {!defaultType && (
+              <div>
+                <label className="block text-sm font-medium text-[var(--text)] mb-3">
+                  Poll Type *
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setPollType('vote')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      pollType === 'vote'
+                        ? 'border-[var(--primary)] bg-[var(--primary-light)]'
+                        : 'border-[var(--border)] hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">🗳️</div>
+                      <div className="font-medium text-[var(--text)]">Vote Poll</div>
+                      <div className="text-xs text-[var(--text-muted)] mt-1">Each person picks one option</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPollType('rank')}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      pollType === 'rank'
+                        ? 'border-[var(--primary)] bg-[var(--primary-light)]'
+                        : 'border-[var(--border)] hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">🏆</div>
+                      <div className="font-medium text-[var(--text)]">Rank Poll</div>
+                      <div className="text-xs text-[var(--text-muted)] mt-1">Order all options by preference</div>
+                    </div>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-[var(--text)] mb-2" htmlFor="title">

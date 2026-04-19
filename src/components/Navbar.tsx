@@ -6,14 +6,12 @@ import { useLanguage } from '@/context/LanguageContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
-  HomeIcon,
-  MagnifyingGlassIcon,
-  FireIcon,
+  ChartBarIcon,
+  TrophyIcon,
+  CogIcon,
+  StarIcon,
   UserCircleIcon,
   PlusIcon,
-  CogIcon,
-  ChevronDownIcon,
-  EllipsisHorizontalIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import { IconLayoutList, IconUser, IconLock, IconLogout } from '@tabler/icons-react';
@@ -28,8 +26,6 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Handle scroll effect for desktop navbar
   useEffect(() => {
@@ -71,7 +67,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between px-4 py-3">
             {/* Left side - Back button or spacer */}
             <div className="flex-1">
-              {pathname !== '/' ? (
+              {pathname !== '/votes' ? (
                 <button
                   onClick={() => {
                     if (pathname === '/spin') {
@@ -89,166 +85,69 @@ const Navbar = () => {
                 <div className="w-8" />
               )}
             </div>
-            
+
             {/* Center - Logo always visible */}
             <div className="flex-1 text-center">
-              <Link href="/" className="inline-flex items-center space-x-2">
+              <Link href="/votes" className="inline-flex items-center space-x-2">
                 <span className="text-lg sm:text-xl font-bold text-[var(--primary)] font-display">✨ Pickly</span>
               </Link>
             </div>
-            
-            {/* Right side - Menu */}
+
+            {/* Right side - Theme/Language */}
             <div className="flex-1 flex justify-end">
-              <div className="relative">
-                <button
-                  onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="p-2 rounded-lg hover:bg-[var(--surface-2)] transition-colors"
-                >
-                  <EllipsisHorizontalIcon className="w-6 h-6 text-[var(--text)]" />
-                </button>
-                
-                {showMobileMenu && (
-                  <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[200px] overflow-hidden">
-                    <div className="p-2">
-                      <ThemeLanguageSwitcher />
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ThemeLanguageSwitcher />
             </div>
           </div>
         </div>
 
         {/* Bottom tab bar */}
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface)] border-t border-[var(--border)]">
-          <div className="flex items-center justify-between px-4 py-1 sm:py-2 pb-[env(safe-area-inset-bottom)]">
-            {/* Left side */}
-            <div className="flex items-center gap-2">
-              <Link
-                href="/explore"
-                className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-                  pathname === '/explore' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
-                }`}
-              >
-                <MagnifyingGlassIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-xs mt-1">{t('nav.explore')}</span>
-              </Link>
-
-              <Link
-                href="/trending"
-                className={`flex flex-col items-center p-2 rounded-lg transition-colors relative ${
-                  pathname === '/trending' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
-                }`}
-              >
-                <div className="relative">
-                  <FireIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                </div>
-                <span className="text-xs mt-1">{t('nav.trending')}</span>
-              </Link>
-            </div>
-
-            {/* Center CREATE button */}
+          <div className="flex items-center justify-between px-2 py-1 sm:py-2 pb-[env(safe-area-inset-bottom)]">
             <Link
-              href="/create"
-              className="flex flex-col items-center p-3 sm:p-4 rounded-full bg-[var(--primary)] text-white shadow-lg -mt-3 sm:-mt-5 border-4 sm:border-4 border-white transform scale-110"
+              href="/votes"
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
+                pathname === '/votes' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+              }`}
             >
-              <PlusIcon className="w-6 h-6 sm:w-7 sm:h-7" />
+              <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <span className="text-xs mt-1">Votes</span>
             </Link>
 
-            {/* Right side */}
-            <div className="flex items-center gap-2">
-              <Link
-                href="/spin"
-                className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
-                  pathname === '/spin' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
-                }`}
-              >
-                <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-occasional" />
-                <span className="text-xs mt-1">{t('nav.spin')}</span>
-              </Link>
-              {isAuthenticated ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setIsProfileMenuOpen(true)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-white text-xs sm:text-sm font-medium hover:bg-[var(--primary)] transition-colors"
-                  >
-                    {getCreatorAvatar(user?.name || 'User')}
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href="/auth/login"
-                  className="flex flex-col items-center p-2 rounded-lg transition-colors text-[var(--text-muted)]"
-                >
-                  <UserCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span className="text-xs mt-1">{t('nav.login')}</span>
-                </Link>
-              )}
-            </div>
+            <Link
+              href="/ranking"
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
+                pathname === '/ranking' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+              }`}
+            >
+              <TrophyIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <span className="text-xs mt-1">Ranking</span>
+            </Link>
+
+            <Link
+              href="/spin"
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
+                pathname === '/spin' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+              }`}
+            >
+              <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-occasional" />
+              <span className="text-xs mt-1">Spin</span>
+            </Link>
+
+            <Link
+              href="/ratings"
+              className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
+                pathname === '/ratings' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+              }`}
+            >
+              <StarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <span className="text-xs mt-1">Ratings</span>
+            </Link>
           </div>
         </div>
 
         {/* Add padding to account for fixed elements */}
         <div className="h-14 sm:h-16"></div>
         <div className="h-16 sm:h-20"></div>
-
-        {/* Profile Menu Slide-up Bottom Sheet */}
-        {isProfileMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-40 bg-black/30"
-              onClick={() => setIsProfileMenuOpen(false)}
-            />
-            {/* Sheet */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl p-4 pb-8 shadow-xl">
-              <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
-              <Link
-                href="/settings"
-                onClick={() => setIsProfileMenuOpen(false)}
-                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl"
-              >
-                <IconUser size={20} stroke={1.5} className="text-gray-500" />
-                <span>Perfil y Configuración</span>
-              </Link>
-              <Link
-                href="/my-polls"
-                onClick={() => setIsProfileMenuOpen(false)}
-                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl"
-              >
-                <IconLayoutList size={20} stroke={1.5} className="text-gray-500" />
-                <span>Mis Encuestas</span>
-              </Link>
-              <Link
-                href="/my-polls?tab=private"
-                onClick={() => setIsProfileMenuOpen(false)}
-                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl"
-              >
-                <IconLock size={20} stroke={1.5} className="text-gray-500" />
-                <span>Encuestas Privadas</span>
-              </Link>
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setIsProfileMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl text-red-400"
-              >
-                <IconLogout size={20} stroke={1.5} className="text-red-400" />
-                <span>Cerrar Sesión</span>
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* Click outside to close mobile menu */}
-        {showMobileMenu && (
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowMobileMenu(false)}
-          />
-        )}
       </>
     );
   }
@@ -268,27 +167,28 @@ const Navbar = () => {
           {/* Center nav links */}
           <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
             <Link
-              href="/"
-              className={`relative text-base lg:text-lg font-medium transition-colors ${
-                pathname === '/' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              href="/votes"
+              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
+                pathname === '/votes' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
-              {t('nav.explore')}
-              {pathname === '/' && (
+              <ChartBarIcon className="w-5 h-5" />
+              <span>Votes</span>
+              {pathname === '/votes' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
             </Link>
 
             <Link
-              href="/trending"
-              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-1 ${
-                pathname === '/trending' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              href="/ranking"
+              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
+                pathname === '/ranking' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
-              <span>{t('nav.trending')}</span>
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              {pathname === '/trending' && (
+              <TrophyIcon className="w-5 h-5" />
+              <span>Ranking</span>
+              {pathname === '/ranking' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
@@ -301,7 +201,7 @@ const Navbar = () => {
               }`}
             >
               <CogIcon className="w-5 h-5 animate-spin-occasional" />
-              <span>{t('nav.spin')}</span>
+              <span>Spin</span>
               {pathname === '/spin' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
@@ -309,13 +209,14 @@ const Navbar = () => {
             </Link>
 
             <Link
-              href="/my-polls"
-              className={`relative text-base lg:text-lg font-medium transition-colors ${
-                pathname === '/my-polls' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              href="/ratings"
+              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
+                pathname === '/ratings' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
-              My Polls
-              {pathname === '/my-polls' && (
+              <StarIcon className="w-5 h-5" />
+              <span>Ratings</span>
+              {pathname === '/ratings' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
               )}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
