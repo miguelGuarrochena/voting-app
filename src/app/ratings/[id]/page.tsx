@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
+import { PageLayout } from '@/components/PageLayout';
 
 // Mock rating data - will be replaced with real API
 const mockRating = {
@@ -61,12 +62,12 @@ export default function RatingDetailPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] pt-20">
+      <PageLayout>
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
           <p className="text-gray-600 mt-4">Loading...</p>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -84,7 +85,7 @@ export default function RatingDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-20 pb-24 md:pb-8">
+    <PageLayout className="pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <button
@@ -157,6 +158,6 @@ export default function RatingDetailPage() {
           })}
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

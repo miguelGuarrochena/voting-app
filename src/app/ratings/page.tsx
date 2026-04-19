@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PlusIcon } from '@heroicons/react/24/outline';
+import { PageLayout } from '@/components/PageLayout';
 
 // Mock ratings data for now - will be replaced with real API
 const mockRatings = [
@@ -34,12 +35,12 @@ export default function RatingsPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] pt-20">
+      <PageLayout>
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
           <p className="text-gray-600 mt-4">Loading...</p>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -52,7 +53,7 @@ export default function RatingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-20 pb-24 md:pb-8">
+    <PageLayout className="pb-24 md:pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -120,6 +121,6 @@ export default function RatingsPage() {
       >
         <PlusIcon className="w-6 h-6" />
       </Link>
-    </div>
+    </PageLayout>
   );
 }

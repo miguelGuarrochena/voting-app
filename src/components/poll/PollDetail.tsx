@@ -870,19 +870,10 @@ const VoteContent = ({
                       {letter}
                     </span>
                   )}
-
-                  {/* Checkmark for selected option - on the letter avatar */}
-                  {isSelected && (
-                    <div className="absolute top-1 right-1 w-10 h-10 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-sm">
-                      <svg className="w-6 h-6 text-[var(--success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
                 </div>
 
                 {/* Right - Content Block */}
-                <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between">
+                <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between relative">
                   {/* Top row: Option Name */}
                   <h3 className="font-bold text-base sm:text-lg text-[var(--text)] truncate">
                     {option.title}
@@ -891,7 +882,7 @@ const VoteContent = ({
                   {/* Middle row: Progress bar and percentage */}
                   <div className="flex items-center gap-2">
                     {/* Progress Bar */}
-                    <div className="flex-1 bg-[var(--surface-2)] rounded-full h-2">
+                    <div className="flex-1 bg-[var(--progress-track)] rounded-full h-2">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           isSelected ? 'bg-[var(--success)]' : 'bg-[var(--text-muted)]'
@@ -907,6 +898,15 @@ const VoteContent = ({
                       {percentage}%
                     </span>
                   </div>
+
+                  {/* Checkmark for selected option - on the right side */}
+                  {isSelected && (
+                    <div className="absolute top-3 right-3 w-8 h-8 bg-[var(--success)] rounded-full flex items-center justify-center shadow-sm">
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

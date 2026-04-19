@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PageLayout } from '@/components/PageLayout';
 
 type RatingItemForm = {
   id: string;
@@ -70,12 +71,12 @@ export default function CreateRatingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-20 pb-24 md:pb-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
+    <PageLayout className="pb-24 md:pb-8" style={{ paddingTop: 'calc(var(--navbar-height) + 1rem)' }}>
+      <div className="max-w-2xl mx-auto py-8">
+        <div className="py-0 sm:py-6">
           <Link
             href="/ratings"
-            className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+            className="hidden sm:block text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
           >
             ← Back
           </Link>
@@ -191,6 +192,6 @@ export default function CreateRatingPage() {
           </button>
         </form>
       </div>
-    </div>
+    </PageLayout>
   );
 }
