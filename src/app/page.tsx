@@ -119,7 +119,7 @@ export default function Home() {
                   href={feature.href}
                   className="block h-full"
                 >
-                  <div className="h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer group">
+                  <div className={`h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer group ${feature.id === 'spin' ? 'mt-4 pt-0' : ''}`}>
                     {/* Icon */}
                     <div className="flex justify-center mb-4">
                       <div className="w-10 h-10 flex items-center justify-center text-[var(--primary)]">

@@ -837,9 +837,9 @@ export const SpinWheel = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
       {/* Add padding to account for fixed navbar */}
-      <div className="pt-16 lg:pt-20" />
+      <div className="pt-0 lg:pt-20" />
 
-      <div className="py-12 px-4">
+      <div className="pt-0 pb-12 px-4 lg:py-12">
         <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[var(--primary-light)] opacity-30 rounded-full blur-3xl transform translate-x-16 -translate-y-16" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[var(--primary-light)] opacity-20 rounded-full blur-3xl transform -translate-x-32 translate-y-32" />
 
