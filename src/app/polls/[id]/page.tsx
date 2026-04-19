@@ -7,10 +7,12 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import usePollStore from '@/store/pollStore';
 import PollDetail from '@/components/poll/PollDetail';
 import { PageLayout } from '@/components/PageLayout';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PollPage() {
   const router = useRouter();
   const { id: pollId } = useParams();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -23,12 +25,12 @@ export default function PollPage() {
     const timer = setTimeout(() => {
       setIsLoading(false);
       if (!poll) {
-        setError('Poll not found');
+        setError(t('common.pollNotFound'));
       }
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [poll]);
+  }, [poll, t]);
 
   if (isLoading) {
     return (
@@ -63,7 +65,7 @@ export default function PollPage() {
             </div>
             <div className="ml-3">
               <p className="text-sm text-red-700">
-                {error || 'Poll not found. It may have been deleted or never existed.'}
+                {error || t('common.pollNotFoundDesc')}
               </p>
               <div className="mt-4">
                 <Link

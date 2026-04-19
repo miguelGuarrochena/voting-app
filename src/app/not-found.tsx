@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import ErrorState from '@/components/ErrorState';
 import { HomeIcon, PlusCircleIcon, MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/context/LanguageContext';
 
 const NotFound = () => {
   const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Log 404 for analytics
@@ -139,7 +141,7 @@ const NotFound = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
-          If you believe this is an error, please contact our support team.
+          {t('common.contactSupport')}
         </motion.p>
       </motion.div>
     </div>

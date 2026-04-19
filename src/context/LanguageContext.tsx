@@ -183,6 +183,17 @@ const translations = {
     'create.creating': 'Creating...',
     'create.optionRequired': 'Option is required',
     'create.optionMinLength': 'Option must be at least 1 character long',
+    'create.newVote': 'Create a New Vote',
+    'create.newRanking': 'Create a New Ranking',
+    'create.newPoll': 'Create a New Poll',
+    'create.description': 'Share your thoughts and gather opinions from your community',
+    'create.back': 'Back',
+    
+    // My Polls
+    'myPolls.createdBy': 'Created by',
+    'myPolls.noPolls': 'You haven\'t created any polls yet',
+    'myPolls.startCreating': 'Start by creating your first poll!',
+    'myPolls.createFirst': 'Create Your First Poll',
   },
   es: {
     // Navigation
@@ -352,6 +363,17 @@ const translations = {
     'create.creating': 'Creando...',
     'create.optionRequired': 'La opción es requerida',
     'create.optionMinLength': 'La opción debe tener al menos 1 caracter',
+    'create.newVote': 'Crear una Nueva Votación',
+    'create.newRanking': 'Crear un Nuevo Ranking',
+    'create.newPoll': 'Crear una Nueva Encuesta',
+    'create.description': 'Comparte tus pensamientos y reúne opiniones de tu comunidad',
+    'create.back': 'Volver',
+    
+    // My Polls
+    'myPolls.createdBy': 'Creado por',
+    'myPolls.noPolls': 'No has creado ninguna encuesta aún',
+    'myPolls.startCreating': '¡Comienza creando tu primera encuesta!',
+    'myPolls.createFirst': 'Crea tu Primera Encuesta',
   }
 };
 

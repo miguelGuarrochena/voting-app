@@ -154,7 +154,7 @@ export default function MyPollsPage() {
                 </div>
                 <PollCard poll={poll} />
                 <div className="mt-2 text-xs text-[var(--text-muted)] text-center">
-                  Created by {poll.createdBy}
+                  {t('myPolls.createdBy')} {poll.createdBy}
                 </div>
               </div>
             ))}
@@ -166,13 +166,13 @@ export default function MyPollsPage() {
       {myPolls.length === 0 && (
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-12 text-center">
           <div className="text-6xl mb-4">📊</div>
-          <h3 className="font-semibold text-[var(--text)] text-lg mb-2">You haven't created any polls yet</h3>
-          <p className="text-[var(--text-muted)] mb-6">Start by creating your first poll!</p>
+          <h3 className="font-semibold text-[var(--text)] text-lg mb-2">{t('myPolls.noPolls')}</h3>
+          <p className="text-[var(--text-muted)] mb-6">{t('myPolls.startCreating')}</p>
           <a
             href="/create"
             className="inline-block px-6 py-3 bg-[var(--primary)] text-white rounded-[var(--radius-md)] font-medium hover:bg-[var(--primary-dark)] transition-colors"
           >
-            Create Your First Poll
+            {t('myPolls.createFirst')}
           </a>
         </div>
       )}
