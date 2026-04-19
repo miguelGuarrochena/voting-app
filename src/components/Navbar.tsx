@@ -14,20 +14,23 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { Plus } from 'lucide-react';
+import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe } from 'lucide-react';
 import { IconLayoutList, IconUser, IconLock, IconLogout } from '@tabler/icons-react';
 import { getCreatorAvatar } from '@/data/mockPolls';
 import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
+import { useTheme } from '@/context/ThemeContext';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, toggleLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Handle scroll effect for desktop navbar
   useEffect(() => {
@@ -69,7 +72,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between px-4 py-3">
             {/* Left side - Back button or spacer */}
             <div className="flex-1">
-              {pathname !== '/votes' ? (
+              {pathname !== '/' ? (
                 <button
                   onClick={() => {
                     if (pathname === '/spin') {
@@ -90,17 +93,97 @@ const Navbar = () => {
 
             {/* Center - Logo always visible */}
             <div className="flex-1 text-center">
-              <Link href="/votes" className="inline-flex items-center space-x-2">
+              <Link href="/" className="inline-flex items-center space-x-2">
                 <span className="text-lg sm:text-xl font-bold text-[var(--primary)] font-display">✨ Pickly</span>
               </Link>
             </div>
 
-            {/* Right side - Theme/Language */}
+            {/* Right side - Burger menu */}
             <div className="flex-1 flex justify-end">
-              <ThemeLanguageSwitcher />
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] hover:bg-[var(--surface)] transition-colors"
+              >
+                {showMobileMenu ? <X className="w-4 h-4" /> : <MenuIcon className="w-4 h-4" />}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile menu dropdown */}
+        {showMobileMenu && (
+          <div className="fixed top-14 left-0 right-0 z-50 bg-[var(--surface)] border-b border-[var(--border)] shadow-lg">
+            <div className="py-2">
+              {/* Theme toggle */}
+              <button
+                onClick={() => toggleTheme()}
+                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                <span>{theme === 'light' ? t('theme.dark') : t('theme.light')}</span>
+              </button>
+
+              {/* Language toggle */}
+              <button
+                onClick={() => toggleLanguage()}
+                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <Globe className="w-5 h-5" />
+                <span>{language === 'en' ? t('lang.es') : t('lang.en')}</span>
+              </button>
+
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/settings"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <CogIcon className="w-5 h-5" />
+                    <span>{t('nav.settings')}</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setShowMobileMenu(false);
+                    }}
+                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <UserCircleIcon className="w-5 h-5" />
+                    <span>{t('nav.logout')}</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <UserCircleIcon className="w-5 h-5" />
+                    <span>{t('nav.login')}</span>
+                  </Link>
+                  <Link
+                    href="/auth/signup"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <UserCircleIcon className="w-5 h-5" />
+                    <span>{t('nav.signup')}</span>
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Click outside to close mobile menu */}
+        {showMobileMenu && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowMobileMenu(false)}
+          />
+        )}
 
         {/* Bottom tab bar */}
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg)] border-t border-[var(--border)]">
