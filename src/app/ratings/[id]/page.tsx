@@ -86,7 +86,7 @@ export default function RatingDetailPage() {
 
   return (
     <PageLayout className="pb-24 md:pb-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <div className="mb-6">
           <button
             onClick={() => router.back()}

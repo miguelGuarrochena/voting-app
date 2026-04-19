@@ -12,8 +12,8 @@ interface PageLayoutProps {
 export function PageLayout({ children, className = '', fullWidth = false, style }: PageLayoutProps) {
   return (
     <div
-      className={`min-h-screen bg-[var(--bg)] pt-[var(--navbar-height)] ${className}`}
-      style={style || { paddingTop: 'calc(var(--navbar-height) + 1.5rem)' }} // navbar height + 24px padding
+      className={`min-h-screen bg-[var(--bg)] pt-[var(--content-top-spacing)] ${className}`}
+      style={style}
     >
       <div className={fullWidth ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}>
         {children}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -813,7 +813,7 @@ const VoteContent = ({
   };
 
   return (
-    <>
+    <Fragment>
       <div className="space-y-3">
         {poll.options.map((option, index) => {
           const optionVotes = getPositiveVotes(option.reactions);
@@ -923,7 +923,7 @@ const VoteContent = ({
           />
         )}
       </AnimatePresence>
-    </>
+    </Fragment>
   );
 };
 

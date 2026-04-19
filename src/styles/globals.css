@@ -35,6 +35,8 @@
   --badge-neutral-text: #4B5563;
   /* Navbar height */
   --navbar-height: 64px;
+  /* Content top spacing: navbar height + additional spacing */
+  --content-top-spacing: 0px;
   --radius-sm: 12px;
   --radius-md: 16px;
   --radius-lg: 24px;
@@ -44,6 +46,12 @@
   --shadow-lg: 0 20px 48px rgba(0,0,0,0.14);
   /* Progress bar track - visible in both modes */
   --progress-track: rgba(0,0,0,0.08);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --content-top-spacing: calc(var(--navbar-height) + 40px);
+  }
 }
 
 [data-theme="dark"] {

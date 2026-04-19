@@ -71,8 +71,8 @@ export default function CreateRatingPage() {
   };
 
   return (
-    <PageLayout className="pb-24 md:pb-8" style={{ paddingTop: 'calc(var(--navbar-height) + 1rem)' }}>
-      <div className="max-w-2xl mx-auto py-8">
+    <PageLayout className="pb-24 md:pb-8">
+      <div className="max-w-2xl mx-auto pb-8">
         <div className="py-0 sm:py-6">
           <Link
             href="/ratings"

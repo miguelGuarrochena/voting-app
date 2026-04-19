@@ -69,7 +69,7 @@ export default function Home() {
   return (
     <PageLayout className="pb-24 md:pb-8">
         {/* Hero Section */}
-        <div className="text-center py-16 sm:py-20 lg:py-24">
+        <div className="text-center pb-16 sm:pb-20 lg:pb-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
