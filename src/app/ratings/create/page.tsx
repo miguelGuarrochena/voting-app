@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 type RatingItemForm = {
@@ -72,12 +73,12 @@ export default function CreateRatingPage() {
     <div className="min-h-screen bg-[var(--bg)] pt-20 pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <button
-            onClick={() => router.back()}
+          <Link
+            href="/ratings"
             className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
           >
             ← Back
-          </button>
+          </Link>
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Create Rating</h1>
@@ -92,8 +93,8 @@ export default function CreateRatingPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors ${
-                errors.title ? 'border-red-500' : 'border-[var(--border)]'
+              className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
+                errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
               placeholder="e.g., Best pizza in NYC?"
               maxLength={100}
@@ -109,7 +110,7 @@ export default function CreateRatingPage() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors min-h-[100px]"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 min-h-[100px]"
               placeholder="Add more details about this rating..."
               maxLength={500}
             />
@@ -142,7 +143,7 @@ export default function CreateRatingPage() {
                       type="text"
                       value={item.label}
                       onChange={(e) => updateItem(item.id, { label: e.target.value })}
-                      className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                       placeholder={`Item ${index + 1}`}
                       maxLength={50}
                     />
@@ -152,7 +153,7 @@ export default function CreateRatingPage() {
                         type="text"
                         value={item.imageUrl}
                         onChange={(e) => updateItem(item.id, { imageUrl: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm"
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="Image URL (optional)"
                       />
                       {/* TODO: Add file upload button */}

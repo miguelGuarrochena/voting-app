@@ -80,6 +80,14 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
   const { createPoll, loading, error: submitError } = useCreatePoll();
 
+  // Helper function to get context-specific labels
+  const getContextLabel = (label: string) => {
+    if (pollType === 'rank') {
+      return label.replace('Poll', 'Ranking').replace('poll', 'ranking');
+    }
+    return label;
+  };
+
   const addOption = () => {
     setOptions([...options, { id: crypto.randomUUID(), text: '', image: '' }]);
   };
@@ -214,7 +222,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
     // Title validation
     if (!title.trim()) {
-      newErrors.title = 'Poll title is required';
+      newErrors.title = pollType === 'rank' ? 'Ranking title is required' : 'Poll title is required';
     } else if (title.trim().length < 3) {
       newErrors.title = 'Title must be at least 3 characters long';
     } else if (title.trim().length > 100) {
@@ -295,7 +303,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
       router.push('/');
     } catch (error) {
       console.error('[CreatePoll] Failed to create poll:', error);
-      setErrors({ submit: 'Failed to create poll. Please try again.' });
+      setErrors({ submit: pollType === 'rank' ? 'Failed to create ranking. Please try again.' : 'Failed to create poll. Please try again.' });
     }
   };
 
@@ -304,7 +312,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Poll Basics Section */}
         <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Poll Basics</h2>
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">{getContextLabel('Poll Basics')}</h2>
 
           <div className="space-y-6">
             {/* Poll Type Selector - Only show if defaultType is not provided */}
@@ -350,7 +358,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="title">
-                Poll Title *
+                {getContextLabel('Poll Title')} *
               </label>
               <div className="space-y-3">
                 <input
@@ -366,7 +374,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                   className={`w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
                     errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-gray-300 dark:border-gray-700'
                   }`}
-                  placeholder="What's your poll about?"
+                  placeholder={pollType === 'rank' ? "What's your ranking about?" : "What's your poll about?"}
                   maxLength={100}
                 />
                 
@@ -386,7 +394,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                   <button
                     type="button"
                     onClick={() => openImagePicker('title')}
-                    className="text-sm px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-full hover:bg-[var(--surface)] transition-colors font-medium border border-[var(--primary)]"
+                    className="text-sm px-4 py-2 bg-gray-100 dark:bg-gray-800 text-[var(--primary)] rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium border border-[var(--primary)]"
                   >
                     📷 Search Stock Images
                   </button>
@@ -429,7 +437,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 min-h-[100px]"
-                placeholder="Add more details about your poll..."
+                placeholder={pollType === 'rank' ? "Add more details about your ranking..." : "Add more details about your poll..."}
                 maxLength={500}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{description.length}/500 characters</p>
@@ -451,7 +459,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Poll will automatically close after the selected duration</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{getContextLabel('Poll will automatically close after the selected duration')}</p>
             </div>
           </div>
           
@@ -464,9 +472,9 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
         {/* Poll Options Section */}
         <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-4">Poll Options</h2>
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-4">{getContextLabel('Poll Options')}</h2>
           <p className="font-body text-sm text-[var(--text-muted)] mb-6">
-            Add at least 2 options. You can include text, emoji, or upload an image for each option.
+            {pollType === 'rank' ? 'Add at least 2 options to rank. You can include text, emoji, or upload an image for each option.' : 'Add at least 2 options. You can include text, emoji, or upload an image for each option.'}
           </p>
 
           <div className="space-y-4">
@@ -489,7 +497,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                           <button
                             type="button"
                             onClick={() => setOpenEmojiPicker(openEmojiPicker === option.id ? null : option.id)}
-                            className="w-12 h-12 px-2 py-2 border border-[var(--border)] rounded-md bg-[var(--surface)] hover:bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-2xl flex items-center justify-center"
+                            className="w-12 h-12 px-2 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-2xl flex items-center justify-center"
                           >
                             {option.emoji || '😶'}
                           </button>
@@ -506,7 +514,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                         </div>
                       </div>
                       {openEmojiPicker === option.id && (
-                        <div className="absolute top-full left-0 mt-2 z-50 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg p-3 w-64">
+                        <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg p-3 w-64">
                           <div className="space-y-2">
                             {Object.entries(emojiCategories).map(([category, emojis]) => (
                               <div key={category}>
@@ -613,7 +621,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                 className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 dark:border-gray-600"
               />
               <label htmlFor="public" className="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-100">
-                Public - Anyone with the link can view and vote
+                Public - Anyone with the link can view and {pollType === 'rank' ? 'rank' : 'vote'}
               </label>
             </div>
             
@@ -628,16 +636,16 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
               />
               <div className="ml-2">
                 <label htmlFor="private" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Private - Only invited participants can view and vote
+                  Private - Only invited participants can view and {pollType === 'rank' ? 'rank' : 'vote'}
                 </label>
                 {isPrivate && (
                   <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
-                    🔒 Only people you share the invite link with can see this poll
+                    🔒 Only people you share the invite link with can see this {pollType === 'rank' ? 'ranking' : 'poll'}
                   </p>
                 )}
                 {isPrivate && participants.length === 0 && (
                   <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-                    ⚠️ Private polls require at least one participant
+                    ⚠️ Private {pollType === 'rank' ? 'rankings' : 'polls'} require at least one participant
                   </p>
                 )}
                 {isPrivate && (
@@ -723,7 +731,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50'
             }`}
           >
-            {loading ? 'Creating...' : 'Create Poll'}
+            {loading ? 'Creating...' : getContextLabel('Create Poll')}
           </button>
         </div>
         

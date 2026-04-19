@@ -7,6 +7,7 @@ import usePollStore from '@/store/pollStore';
 import { motion } from 'framer-motion';
 import { BarChart2, Trophy, RefreshCw, Star } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { PageLayout } from '@/components/PageLayout';
 
 const features = [
   {
@@ -57,17 +58,16 @@ export default function Home() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] pt-20">
+      <PageLayout>
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-20 pb-24 md:pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <PageLayout className="pb-24 md:pb-8">
         {/* Hero Section */}
         <div className="text-center py-16 sm:py-20 lg:py-24">
           <motion.div
@@ -175,8 +175,8 @@ export default function Home() {
               {recentPolls.map((poll, index) => {
                 // Determine type badge
                 const getTypeBadge = () => {
-                  if (poll.type === 'rank') return { label: 'Ranking', color: 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300' };
-                  return { label: 'Vote', color: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' };
+                  if (poll.type === 'rank') return { label: 'Ranking', color: 'bg-[var(--badge-warning-bg)] text-[var(--badge-warning-text)]' };
+                  return { label: 'Vote', color: 'bg-[var(--badge-info-bg)] text-[var(--badge-info-text)]' };
                 };
                 const typeBadge = getTypeBadge();
 
@@ -216,7 +216,6 @@ export default function Home() {
             </div>
           )}
         </motion.div>
-      </div>
-    </div>
+      </PageLayout>
   );
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import ErrorState from '@/components/ErrorState';
-import { HomeIcon, PlusCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, PlusCircleIcon, MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 const NotFound = () => {
   const router = useRouter();
@@ -126,7 +126,7 @@ const NotFound = () => {
           </div>
           
           <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] border border-[var(--border)] p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/spin')}>
-            <div className="text-2xl mb-2">🎯</div>
+            <ArrowPathIcon className="w-8 h-8 mb-2 mx-auto" />
             <h3 className="font-display font-semibold text-[var(--text)] mb-1">Spin Wheel</h3>
             <p className="text-sm text-[var(--text-muted)]">Make decisions fun</p>
           </div>

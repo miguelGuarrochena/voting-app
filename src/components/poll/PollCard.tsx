@@ -217,16 +217,16 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                 {/* Status Badge */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
                   {urgencyBadge && (
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium border ${urgencyBadge.color}`}>
+                    <div className="px-2 py-1 rounded-full text-xs font-medium border border-[var(--warning)] bg-[var(--badge-warning-bg)] text-[var(--badge-warning-text)]">
                       {urgencyBadge.text}
                     </div>
                   )}
                   <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
                     isExpired
-                      ? 'bg-gray-500/80 text-white'
-                      : 'bg-green-500/80 text-white'
+                      ? 'bg-[var(--badge-neutral-bg)]/80 text-[var(--badge-neutral-text)]'
+                      : 'bg-[var(--badge-success-bg)]/80 text-[var(--badge-success-text)]'
                   }`}>
-                    {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+                    {!isExpired && <div className="w-2 h-2 bg-[var(--badge-success-text)] rounded-full animate-pulse" />}
                     {isExpired ? t('poll.ended') : t('poll.active')}
                   </div>
                 </div>
@@ -237,7 +237,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                 style={{ background: getGradient(poll.title) }}
               >
                 {/* Avatar Circle */}
-                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
+                <div className="w-20 h-20 rounded-full bg-[var(--surface)]/20 backdrop-blur-sm flex items-center justify-center border-4 border-[var(--surface)]/30">
                   <span className="text-4xl font-bold text-white drop-shadow-lg">
                     {poll.title.charAt(0).toUpperCase()}
                   </span>
@@ -248,14 +248,14 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                 {/* Status Badge */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
                   {urgencyBadge && (
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium border ${urgencyBadge.color}`}>
+                    <div className="px-2 py-1 rounded-full text-xs font-medium border border-[var(--warning)] bg-[var(--badge-warning-bg)] text-[var(--badge-warning-text)]">
                       {urgencyBadge.text}
                     </div>
                   )}
                   <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
                     isExpired
-                      ? 'bg-gray-500/80 text-white'
-                      : 'bg-green-500/80 text-white'
+                      ? 'bg-[var(--badge-neutral-bg)]/80 text-[var(--badge-neutral-text)]'
+                      : 'bg-[var(--badge-success-bg)]/80 text-[var(--badge-success-text)]'
                   }`}>
                     {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
                     {isExpired ? t('poll.ended') : t('poll.active')}
@@ -274,7 +274,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
             {/* Meta info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white text-xs font-medium">
+                <div className="w-6 h-6 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-xs font-medium">
                   {getCreatorAvatar(poll.createdBy)}
                 </div>
                 <span>{totalVotes} votes</span>
@@ -283,10 +283,10 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
               {/* Status indicator */}
               <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                 isExpired 
-                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400' 
-                  : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                  ? 'bg-[var(--badge-neutral-bg)] text-[var(--badge-neutral-text)]' 
+                  : 'bg-[var(--badge-success-bg)] text-[var(--badge-success-text)]'
               }`}>
-                {!isExpired && <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />}
+                {!isExpired && <div className="w-1.5 h-1.5 bg-[var(--success)] rounded-full" />}
                 {isExpired ? t('poll.ended') : t('poll.active')}
               </div>
             </div>

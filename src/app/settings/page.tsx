@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { 
+import { PageLayout } from '@/components/PageLayout';
+import {
   UserCircleIcon,
   BellIcon,
   ShieldCheckIcon,
@@ -122,7 +123,7 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]">
+    <PageLayout fullWidth>
       {/* Header */}
       <div className="bg-[var(--surface)] border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,7 +174,7 @@ const SettingsPage = () => {
             <div className="mt-8 pt-8 border-t border-[var(--border)]">
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[var(--error)] hover:bg-[var(--badge-error-bg)] transition-colors text-left"
               >
                 <ArrowLeftIcon className="w-5 h-5" />
                 <span className="font-medium">{t('settings.logout')}</span>
@@ -191,7 +192,7 @@ const SettingsPage = () => {
                   </h2>
                   
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-pink-500 flex items-center justify-center text-white text-2xl font-semibold">
+                    <div className="w-20 h-20 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-2xl font-semibold">
                       {user?.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <div>
@@ -401,8 +402,8 @@ const SettingsPage = () => {
             </div>
           </div>
         </div>
-    </div>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

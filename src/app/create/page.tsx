@@ -2,32 +2,45 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { CreatePollForm } from '@/components/create/create-poll-form';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { PageLayout } from '@/components/PageLayout';
 
 function CreatePollContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get('type') as 'vote' | 'rank' | null;
 
+  // Determine back link based on type
+  const backLink = type === 'rank' ? '/ranking' : '/votes';
+
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-20">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <PageLayout>
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-4">
+          <Link
+            href={backLink}
+            className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+          >
+            ← Back
+          </Link>
+        </div>
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-2">
             {type === 'vote' ? 'Create a New Vote' : type === 'rank' ? 'Create a New Ranking' : 'Create a New Poll'}
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">Share your thoughts and gather opinions from your community</p>
+          <p className="text-[var(--text-muted)] text-sm sm:text-base">Share your thoughts and gather opinions from your community</p>
         </div>
         <CreatePollForm defaultType={type || undefined} />
       </div>
-    </div>
+    </PageLayout>
   );
 }
 
 const CreatePollPage = () => {
   return (
     <ProtectedRoute>
-      <Suspense fallback={<div className="min-h-screen bg-[var(--bg)] pt-20 flex items-center justify-center">Loading...</div>}>
+      <Suspense fallback={<PageLayout className="flex items-center justify-center"><div>Loading...</div></PageLayout>}>
         <CreatePollContent />
       </Suspense>
     </ProtectedRoute>

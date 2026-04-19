@@ -520,7 +520,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Link from 'next/link';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface WheelOption {
@@ -1001,7 +1001,7 @@ export const SpinWheel = () => {
                 </div>
                 {options.length < 2 && (
                   <div className="text-center py-8 text-[var(--text-muted)]">
-                    <div className="text-4xl mb-2">🎯</div>
+                    <ArrowPathIcon className="w-12 h-12 mx-auto mb-2" />
                     <p>{t('spin.enterAtLeastTwoOptions')}</p>
                   </div>
                 )}
@@ -1123,7 +1123,7 @@ export const SpinWheel = () => {
                   </div>
                   {options.length < 2 && (
                     <div className="text-center py-4 text-[var(--text-muted)]">
-                      <div className="text-3xl mb-1">🎯</div>
+                      <ArrowPathIcon className="w-9 h-9 mx-auto mb-1" />
                       <p className="text-sm">{t('spin.enterAtLeastTwoOptions')}</p>
                     </div>
                   )}

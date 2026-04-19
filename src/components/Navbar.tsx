@@ -11,7 +11,8 @@ import {
   CogIcon,
   StarIcon,
   UserCircleIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { Plus } from 'lucide-react';
 import { IconLayoutList, IconUser, IconLock, IconLogout } from '@tabler/icons-react';
@@ -130,7 +131,7 @@ const Navbar = () => {
                 pathname === '/explore' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
               }`}
             >
-              <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-occasional" />
+              <ArrowPathIcon className="w-5 h-5 sm:w-6 sm:h-6" />
               <span className="text-xs mt-1">Spin</span>
             </Link>
 
@@ -169,8 +170,8 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
             <Link
               href="/votes"
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                pathname === '/votes' ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
+              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
+                pathname === '/votes' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
               <ChartBarIcon className="w-5 h-5" />
@@ -201,7 +202,7 @@ const Navbar = () => {
                 pathname === '/spin' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
-              <CogIcon className="w-5 h-5 animate-spin-occasional" />
+              <ArrowPathIcon className="w-5 h-5" />
               <span>Spin</span>
               {pathname === '/spin' && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
@@ -231,7 +232,7 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-pink-500 flex items-center justify-center text-white text-sm font-semibold hover:bg-pink-600 transition-colors"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-sm font-semibold hover:bg-[var(--primary-dark)] transition-colors"
                   >
                     {getCreatorAvatar(user?.name || 'User')}
                   </button>
@@ -294,7 +295,7 @@ const Navbar = () => {
                           onClick={() => setShowCreateMenu(false)}
                           className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                         >
-                          <CogIcon className="w-4 h-4" />
+                          <ArrowPathIcon className="w-4 h-4" />
                           <span>Spin Wheel</span>
                         </Link>
                         <Link
@@ -314,7 +315,7 @@ const Navbar = () => {
               <>
                 <Link
                   href="/auth/login"
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors text-sm sm:text-base"
+                  className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium transition-colors text-sm sm:text-base"
                 >
                   {t('nav.login')}
                 </Link>

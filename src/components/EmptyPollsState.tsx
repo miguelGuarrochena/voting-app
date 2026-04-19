@@ -153,7 +153,7 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
             href="/spin"
             className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[var(--warning)] to-[var(--warning)]/80 text-white rounded-full font-medium hover:shadow-lg transition-all transform hover:scale-105"
           >
-            <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-sm">🎯</div>
+            <ArrowPathIcon className="w-5 h-5" />
             <span>Try the Wheel</span>
           </Link>
         </motion.div>
@@ -188,7 +188,7 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--warning-light)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative">
               <div className="w-16 h-16 bg-gradient-to-br from-[var(--warning)] to-[var(--warning)]/80 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
-                <div className="text-2xl">🎯</div>
+                <ArrowPathIcon className="w-8 h-8 text-white" />
               </div>
               <h3 className="font-display text-xl font-bold text-[var(--text)] mb-3">Decision Wheel</h3>
               <p className="text-[var(--text-muted)]">Let fate decide for you</p>

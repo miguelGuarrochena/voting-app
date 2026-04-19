@@ -350,20 +350,20 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
         <div className="flex flex-col gap-1">
           {/* Line 1: avatar + username + Active badge */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-white text-sm font-semibold">
+            <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-sm font-semibold">
               {getCreatorAvatar(poll.createdBy)}
             </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">{poll.createdBy}</span>
+            <span className="text-sm text-[var(--text-muted)]">{poll.createdBy}</span>
             <div className={`px-2 py-1 rounded-full text-xs font-medium ${
               hasEnded
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                ? 'bg-[var(--badge-neutral-bg)] text-[var(--badge-neutral-text)]'
+                : 'bg-[var(--badge-success-bg)] text-[var(--badge-success-text)]'
             }`}>
               {hasEnded ? t('poll.ended') : t('poll.active')}
             </div>
           </div>
           {/* Line 2: time • votes • timer */}
-          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] flex-wrap">
             <span>{mounted ? formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true }) : 'just now'}</span>
             <span>•</span>
             <span>{totalVotes} votes</span>
@@ -378,20 +378,20 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
 
         {/* Invite Link Section - Only for creator of private polls */}
         {isCreator && poll.isPrivate && inviteLink && (
-          <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+          <div className="mt-4 bg-[var(--badge-info-bg)] border border-[var(--border)] rounded-xl p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-blue-800 dark:text-blue-300 font-medium">🔒 Invite Link</span>
+                  <span className="text-[var(--badge-info-text)] font-medium">🔒 Invite Link</span>
                 </div>
-                <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">Only people with this link can see this poll</p>
-                <div className="bg-[var(--surface)] border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2 text-sm text-[var(--text)] break-all">
+                <p className="text-xs text-[var(--badge-info-text)] mb-2">Only people with this link can see this poll</p>
+                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text)] break-all">
                   {inviteLink}
                 </div>
               </div>
               <button
                 onClick={handleCopyInviteLink}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex-shrink-0"
+                className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--primary-dark)] transition-colors flex-shrink-0"
               >
                 Copy Link
               </button>
@@ -407,7 +407,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             onClick={() => setActiveTab('vote')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'vote'
-                ? 'bg-[#f43f5e] text-white'
+                ? 'bg-[var(--primary)] text-white'
                 : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
@@ -420,7 +420,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             onClick={() => setActiveTab('results')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'results'
-                ? 'bg-[#f43f5e] text-white'
+                ? 'bg-[var(--primary)] text-white'
                 : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
@@ -519,7 +519,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
                     handleDelete();
                     setShowDeleteDialog(false);
                   }}
-                  className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 bg-[var(--error)] text-white hover:opacity-90 rounded-lg font-medium transition-colors"
                 >
                   {t('poll.delete')}
                 </button>
@@ -531,14 +531,14 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
 
       {/* Danger Zone - Delete Button */}
       {isCreator && !hasEnded && (
-        <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700 pb-32 md:pb-0">
-          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide text-center mb-4">
+        <div className="mt-16 pt-8 border-t border-[var(--border)] pb-32 md:pb-0">
+          <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide text-center mb-4">
             {t('poll.dangerZone')}
           </p>
           <div className="flex justify-center">
             <button
               onClick={() => setShowDeleteDialog(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-red-300 dark:border-red-700 text-red-500 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-400 dark:hover:border-red-600 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[var(--error)] text-[var(--error)] text-sm font-medium hover:bg-[var(--badge-error-bg)] hover:border-[var(--error)] transition-all"
             >
               🗑️ {t('poll.deletePoll')}
             </button>
@@ -599,9 +599,9 @@ const ResultsContent = ({
   const top3 = sortedOptions.slice(0, 3);
   const remainingOptions = sortedOptions.slice(3);
 
-  // Medal colors for podium
-  const medalColors = ['bg-yellow-400', 'bg-gray-400', 'bg-amber-600']; // Gold, Silver, Bronze
-  const medalBorders = ['border-yellow-500', 'border-gray-500', 'border-amber-700'];
+  // Medal colors for podium - using inline styles for gradient colors
+  const medalColors = ['#FACC15', '#9CA3AF', '#D97706']; // Gold, Silver, Bronze hex values
+  const medalBorders = ['#EAB308', '#6B7280', '#B45309'];
   const podiumHeights = ['h-48', 'h-40', 'h-32']; // 1st tallest, 2nd middle, 3rd shortest
   const podiumOrder = top3.length >= 3 ? [1, 0, 2] : top3.length === 2 ? [1, 0] : [0]; // 2nd, 1st, 3rd positions
 
@@ -638,7 +638,7 @@ const ResultsContent = ({
 
                   {/* Letter Avatar */}
                   <div
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg border-4 border-white"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg border-4 border-[var(--surface)]"
                     style={{ backgroundColor: hasImage ? undefined : letterColor }}
                   >
                     {hasImage ? (
@@ -655,9 +655,9 @@ const ResultsContent = ({
                 </div>
 
                 {/* Podium Card */}
-                <div className={`relative w-24 sm:w-32 ${podiumHeights[sortedIndex]} rounded-t-xl border-2 ${medalBorders[sortedIndex]} ${medalColors[sortedIndex]} bg-gradient-to-b from-white to-gray-50 flex flex-col items-center justify-end p-2 shadow-lg`}>
+                <div className={`relative w-24 sm:w-32 ${podiumHeights[sortedIndex]} rounded-t-xl border-2 flex flex-col items-center justify-end p-2 shadow-lg`} style={{ borderColor: medalBorders[sortedIndex], background: `linear-gradient(to bottom, ${medalColors[sortedIndex]}, var(--surface-2))` }}>
                   {/* Option Name */}
-                  <span className="text-xs sm:text-sm font-semibold text-gray-800 text-center line-clamp-2 mb-1">
+                  <span className="text-xs sm:text-sm font-semibold text-[var(--text)] text-center line-clamp-2 mb-1">
                     {option.title}
                   </span>
 
@@ -667,7 +667,7 @@ const ResultsContent = ({
                   </span>
 
                   {/* Rank Number */}
-                  <div className={`absolute -bottom-3 w-6 h-6 rounded-full ${medalColors[sortedIndex]} border-2 ${medalBorders[sortedIndex]} flex items-center justify-center text-xs font-bold text-white`}>
+                  <div className="absolute -bottom-3 w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: medalColors[sortedIndex], borderColor: medalBorders[sortedIndex] }}>
                     {sortedIndex + 1}
                   </div>
                 </div>
@@ -680,7 +680,7 @@ const ResultsContent = ({
       {/* Remaining Options - Compact Rows */}
       {remainingOptions.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
             Other Options
           </h3>
           {remainingOptions.map((option, index) => {
@@ -695,13 +695,13 @@ const ResultsContent = ({
             return (
               <motion.div
                 key={option.id}
-                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 shadow-sm"
+                className="flex items-center gap-3 p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] shadow-sm"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
                 {/* Rank Number */}
-                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] flex-shrink-0">
                   {rank}
                 </div>
 
@@ -726,19 +726,19 @@ const ResultsContent = ({
 
                 {/* Name and Progress */}
                 <div className="flex-1 min-w-0">
-                  <span className={`font-medium text-sm truncate block ${isUserChoice ? 'text-[#f43f5e]' : 'text-[var(--text)]'}`}>
+                  <span className={`font-medium text-sm truncate block ${isUserChoice ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>
                     {option.title}
                   </span>
-                  <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                  <div className="w-full bg-[var(--surface-2)] rounded-full h-1.5 mt-1">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${isUserChoice ? 'bg-[#f43f5e]' : 'bg-gray-400'}`}
-                      style={{ width: `${percentage}%` }}
+                      className={`h-full rounded-full transition-all duration-500 ${isUserChoice ? 'bg-[var(--primary)]' : 'bg-[var(--text-muted)]'}`}
+                      style={{ width: `${percentage}%`, opacity: isUserChoice ? 1 : 0.5 }}
                     />
                   </div>
                 </div>
 
                 {/* Percentage */}
-                <span className={`text-lg font-bold flex-shrink-0 ${isUserChoice ? 'text-[#f43f5e]' : 'text-[var(--text-muted)]'}`}>
+                <span className={`text-lg font-bold flex-shrink-0 ${isUserChoice ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`}>
                   {percentage}%
                 </span>
               </motion.div>
@@ -828,9 +828,9 @@ const VoteContent = ({
               key={option.id}
               className={`relative rounded-2xl border-2 transition-all cursor-pointer ${
                 isSelected
-                  ? 'border-green-500 shadow-md'
-                  : 'border-gray-200 hover:border-gray-300'
-              } bg-white`}
+                  ? 'border-[var(--success)] shadow-md'
+                  : 'border-[var(--border)] hover:border-[var(--text-muted)]'
+              } bg-[var(--surface)]`}
               onClick={() => handleCardClick(option.id)}
               whileHover={!hasEnded ? { scale: 1.01 } : {}}
               whileTap={!hasEnded ? { scale: 0.99 } : {}}
@@ -854,7 +854,7 @@ const VoteContent = ({
                 {/* Left - Letter Block (full height, green background) */}
                 <div
                   className={`w-16 sm:w-20 flex-shrink-0 flex items-center justify-center relative rounded-l-2xl overflow-hidden ${
-                    isSelected ? 'bg-green-500' : ''
+                    isSelected ? 'bg-[var(--success)]' : ''
                   }`}
                   style={{ backgroundColor: isSelected ? undefined : letterColor }}
                 >
@@ -873,8 +873,8 @@ const VoteContent = ({
 
                   {/* Checkmark for selected option - on the letter avatar */}
                   {isSelected && (
-                    <div className="absolute top-1 right-1 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                      <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="absolute top-1 right-1 w-10 h-10 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-sm">
+                      <svg className="w-6 h-6 text-[var(--success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
@@ -891,18 +891,18 @@ const VoteContent = ({
                   {/* Middle row: Progress bar and percentage */}
                   <div className="flex items-center gap-2">
                     {/* Progress Bar */}
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-[var(--surface-2)] rounded-full h-2">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
-                          isSelected ? 'bg-green-500' : 'bg-gray-400'
+                          isSelected ? 'bg-[var(--success)]' : 'bg-[var(--text-muted)]'
                         }`}
-                        style={{ width: `${percentage}%` }}
+                        style={{ opacity: isSelected ? 1 : 0.5, width: `${percentage}%` }}
                       />
                     </div>
 
                     {/* Percentage - bold, green if selected, gray otherwise */}
                     <span className={`text-lg sm:text-xl font-bold flex-shrink-0 ${
-                      isSelected ? 'text-green-600' : 'text-gray-600'
+                      isSelected ? 'text-[var(--success)]' : 'text-[var(--text-muted)]'
                     }`}>
                       {percentage}%
                     </span>

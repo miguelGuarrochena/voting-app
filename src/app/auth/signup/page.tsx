@@ -53,19 +53,19 @@ export default function SignupPage() {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <motion.div 
-                className="bg-red-50 border border-red-200 rounded-[var(--radius-md)] p-4"
+              <motion.div
+                className="bg-[var(--badge-error-bg)] border border-[var(--error)] rounded-[var(--radius-md)] p-4"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
                 <div className="flex items-start gap-3">
-                  <div className="text-red-500 mt-0.5">
+                  <div className="text-[var(--error)] mt-0.5">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-red-800">{error}</p>
+                    <p className="text-sm font-medium text-[var(--badge-error-text)]">{error}</p>
                   </div>
                 </div>
               </motion.div>

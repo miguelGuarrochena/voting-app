@@ -20,6 +20,21 @@
   --border: #E5E5E5;
   --success: #2DD4A0;
   --warning: #FFB347;
+  --error: #EF4444;
+  --info: #3B82F6;
+  /* Badge/Status backgrounds */
+  --badge-success-bg: #D1FAE5;
+  --badge-success-text: #065F46;
+  --badge-warning-bg: #FEF3C7;
+  --badge-warning-text: #92400E;
+  --badge-error-bg: #FEE2E2;
+  --badge-error-text: #991B1B;
+  --badge-info-bg: #DBEAFE;
+  --badge-info-text: #1E40AF;
+  --badge-neutral-bg: #F3F4F6;
+  --badge-neutral-text: #4B5563;
+  /* Navbar height */
+  --navbar-height: 64px;
   --radius-sm: 12px;
   --radius-md: 16px;
   --radius-lg: 24px;
@@ -34,13 +49,26 @@
   --primary-light: #FF4D6A;
   --primary-dark: #E63050;
   --bg: #000000;
-  --surface: #111111;
-  --surface-2: #1A1A1A;
+  --surface: #000000;
+  --surface-2: #111111;
   --text: #FFFFFF;
   --text-muted: #AAAAAA;
   --border: #333333;
   --success: #2DD4A0;
   --warning: #FFB347;
+  --error: #EF4444;
+  --info: #60A5FA;
+  /* Badge/Status backgrounds - Dark mode */
+  --badge-success-bg: #064E3B;
+  --badge-success-text: #6EE7B7;
+  --badge-warning-bg: #78350F;
+  --badge-warning-text: #FCD34D;
+  --badge-error-bg: #7F1D1D;
+  --badge-error-text: #FCA5A5;
+  --badge-info-bg: #1E3A8A;
+  --badge-info-text: #93C5FD;
+  --badge-neutral-bg: #374151;
+  --badge-neutral-text: #D1D5DB;
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.5);
   --shadow-md: 0 8px 24px rgba(0,0,0,0.6);
   --shadow-lg: 0 20px 48px rgba(0,0,0,0.7);

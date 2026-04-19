@@ -6,6 +6,7 @@ import Head from 'next/head';
 import usePollStore from '@/store/pollStore';
 import { PollCard } from '@/components/poll/PollCard';
 import { PlusIcon } from '@heroicons/react/24/outline';
+import { PageLayout } from '@/components/PageLayout';
 
 export default function VotesPage() {
   const { polls, loadPolls, isLoading } = usePollStore();
@@ -37,18 +38,17 @@ export default function VotesPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] pt-20">
+      <PageLayout>
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-          <p className="text-gray-600 mt-4">Loading...</p>
+          <p className="text-[var(--text-muted)] mt-4">Loading...</p>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-20 pb-24 md:pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <PageLayout className="pb-24 md:pb-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -92,7 +92,7 @@ export default function VotesPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-[50vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-            <p className="text-gray-600 mt-4">Loading votes...</p>
+            <p className="text-[var(--text-muted)] mt-4">Loading votes...</p>
           </div>
         ) : sortedPolls.length === 0 ? (
           <div className="text-center py-16">
@@ -114,8 +114,6 @@ export default function VotesPage() {
             ))}
           </div>
         )}
-      </div>
-
       {/* Mobile FAB */}
       <Link
         href="/create?type=vote"
@@ -123,6 +121,6 @@ export default function VotesPage() {
       >
         <PlusIcon className="w-6 h-6" />
       </Link>
-    </div>
+    </PageLayout>
   );
 }
