@@ -199,7 +199,7 @@ export default function MyPollsPage() {
               <button
                 onClick={() => {
                   if (pollToDelete) {
-                    handleDelete(pollToDelete);
+                    handleDelete();
                   }
                   setShowDeleteDialog(false);
                   setPollToDelete(null);
