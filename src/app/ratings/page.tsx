@@ -27,11 +27,23 @@ export default function RatingsPage() {
   const [mounted, setMounted] = useState(false);
   const [ratings, setRatings] = useState(mockRatings);
   const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState<'recent' | 'trending'>('recent');
 
   useEffect(() => {
     setMounted(true);
     // TODO: Load ratings from API
   }, []);
+
+  // Apply filter logic
+  const sortedRatings = [...ratings].sort((a, b) => {
+    if (filter === 'trending') {
+      const aVotes = a.items.reduce((sum, item) => sum + item.votes.length, 0);
+      const bVotes = b.items.reduce((sum, item) => sum + item.votes.length, 0);
+      return bVotes - aVotes;
+    } else {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
 
   if (!mounted) {
     return (
@@ -70,13 +82,37 @@ export default function RatingsPage() {
           </Link>
         </div>
 
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setFilter('recent')}
+            className={`px-4 py-2 rounded-full font-medium transition-colors ${
+              filter === 'recent'
+                ? 'bg-[var(--primary)] text-white'
+                : 'bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--text)]'
+            }`}
+          >
+            Recent
+          </button>
+          <button
+            onClick={() => setFilter('trending')}
+            className={`px-4 py-2 rounded-full font-medium transition-colors ${
+              filter === 'trending'
+                ? 'bg-[var(--primary)] text-white'
+                : 'bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--text)]'
+            }`}
+          >
+            Trending
+          </button>
+        </div>
+
         {/* Ratings Grid */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-[50vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
             <p className="text-gray-600 mt-4">Loading ratings...</p>
           </div>
-        ) : ratings.length === 0 ? (
+        ) : sortedRatings.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">⭐</div>
             <h3 className="text-xl font-semibold text-[var(--text)] mb-2">No ratings yet</h3>
@@ -91,7 +127,7 @@ export default function RatingsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ratings.filter(r => r.visibility === 'public' && !r.isPrivate).map((rating) => (
+            {sortedRatings.filter(r => r.visibility === 'public' && !r.isPrivate).map((rating) => (
               <Link
                 key={rating.id}
                 href={`/ratings/${rating.id}`}
