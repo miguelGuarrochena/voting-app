@@ -111,15 +111,15 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   if (!canAccess) {
     return (
       <div className="max-w-md mx-auto mt-16 px-4">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-lg border border-[var(--border)] p-8 text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Access Denied</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Access Denied</h1>
+          <p className="text-[var(--text-muted)] mb-6">
             You don't have permission to view this poll. This is a private poll and you need an invite link to access it.
           </p>
           <button
             onClick={() => window.location.href = '/'}
-            className="px-6 py-3 bg-gray-900 dark:bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
+            className="px-6 py-3 bg-[var(--surface)] text-[var(--text)] rounded-xl font-medium hover:bg-[var(--surface-2)] transition-colors"
           >
             Back to Feed
           </button>
@@ -324,14 +324,14 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   return (
     <div className="w-full max-w-2xl mx-auto pb-20 md:pb-0">
       {/* Poll Header */}
-      <div className="bg-white dark:bg-gray-900 rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] border border-gray-100 dark:border-gray-800 p-4 md:p-6 mb-4 md:mb-6">
+      <div className="bg-[var(--surface)] rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4 md:p-6 mb-4 md:mb-6">
         <div className="flex flex-row items-start justify-between gap-3 mb-4">
           <div className="flex-1">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-[var(--text)] mb-2">
               {poll.title}
             </h1>
             {poll.description && (
-              <p className="font-body text-gray-500 dark:text-gray-400 text-base mb-4">
+              <p className="font-body text-[var(--text-muted)] text-base mb-4">
                 {poll.description}
               </p>
             )}
@@ -350,7 +350,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
         <div className="flex flex-col gap-1">
           {/* Line 1: avatar + username + Active badge */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="w-8 h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-sm font-medium">
+            <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-white text-sm font-semibold">
               {getCreatorAvatar(poll.createdBy)}
             </div>
             <span className="text-sm text-gray-500 dark:text-gray-400">{poll.createdBy}</span>
@@ -385,7 +385,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
                   <span className="text-blue-800 dark:text-blue-300 font-medium">🔒 Invite Link</span>
                 </div>
                 <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">Only people with this link can see this poll</p>
-                <div className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-300 break-all">
+                <div className="bg-white dark:bg-black border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-300 break-all">
                   {inviteLink}
                 </div>
               </div>
@@ -401,7 +401,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-1 mb-4 md:mb-6">
+      <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-1 mb-4 md:mb-6">
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTab('vote')}
@@ -500,17 +500,17 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 max-w-md w-full mx-4"
+              className="bg-[var(--surface)] rounded-2xl shadow-xl p-6 max-w-md w-full mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('poll.deletePoll')}</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <h3 className="text-xl font-bold text-[var(--text)] mb-2">{t('poll.deletePoll')}</h3>
+              <p className="text-[var(--text-muted)] mb-6">
                 {t('poll.deleteConfirm')}
               </p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowDeleteDialog(false)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg font-medium transition-colors"
                 >
                   {t('poll.cancel')}
                 </button>

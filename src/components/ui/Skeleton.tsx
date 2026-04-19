@@ -56,7 +56,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
 // Poll card skeleton component
 export const PollCardSkeleton: React.FC = () => (
-  <div className="bg-white dark:bg-gray-900 rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-gray-100 dark:border-gray-800">
+  <div className="bg-[var(--surface)] rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-[var(--border)]">
     <Skeleton variant="rectangular" height={200} />
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">

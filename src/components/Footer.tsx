@@ -6,7 +6,7 @@ const Footer = () => {
   const { t } = useLanguage();
 
   return (
-    <footer className="bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 py-8 text-center text-gray-500 dark:text-gray-400">
+    <footer className="bg-[var(--bg)] border-t border-[var(--border)] py-8 text-center text-[var(--text-muted)]">
       <p>{t('footer.copyright')}</p>
     </footer>
   );

@@ -191,7 +191,7 @@ const SettingsPage = () => {
                   </h2>
                   
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-2xl font-medium">
+                    <div className="w-20 h-20 rounded-full bg-pink-500 flex items-center justify-center text-white text-2xl font-semibold">
                       {user?.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <div>

@@ -119,7 +119,7 @@ export default function Home() {
                   href={feature.href}
                   className="block h-full"
                 >
-                  <div className="h-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer group">
+                  <div className="h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer group">
                     {/* Icon */}
                     <div className="flex justify-center mb-4">
                       <div className="w-10 h-10 flex items-center justify-center text-[var(--primary)]">
@@ -128,12 +128,12 @@ export default function Home() {
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 text-center">
+                    <h3 className="text-lg font-bold text-[var(--text)] mb-2 text-center">
                       {feature.title}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-gray-500 dark:text-gray-400 text-sm text-center leading-relaxed">
+                    <p className="text-[var(--text-muted)] text-sm text-center leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
@@ -186,7 +186,7 @@ export default function Home() {
                     href={`/polls/${poll.id}`}
                     className="block"
                   >
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800 p-4 hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full flex flex-col">
+                    <div className="bg-[var(--surface)] rounded-2xl shadow-sm hover:shadow-md border border-[var(--border)] p-4 hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full flex flex-col">
                       {/* Type badge */}
                       <div className="mb-2">
                         <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${typeBadge.color}`}>
@@ -195,12 +195,12 @@ export default function Home() {
                       </div>
 
                       {/* Title */}
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 line-clamp-2 flex-1">
+                      <h4 className="font-semibold text-[var(--text)] mb-3 line-clamp-2 flex-1">
                         {poll.title}
                       </h4>
 
                       {/* Creator and time */}
-                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-auto">
+                      <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mt-auto">
                         <span className="truncate max-w-[120px]">{poll.createdBy}</span>
                         <span className="whitespace-nowrap">{formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true })}</span>
                       </div>
@@ -210,9 +210,9 @@ export default function Home() {
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+            <div className="text-center py-12 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
               <div className="text-4xl mb-3">📭</div>
-              <p className="text-gray-500 dark:text-gray-400">No activity yet — be the first to create something!</p>
+              <p className="text-[var(--text-muted)]">No activity yet — be the first to create something!</p>
             </div>
           )}
         </motion.div>

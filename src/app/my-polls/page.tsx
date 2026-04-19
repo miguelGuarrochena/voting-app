@@ -181,9 +181,9 @@ export default function MyPollsPage() {
       {/* Delete Confirmation Dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('poll.deletePoll')}</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-[var(--text)] mb-2">{t('poll.deletePoll')}</h3>
+            <p className="text-[var(--text-muted)] mb-6">
               {t('poll.deleteConfirm')}
             </p>
             <div className="flex justify-end gap-3">

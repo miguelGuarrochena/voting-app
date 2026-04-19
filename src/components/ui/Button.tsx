@@ -23,8 +23,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     
     const variants = {
       primary: 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] focus:ring-[var(--primary)] disabled:bg-gray-300 disabled:text-gray-500',
-      secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 focus:ring-gray-500 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400',
-      outline: 'border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-[var(--primary)] disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400',
+      secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 focus:ring-gray-500 disabled:bg-white dark:disabled:bg-gray-800 disabled:text-gray-400',
+      outline: 'border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-[var(--primary)] disabled:bg-white dark:disabled:bg-gray-800 disabled:text-gray-400',
       ghost: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500 disabled:text-gray-400'
     };
 

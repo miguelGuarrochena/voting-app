@@ -42,20 +42,20 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
       style={style}
       {...(!isMobile ? attributes : {})}
       {...(!isMobile ? listeners : {})}
-      className={`bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-3 ${!isMobile ? 'cursor-move hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md' : ''} transition-all flex items-center gap-4 w-full`}
+      className={`bg-[var(--surface)] border-2 border-[var(--border)] rounded-xl p-4 mb-3 ${!isMobile ? 'cursor-move hover:border-[var(--border)] hover:shadow-md' : ''} transition-all flex items-center gap-4 w-full`}
     >
       <div className="flex-shrink-0 w-8 h-8 bg-[var(--primary)] text-white rounded-full flex items-center justify-center font-bold text-sm">
         {index + 1}
       </div>
+      {option.imageUrl && (
+        <img
+          src={option.imageUrl}
+          alt={option.title}
+          className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+        />
+      )}
       <div className="flex-1">
         <h3 className="font-semibold text-gray-900 dark:text-gray-100">{option.title}</h3>
-        {option.imageUrl && (
-          <img
-            src={option.imageUrl}
-            alt={option.title}
-            className="w-16 h-16 object-cover rounded-lg mt-2"
-          />
-        )}
       </div>
       {isMobile ? (
         <div className="flex flex-col gap-1">
@@ -63,7 +63,7 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
             onClick={() => onMoveUp?.(index)}
             disabled={index === 0}
             aria-label="Move up"
-            className="w-11 h-11 flex items-center justify-center bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors"
+            className="w-11 h-11 flex items-center justify-center bg-[var(--surface-2)] hover:bg-[var(--surface)] disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors"
           >
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -73,7 +73,7 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
             onClick={() => onMoveDown?.(index)}
             disabled={index === totalOptions - 1}
             aria-label="Move down"
-            className="w-11 h-11 flex items-center justify-center bg-gray-100 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors"
+            className="w-11 h-11 flex items-center justify-center bg-[var(--surface-2)] hover:bg-[var(--surface)] disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors"
           >
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -163,20 +163,20 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
         {rankedOptions.map((option, index) => (
           <div
             key={option.id}
-            className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center gap-4"
+            className="bg-[var(--surface)] border-2 border-[var(--border)] rounded-xl p-4 flex items-center gap-4"
           >
             <div className="flex-shrink-0 w-8 h-8 bg-[var(--primary)] text-white rounded-full flex items-center justify-center font-bold text-sm">
               {index + 1}
             </div>
+            {option.imageUrl && (
+              <img
+                src={option.imageUrl}
+                alt={option.title}
+                className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+              />
+            )}
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">{option.title}</h3>
-              {option.imageUrl && (
-                <img
-                  src={option.imageUrl}
-                  alt={option.title}
-                  className="w-16 h-16 object-cover rounded-lg mt-2"
-                />
-              )}
             </div>
           </div>
         ))}

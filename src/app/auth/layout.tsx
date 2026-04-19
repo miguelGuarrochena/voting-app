@@ -9,7 +9,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 ${inter.className}`}>
+    <div className={`min-h-screen bg-[var(--bg)] flex flex-col justify-center py-12 sm:px-6 lg:px-8 ${inter.className}`}>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link href="/" className="flex justify-center">
           <span className="text-2xl font-bold text-sky-500">Pickly</span>
@@ -20,7 +20,7 @@ export default function AuthLayout({
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-gray-900 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-white dark:bg-black py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {children}
         </div>
       </div>

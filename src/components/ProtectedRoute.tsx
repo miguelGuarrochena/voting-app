@@ -22,7 +22,7 @@ export const ProtectedRoute = ({ children, redirectTo = '/auth/login' }: Protect
   // Show loading spinner while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4">
             <svg className="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

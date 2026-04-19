@@ -91,16 +91,16 @@ const ImagePickerModal = ({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white dark:bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col m-4"
+          className="bg-[var(--surface)] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col m-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
+              <h2 className="text-xl font-semibold text-[var(--text)]">{title}</h2>
               <button
                 onClick={handleClose}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -167,8 +167,8 @@ const ImagePickerModal = ({
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 p-4 bg-gray-50">
-            <p className="text-xs text-gray-500 text-center">
+          <div className="border-t border-[var(--border)] p-4 bg-[var(--surface)]">
+            <p className="text-xs text-[var(--text-muted)] text-center">
               Images provided by free stock photo services. Always check licensing terms for commercial use.
             </p>
           </div>

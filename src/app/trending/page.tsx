@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 // Skeleton loader component
 const PollCardSkeleton = () => (
-  <div className="bg-white dark:bg-gray-900 rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-gray-100 dark:border-gray-800 animate-pulse">
+  <div className="bg-[var(--surface)] rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-[var(--border)] animate-pulse">
     <div className="h-[200px] bg-gray-200" />
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -95,11 +95,11 @@ const TrendingPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-4 text-center border border-gray-100 dark:border-gray-800">
+          <div className="bg-[var(--surface)] rounded-xl p-4 text-center border border-[var(--border)]">
             <div className="text-2xl font-bold text-[var(--primary)]">{trendingPolls.length}</div>
             <div className="text-sm text-gray-500 dark:text-gray-400">Active Polls</div>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-4 text-center border border-gray-100 dark:border-gray-800">
+          <div className="bg-[var(--surface)] rounded-xl p-4 text-center border border-[var(--border)]">
             <div className="text-2xl font-bold text-[var(--primary)]">
               {trendingPolls.reduce((sum, poll) => 
                 sum + poll.options.reduce((optSum, option) => optSum + (option.votes || 0), 0), 0
@@ -107,7 +107,7 @@ const TrendingPage = () => {
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">Total Votes</div>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-4 text-center border border-gray-100 dark:border-gray-800">
+          <div className="bg-[var(--surface)] rounded-xl p-4 text-center border border-[var(--border)]">
             <div className="text-2xl font-bold text-[var(--primary)]">
               {trendingPolls.filter(poll => new Date(poll.expiresAt) > new Date()).length}
             </div>

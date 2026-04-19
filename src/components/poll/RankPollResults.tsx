@@ -45,9 +45,9 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
 
   if (!hasRankings) {
     return (
-      <div className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center">
-        <p className="text-gray-600 dark:text-gray-400 text-lg">No rankings submitted yet</p>
-        <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">Be the first to rank these options!</p>
+      <div className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl p-8 text-center">
+        <p className="text-[var(--text-muted)] text-lg">No rankings submitted yet</p>
+        <p className="text-[var(--text-muted)] text-sm mt-2">Be the first to rank these options!</p>
       </div>
     );
   }
@@ -67,8 +67,8 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
         return (
           <div
             key={option.id}
-            className={`bg-white dark:bg-gray-900 border-2 rounded-xl p-4 transition-all ${
-              isWinner ? 'border-yellow-400 shadow-md' : 'border-gray-200 dark:border-gray-700'
+            className={`bg-[var(--surface)] border-2 rounded-xl p-4 transition-all ${
+              isWinner ? 'border-yellow-400 shadow-md' : 'border-[var(--border)]'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -77,7 +77,7 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
                 className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
                   isWinner
                     ? 'bg-yellow-400 text-yellow-900'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    : 'bg-[var(--surface-2)] text-[var(--text)]'
                 }`}
               >
                 {index + 1}

@@ -64,7 +64,7 @@ const Navbar = () => {
     return (
       <>
         {/* Top minimal bar */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg)] border-b border-[var(--border)]">
           <div className="flex items-center justify-between px-4 py-3">
             {/* Left side - Back button or spacer */}
             <div className="flex-1">
@@ -78,7 +78,7 @@ const Navbar = () => {
                       router.back();
                     }
                   }}
-                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] hover:bg-[var(--surface)] transition-colors"
                 >
                   <ArrowLeftIcon className="w-4 h-4" />
                 </button>
@@ -102,12 +102,12 @@ const Navbar = () => {
         </div>
 
         {/* Bottom tab bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg)] border-t border-[var(--border)]">
           <div className="flex items-center justify-between px-2 py-1 sm:py-2 pb-[env(safe-area-inset-bottom)]">
             <Link
               href="/votes"
               className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/votes' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
+                pathname === '/votes' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
               }`}
             >
               <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -117,7 +117,7 @@ const Navbar = () => {
             <Link
               href="/ranking"
               className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/ranking' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
+                pathname === '/ranking' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
               }`}
             >
               <TrophyIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -127,7 +127,7 @@ const Navbar = () => {
             <Link
               href="/spin"
               className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/spin' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
+                pathname === '/explore' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
               }`}
             >
               <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-occasional" />
@@ -137,7 +137,7 @@ const Navbar = () => {
             <Link
               href="/ratings"
               className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/ratings' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
+                pathname === '/ratings' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
               }`}
             >
               <StarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -155,7 +155,7 @@ const Navbar = () => {
 
   // Desktop navbar
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-950/95 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all ${
+    <nav className={`fixed top-0 left-0 right-0 z-40 bg-[var(--bg)]/95 backdrop-blur-xl border-b border-[var(--border)] transition-all ${
       scrolled ? 'shadow-lg' : ''
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -169,8 +169,8 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
             <Link
               href="/votes"
-              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/votes' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                pathname === '/votes' ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
               }`}
             >
               <ChartBarIcon className="w-5 h-5" />
@@ -184,7 +184,7 @@ const Navbar = () => {
             <Link
               href="/ranking"
               className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/ranking' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                pathname === '/ranking' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
               <TrophyIcon className="w-5 h-5" />
@@ -198,7 +198,7 @@ const Navbar = () => {
             <Link
               href="/spin"
               className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/spin' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                pathname === '/spin' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
               <CogIcon className="w-5 h-5 animate-spin-occasional" />
@@ -212,7 +212,7 @@ const Navbar = () => {
             <Link
               href="/ratings"
               className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/ratings' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                pathname === '/ratings' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
               <StarIcon className="w-5 h-5" />
@@ -231,18 +231,18 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-white text-sm font-medium hover:bg-[var(--primary)] transition-colors"
+                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-pink-500 flex items-center justify-center text-white text-sm font-semibold hover:bg-pink-600 transition-colors"
                   >
                     {getCreatorAvatar(user?.name || 'User')}
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
+                    <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
                       <div className="py-1">
                         <Link
                           href="/settings"
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                         >
                           <CogIcon className="w-4 h-4" />
                           <span>{t('nav.settings')}</span>
@@ -252,7 +252,7 @@ const Navbar = () => {
                             handleLogout();
                             setShowUserMenu(false);
                           }}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                         >
                           <UserCircleIcon className="w-4 h-4" />
                           <span>{t('nav.logout')}</span>
@@ -271,12 +271,12 @@ const Navbar = () => {
                   </button>
 
                   {showCreateMenu && (
-                    <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 min-w-[180px] overflow-hidden">
+                    <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[180px] overflow-hidden">
                       <div className="py-1">
                         <Link
                           href="/create?type=vote"
                           onClick={() => setShowCreateMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                         >
                           <ChartBarIcon className="w-4 h-4" />
                           <span>Vote</span>
@@ -284,7 +284,7 @@ const Navbar = () => {
                         <Link
                           href="/create?type=rank"
                           onClick={() => setShowCreateMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                         >
                           <TrophyIcon className="w-4 h-4" />
                           <span>Ranking</span>
@@ -292,7 +292,7 @@ const Navbar = () => {
                         <Link
                           href="/spin"
                           onClick={() => setShowCreateMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                         >
                           <CogIcon className="w-4 h-4" />
                           <span>Spin Wheel</span>
@@ -300,7 +300,7 @@ const Navbar = () => {
                         <Link
                           href="/ratings/create"
                           onClick={() => setShowCreateMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                         >
                           <StarIcon className="w-4 h-4" />
                           <span>Ratings</span>

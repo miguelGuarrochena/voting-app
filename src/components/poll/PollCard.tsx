@@ -176,7 +176,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
   return (
     <div className={`block ${className}`}>
       <motion.div 
-        className={`${cardHeight} bg-white dark:bg-gray-900 rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-800 hover:-translate-y-1 active:scale-[0.98] flex flex-col cursor-pointer overflow-hidden group`}
+        className={`${cardHeight} bg-[var(--surface)] rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-[var(--border)] hover:-translate-y-1 active:scale-[0.98] flex flex-col cursor-pointer overflow-hidden group`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -266,15 +266,15 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
           </div>
           
           {/* Title and Meta Info */}
-          <div className="p-4 sm:p-5 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-            <h3 className="font-display font-bold text-gray-900 dark:text-gray-100 text-lg sm:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+          <div className="p-4 sm:p-5 bg-[var(--surface)] border-b border-[var(--border)]">
+            <h3 className="font-display font-bold text-[var(--text)] text-lg sm:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
               {poll.title}
             </h3>
             
             {/* Meta info */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-primary text-xs font-medium">
+              <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+                <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white text-xs font-medium">
                   {getCreatorAvatar(poll.createdBy)}
                 </div>
                 <span>{totalVotes} votes</span>
@@ -294,7 +294,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
         </div>
         
         {/* MIDDLE ZONE - Scrollable: Results List */}
-        <div className="flex-1 relative overflow-hidden bg-white dark:bg-gray-900">
+        <div className="flex-1 relative overflow-hidden bg-[var(--surface)]">
           <div className="h-full overflow-y-auto" style={{ maxHeight: '240px' }}>
             {hasVotes ? (
               <div className="p-4 sm:p-5 space-y-2">
@@ -389,7 +389,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
               </div>
             ) : (
               <div className="flex-1 flex items-center justify-center p-4 sm:p-5">
-                <div className="text-center text-gray-500 dark:text-gray-400">
+                <div className="text-center text-[var(--text-muted)]">
                   <div className="text-2xl mb-2">📊</div>
                   <p className="text-sm">{t('poll.noVotesYet')}</p>
                 </div>
@@ -399,12 +399,12 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
           
           {/* Scroll fade indicator */}
           {hasVotes && (
-            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-900 via-white/80 dark:via-gray-900/80 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[var(--surface)] via-[var(--surface)]/80 to-transparent pointer-events-none" />
           )}
         </div>
         
         {/* BOTTOM ZONE - Fixed: Aggregated Reactions + View Poll Link */}
-        <div className="flex-shrink-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+        <div className="flex-shrink-0 bg-[var(--surface)] border-t border-[var(--border)]">
           <div className="flex items-center justify-between p-4 sm:p-5">
             <div className="flex items-center gap-2">
               {/* Delete button (if provided) */}

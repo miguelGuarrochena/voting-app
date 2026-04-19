@@ -303,14 +303,14 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Poll Basics Section */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Poll Basics</h2>
+        <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Poll Basics</h2>
 
           <div className="space-y-6">
             {/* Poll Type Selector - Only show if defaultType is not provided */}
             {!defaultType && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-[var(--text)] mb-3">
                   Poll Type *
                 </label>
                 <div className="grid grid-cols-2 gap-4">
@@ -463,9 +463,9 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
         </div>
 
         {/* Poll Options Section */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Poll Options</h2>
-          <p className="font-body text-sm text-gray-500 dark:text-gray-400 mb-6">
+        <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-4">Poll Options</h2>
+          <p className="font-body text-sm text-[var(--text-muted)] mb-6">
             Add at least 2 options. You can include text, emoji, or upload an image for each option.
           </p>
 
@@ -489,7 +489,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                           <button
                             type="button"
                             onClick={() => setOpenEmojiPicker(openEmojiPicker === option.id ? null : option.id)}
-                            className="w-12 h-12 px-2 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-2xl flex items-center justify-center"
+                            className="w-12 h-12 px-2 py-2 border border-[var(--border)] rounded-md bg-[var(--surface)] hover:bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-2xl flex items-center justify-center"
                           >
                             {option.emoji || '😶'}
                           </button>
@@ -506,11 +506,11 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                         </div>
                       </div>
                       {openEmojiPicker === option.id && (
-                        <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 w-64">
+                        <div className="absolute top-full left-0 mt-2 z-50 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg p-3 w-64">
                           <div className="space-y-2">
                             {Object.entries(emojiCategories).map(([category, emojis]) => (
                               <div key={category}>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 capitalize mb-1">{category}</div>
+                                <div className="text-xs text-[var(--text-muted)] capitalize mb-1">{category}</div>
                                 <div className="grid grid-cols-5 gap-1">
                                   {emojis.map((emoji) => (
                                     <button
@@ -599,8 +599,8 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
         </div>
 
         {/* Visibility & Privacy Section */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Visibility & Privacy</h2>
+        <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Visibility & Privacy</h2>
           
           <div className="space-y-4">
             <div className="flex items-center">

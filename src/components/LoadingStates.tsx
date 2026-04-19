@@ -59,7 +59,7 @@ interface SkeletonCardProps {
 
 export const SkeletonCard = ({ className = '' }: SkeletonCardProps) => {
   return (
-    <div className={`bg-white dark:bg-gray-900 rounded-3xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700 animate-pulse ${className}`}>
+    <div className={`bg-[var(--surface)] rounded-3xl shadow-sm overflow-hidden border border-[var(--border)] animate-pulse ${className}`}>
       <div className="h-48 bg-gray-200" />
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">

@@ -8,7 +8,7 @@ import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 // Skeleton loader component
 const PollCardSkeleton = () => (
-  <div className="bg-white dark:bg-gray-900 rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-gray-100 dark:border-gray-800 animate-pulse">
+  <div className="bg-[var(--surface)] rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-[var(--border)] animate-pulse">
     <div className="h-[200px] bg-gray-200" />
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -177,7 +177,7 @@ const ExplorePage = () => {
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   sortBy === option.value
                     ? 'bg-[var(--primary)] text-white'
-                    : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
                 title={option.description}
               >
