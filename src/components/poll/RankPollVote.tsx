@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, closestCenter } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Poll } from '@/types/poll';
+import { Poll, PollOption } from '@/types/poll';
 import { ImageModal } from '@/components/ImageModal';
 
 interface RankPollVoteProps {
@@ -15,16 +15,18 @@ interface RankPollVoteProps {
   className?: string;
 }
 
-// Sortable item component
-function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOptions, onImageClick }: {
-  option: Poll['options'][0];
+interface SortableOptionProps {
+  option: PollOption;
   index: number;
   isMobile: boolean;
   onMoveUp?: (index: number) => void;
   onMoveDown?: (index: number) => void;
   totalOptions: number;
   onImageClick?: (imageUrl: string, alt: string) => void;
-}) {
+}
+
+// Sortable item component
+function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOptions, onImageClick }: SortableOptionProps) {
   const {
     attributes,
     listeners,
@@ -36,6 +38,12 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+  };
+
+  const handleImageClick = () => {
+    if (onImageClick && option.imageUrl) {
+      onImageClick(option.imageUrl, option.title || '');
+    }
   };
 
   return (
@@ -51,7 +59,7 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
       </div>
       {option.imageUrl && (
         <button
-          onClick={() => onImageClick?.(option.imageUrl, option.title)}
+          onClick={handleImageClick}
           className="flex-shrink-0"
           type="button"
         >
@@ -103,7 +111,7 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
 }
 
 export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, className = '' }: RankPollVoteProps) => {
-  const [options, setOptions] = useState(poll.options);
+  const [options, setOptions] = useState<PollOption[]>(poll.options);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [modalImage, setModalImage] = useState<{ url: string; alt: string } | null>(null);
@@ -223,7 +231,7 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
                 onMoveUp={moveUp}
                 onMoveDown={moveDown}
                 totalOptions={options.length}
-                onImageClick={(url, alt) => setModalImage({ url, alt })}
+                onImageClick={(url: string, alt: string) => setModalImage({ url, alt })}
               />
             ))}
           </SortableContext>
@@ -239,7 +247,7 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
               onMoveUp={moveUp}
               onMoveDown={moveDown}
               totalOptions={options.length}
-              onImageClick={(url, alt) => setModalImage({ url, alt })}
+              onImageClick={(url: string, alt: string) => setModalImage({ url, alt })}
             />
           ))}
         </SortableContext>

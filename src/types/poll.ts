@@ -58,7 +58,7 @@ export interface UserVote {
 export interface PollOption {
   id: string;
   pollId: string;
-  title: string;
+  title?: string;
   imageUrl?: string;
   reactions: ReactionCount;
   votes: number;

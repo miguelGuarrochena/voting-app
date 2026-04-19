@@ -91,7 +91,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
       if (option.imageUrl) {
         images.push({
           url: option.imageUrl,
-          title: option.title
+          title: option.title || ''
         });
       }
     });

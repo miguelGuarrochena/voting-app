@@ -28,7 +28,7 @@ export const usePolls = () => {
       filtered = filtered.filter(poll =>
         poll.title.toLowerCase().includes(query) ||
         poll.options.some(option => 
-          option.title.toLowerCase().includes(query)
+          (option.title || '').toLowerCase().includes(query)
         )
       );
     }

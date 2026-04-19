@@ -94,7 +94,7 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
 
                 {option.imageUrl && (
                   <button
-                    onClick={() => option.imageUrl && setModalImage({ url: option.imageUrl, alt: option.title })}
+                    onClick={() => option.imageUrl && setModalImage({ url: option.imageUrl, alt: option.title || '' })}
                     className="mt-2"
                     type="button"
                   >

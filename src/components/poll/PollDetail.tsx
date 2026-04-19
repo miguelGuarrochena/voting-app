@@ -612,7 +612,7 @@ const ResultsContent = ({
             const option = top3[sortedIndex];
             const optionVotes = getPositiveVotes(option.reactions);
             const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
-            const letter = getOptionLetter(option.title);
+            const letter = getOptionLetter(option.title || '');
             const letterColor = getOptionColor(letter);
             const isFirst = sortedIndex === 0;
             const hasImage = option.imageUrl && !imageErrors[option.id];
@@ -686,7 +686,7 @@ const ResultsContent = ({
             const optionVotes = getPositiveVotes(option.reactions);
             const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
             const isUserChoice = userVotedOption === option.id;
-            const letter = getOptionLetter(option.title);
+            const letter = getOptionLetter(option.title || '');
             const letterColor = getOptionColor(letter);
             const hasImage = option.imageUrl && !imageErrors[option.id];
 
@@ -817,7 +817,7 @@ const VoteContent = ({
           const optionVotes = getPositiveVotes(option.reactions);
           const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
           const hasImage = option.imageUrl && !imageErrors[option.id];
-          const letter = getOptionLetter(option.title);
+          const letter = getOptionLetter(option.title || '');
           const letterColor = getOptionColor(letter);
           const isSelected = selectedOptionId === option.id;
 
