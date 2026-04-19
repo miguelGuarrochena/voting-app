@@ -729,10 +729,10 @@ const ResultsContent = ({
                   <span className={`font-medium text-sm truncate block ${isUserChoice ? 'text-[var(--primary)]' : 'text-[var(--text)]'}`}>
                     {option.title}
                   </span>
-                  <div className="w-full bg-[var(--surface-2)] rounded-full h-1.5 mt-1">
+                  <div className="w-full bg-[var(--progress-track)] rounded-full h-1.5 mt-1">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${isUserChoice ? 'bg-[var(--primary)]' : 'bg-[var(--text-muted)]'}`}
-                      style={{ width: `${percentage}%`, opacity: isUserChoice ? 1 : 0.5 }}
+                      className={`h-full rounded-full transition-all duration-500 ${isUserChoice ? 'bg-[var(--primary)]' : 'bg-[var(--primary)]'}`}
+                      style={{ width: `${percentage}%`, opacity: isUserChoice ? 1 : 0.6 }}
                     />
                   </div>
                 </div>

@@ -357,8 +357,8 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                         </div>
                         
                         {/* Progress Bar */}
-                        <div className="w-full bg-surface-2 rounded-full h-1.5 mt-2 overflow-hidden">
-                          <motion.div 
+                        <div className="w-full bg-[var(--progress-track)] rounded-full h-1.5 mt-2 overflow-hidden">
+                          <motion.div
                             className="bg-gradient-to-r from-primary to-primary-dark h-full rounded-full origin-left"
                             initial={{ scaleX: 0 }}
                             animate={{ scaleX: percentage / 100 }}
