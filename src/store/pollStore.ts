@@ -51,17 +51,17 @@ const usePollStore = create<PollStore>()(
       
       loadPolls: async () => {
         const { polls, isLoading } = get();
-        
+
         // Prevent multiple simultaneous loads
         if (isLoading) {
           return;
         }
-        
+
         // Skip if we already have polls (to prevent duplicates)
         if (polls.length > 0) {
           return;
         }
-        
+
         try {
           set({ isLoading: true });
           // In a real app, this would be an API call
@@ -86,17 +86,17 @@ const usePollStore = create<PollStore>()(
 
       voteOnOption: (pollId: string, optionId: string) => {
         const { currentPoll, polls, userVotes } = get();
-        
+
         // Create a deep copy of the polls to modify
         const updatedPolls = [...polls];
         const pollIndex = updatedPolls.findIndex(p => p.id === pollId);
         if (pollIndex === -1) return;
-        
+
         const poll = { ...updatedPolls[pollIndex] };
-        
+
         // Check if user already voted
         const previousVote = userVotes[pollId];
-        
+
         // Update votes
         const updatedOptions = poll.options.map(option => {
           if (option.id === optionId) {
@@ -107,16 +107,16 @@ const usePollStore = create<PollStore>()(
           }
           return option;
         });
-        
+
         poll.options = updatedOptions;
         updatedPolls[pollIndex] = poll;
-        
+
         // Update user votes
         const updatedUserVotes = {
           ...userVotes,
           [pollId]: optionId
         };
-        
+
         set({
           polls: updatedPolls,
           currentPoll: currentPoll?.id === pollId ? { ...poll } : currentPoll,

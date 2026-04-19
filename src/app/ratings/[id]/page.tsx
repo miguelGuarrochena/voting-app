@@ -22,6 +22,12 @@ export default function RatingDetailPage() {
     const foundRating = storedRatings.find((r: any) => r.id === params.id);
     if (foundRating) {
       setRating(foundRating);
+      
+      // Load user's previous votes for this rating
+      const userId = 'current-user'; // In a real app, this would come from auth
+      const userVotesKey = `user_votes_${params.id}_${userId}`;
+      const storedVotes = JSON.parse(localStorage.getItem(userVotesKey) || '{}');
+      setUserVotes(storedVotes);
     }
   }, [params.id]);
 
@@ -61,8 +67,59 @@ export default function RatingDetailPage() {
 
   // Handle star rating
   const handleStarClick = (itemId: string, stars: number) => {
+    const userId = 'current-user'; // In a real app, this would come from auth
+    
+    // Update local state
     setUserVotes(prev => ({ ...prev, [itemId]: stars }));
-    // TODO: Submit vote to API
+    
+    // Save user's vote to localStorage
+    const userVotesKey = `user_votes_${params.id}_${userId}`;
+    const updatedVotes = { ...userVotes, [itemId]: stars };
+    localStorage.setItem(userVotesKey, JSON.stringify(updatedVotes));
+    
+    // Update the rating data in localStorage
+    const storedRatings = JSON.parse(localStorage.getItem('ratings') || '[]');
+    const ratingIndex = storedRatings.findIndex((r: any) => r.id === params.id);
+    
+    if (ratingIndex !== -1) {
+      const rating = storedRatings[ratingIndex];
+      const itemIndex = rating.items.findIndex((item: any) => item.id === itemId);
+      
+      if (itemIndex !== -1) {
+        // Check if user already voted for this item
+        const existingVoteIndex = rating.items[itemIndex].votes.findIndex(
+          (vote: any) => vote.userId === userId
+        );
+        
+        const newVote = {
+          id: crypto.randomUUID(),
+          itemId: itemId,
+          userId: userId,
+          stars: stars,
+          timestamp: new Date().toISOString()
+        };
+        
+        if (existingVoteIndex !== -1) {
+          // Update existing vote
+          rating.items[itemIndex].votes[existingVoteIndex] = newVote;
+        } else {
+          // Add new vote
+          rating.items[itemIndex].votes.push(newVote);
+        }
+        
+        // Save updated rating to localStorage
+        storedRatings[ratingIndex] = rating;
+        localStorage.setItem('ratings', JSON.stringify(storedRatings));
+        
+        // Update only the specific item in rating state to avoid full re-render
+        setRating((prev: any) => ({
+          ...prev,
+          items: prev.items.map((item: any) =>
+            item.id === itemId ? rating.items[itemIndex] : item
+          )
+        }));
+      }
+    }
   };
 
   return (
@@ -93,18 +150,20 @@ export default function RatingDetailPage() {
                 className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
+                  <div className="w-64 flex-shrink-0">
                     {item.imageUrl && (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.label}
-                        className="w-full h-48 object-cover rounded-lg mb-3 cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => setModalImage({ url: item.imageUrl, alt: item.label })}
-                      />
+                      <div className="w-full h-48">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.label}
+                          className="w-full h-full object-cover rounded-lg mb-3 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => setModalImage({ url: item.imageUrl, alt: item.label })}
+                        />
+                      </div>
                     )}
                     <h3 className="font-semibold text-lg text-[var(--text)]">{item.label}</h3>
                   </div>
-                  <div className="flex items-center gap-1 ml-4">
+                  <div className="flex items-center gap-1 ml-4 flex-shrink-0">
                     <span className="text-yellow-500">⭐</span>
                     <span className="font-bold text-xl text-[var(--text)]">{average}</span>
                     <span className="text-sm text-[var(--text-muted)]">({item.votes.length} votes)</span>
@@ -129,11 +188,9 @@ export default function RatingDetailPage() {
                       </button>
                     ))}
                   </div>
-                  {userVote && (
-                    <span className="text-sm text-[var(--primary)] font-medium">
-                      ({userVote} stars)
-                    </span>
-                  )}
+                  <span className="text-sm text-[var(--primary)] font-medium w-[70px]">
+                    {userVote ? `(${userVote} stars)` : '\u00A0'}
+                  </span>
                 </div>
               </div>
             );

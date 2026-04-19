@@ -30,7 +30,7 @@ const getAvatarColor = (name: string): string => {
 
 const PollDetail = ({ pollId }: PollDetailProps) => {
   const { t } = useLanguage();
-  const { voteOnOption, getPollById, userVotes, userRankings, rankOptions, canUserAccessPoll, deletePoll } = usePollStore();
+  const { voteOnOption, rankOptions, canUserAccessPoll, deletePoll } = usePollStore();
   const [activeTab, setActiveTab] = useState<'vote' | 'results'>('vote');
   const [timeRemaining, setTimeRemaining] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -46,9 +46,13 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   useEffect(() => {
     setMounted(true);
   }, []);
-  
-  // Get the poll from the store
-  const poll = getPollById(pollId);
+
+  // Get the poll from the store using a reactive selector
+  const poll = usePollStore((state) => state.polls.find((p) => p.id === pollId) || null);
+
+  // Get user votes and rankings using reactive selectors
+  const userVotes = usePollStore((state) => state.userVotes);
+  const userRankings = usePollStore((state) => state.userRankings);
 
   // Get poll type with default to 'vote'
   const pollType = poll?.type ?? 'vote';
@@ -92,11 +96,11 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
     );
   }
   
-  // Calculate total votes and check if poll has ended (only positive reactions count)
+  // Calculate total votes and check if poll has ended
   const totalVotes = useMemo(() => {
     if (!poll) return 0;
-    return poll.options.reduce((sum, option) => sum + getPositiveVotes(option.reactions), 0);
-  }, [poll]);
+    return poll.options.reduce((sum, option) => sum + (option.votes || 0), 0);
+  }, [poll?.options]);
   
   const hasEnded = useMemo(() => {
     if (!poll) return true;
@@ -106,13 +110,6 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   }, [poll?.expiresAt]); // More specific dependency
   
   const userVotedOption = poll ? userVotes[poll.id] : undefined;
-
-  // Auto-switch to results tab if poll has ended
-  useEffect(() => {
-    if (hasEnded && activeTab === 'vote') {
-      setActiveTab('results');
-    }
-  }, [hasEnded, activeTab]);
 
   // Countdown timer
   useEffect(() => {
@@ -193,7 +190,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   // Handle voting
   const handleVote = (optionId: string) => {
     if (hasEnded) return;
-    
+
     if (false) { // TODO: Add multipleChoice property to Poll type
       // Multi-choice: toggle selection
       setSelectedOptions(prev => {
@@ -277,8 +274,8 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   const getWinningOption = () => {
     if (!poll || totalVotes === 0) return null;
     return poll.options.reduce((winner, option) => {
-      const winnerVotes = getPositiveVotes(winner.reactions);
-      const optionVotes = getPositiveVotes(option.reactions);
+      const winnerVotes = winner.votes || 0;
+      const optionVotes = option.votes || 0;
       return optionVotes > winnerVotes ? option : winner;
     });
   };
@@ -560,8 +557,8 @@ const ResultsContent = ({
   // Sort options by votes for podium
   const sortedOptions = useMemo(() => {
     return [...poll.options].sort((a, b) => {
-      const votesA = getPositiveVotes(a.reactions);
-      const votesB = getPositiveVotes(b.reactions);
+      const votesA = a.votes || 0;
+      const votesB = b.votes || 0;
       return votesB - votesA;
     });
   }, [poll.options]);
@@ -582,8 +579,8 @@ const ResultsContent = ({
         <div className="flex items-end justify-center gap-2 sm:gap-4 mt-12 mb-8">
           {podiumOrder.map((sortedIndex) => {
             const option = top3[sortedIndex];
-            const optionVotes = getPositiveVotes(option.reactions);
-            const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
+            const optionVoteCount = option.votes || 0;
+            const percentage = totalVotes > 0 ? Math.round((optionVoteCount / totalVotes) * 100) : 0;
             const letter = getOptionLetter(option.title || '');
             const letterColor = getOptionColor(letter);
             const isFirst = sortedIndex === 0;
@@ -655,8 +652,8 @@ const ResultsContent = ({
           </h3>
           {remainingOptions.map((option, index) => {
             const rank = index + 4;
-            const optionVotes = getPositiveVotes(option.reactions);
-            const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
+            const optionVoteCount = option.votes || 0;
+            const percentage = totalVotes > 0 ? Math.round((optionVoteCount / totalVotes) * 100) : 0;
             const isUserChoice = userVotedOption === option.id;
             const letter = getOptionLetter(option.title || '');
             const letterColor = getOptionColor(letter);
@@ -787,8 +784,8 @@ const VoteContent = ({
     <Fragment>
       <div className="space-y-3">
         {poll.options.map((option, index) => {
-          const optionVotes = getPositiveVotes(option.reactions);
-          const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
+          const optionVoteCount = option.votes || 0;
+          const percentage = totalVotes > 0 ? Math.round((optionVoteCount / totalVotes) * 100) : 0;
           const hasImage = option.imageUrl && !imageErrors[option.id];
           const letter = getOptionLetter(option.title || '');
           const letterColor = getOptionColor(letter);

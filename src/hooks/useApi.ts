@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { pollApi, ApiResponse } from '@/services/api';
 import { Poll } from '@/types/poll';
+import usePollStore from '@/store/pollStore';
 
 // Generic hook for API calls with loading and error states
 export function useApiCall<T, P extends any[] = []>(
@@ -221,116 +222,31 @@ export function useRemoveReaction() {
 
 // Hook for managing user interactions (combining voting and reactions)
 export function usePollInteractions(pollId: string) {
-  const { voteOnOption, isVoting } = useVote();
-  const { addReaction, isReacting } = useReactions();
-  const { removeReaction } = useRemoveReaction();
+  const store = usePollStore();
 
-  const [userVotes, setUserVotes] = useState<Record<string, string>>(() => {
-    if (typeof window === 'undefined') return {};
-    try {
-      const stored = localStorage.getItem('userVotes');
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
+  const handleVote = useCallback((optionId: string) => {
+    store.voteOnOption(pollId, optionId);
+  }, [pollId, store]);
+
+  const handleReaction = useCallback((optionId: string, emoji: string) => {
+    const currentReaction = store.userReactions[pollId]?.[optionId];
+
+    if (currentReaction === emoji) {
+      store.removeReaction(pollId, optionId);
+    } else {
+      store.reactToOption(pollId, optionId, emoji);
     }
-  });
+  }, [pollId, store]);
 
-  const [userReactions, setUserReactions] = useState<Record<string, Record<string, string>>>(() => {
-    if (typeof window === 'undefined') return {};
-    try {
-      const stored = localStorage.getItem('userReactions');
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  });
-
-  // Save to localStorage when state changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('userVotes', JSON.stringify(userVotes));
-    }
-  }, [userVotes]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('userReactions', JSON.stringify(userReactions));
-    }
-  }, [userReactions]);
-
-  const handleVote = useCallback(async (optionId: string) => {
-    const previousVote = userVotes[pollId];
-    
-    try {
-      await voteOnOption(pollId, optionId);
-      setUserVotes(prev => ({
-        ...prev,
-        [pollId]: optionId
-      }));
-    } catch (error) {
-      // Revert on error
-      if (previousVote) {
-        setUserVotes(prev => ({
-          ...prev,
-          [pollId]: previousVote
-        }));
-      }
-      throw error;
-    }
-  }, [pollId, voteOnOption, userVotes]);
-
-  const handleReaction = useCallback(async (optionId: string, emoji: string) => {
-    const currentReaction = userReactions[pollId]?.[optionId];
-    
-    try {
-      if (currentReaction === emoji) {
-        // Remove reaction if clicking the same emoji
-        await removeReaction(pollId, optionId, emoji);
-        setUserReactions(prev => {
-          const newReactions = { ...prev };
-          if (newReactions[pollId]) {
-            delete newReactions[pollId][optionId];
-            if (Object.keys(newReactions[pollId]).length === 0) {
-              delete newReactions[pollId];
-            }
-          }
-          return newReactions;
-        });
-      } else {
-        // Add or change reaction
-        await addReaction(pollId, optionId, emoji);
-        setUserReactions(prev => ({
-          ...prev,
-          [pollId]: {
-            ...prev[pollId],
-            [optionId]: emoji
-          }
-        }));
-      }
-    } catch (error) {
-      // Revert on error
-      if (currentReaction) {
-        setUserReactions(prev => ({
-          ...prev,
-          [pollId]: {
-            ...prev[pollId],
-            [optionId]: currentReaction
-          }
-        }));
-      }
-      throw error;
-    }
-  }, [pollId, addReaction, removeReaction, userReactions]);
-
-  const hasVoted = !!userVotes[pollId];
-  const votedOption = userVotes[pollId];
+  const hasVoted = !!store.userVotes[pollId];
+  const votedOption = store.userVotes[pollId];
 
   return {
     handleVote,
     handleReaction,
     hasVoted,
     votedOption,
-    userReactions: userReactions[pollId] || {},
-    isInteracting: isVoting || isReacting
+    userReactions: store.userReactions[pollId] || {},
+    isInteracting: false
   };
 }

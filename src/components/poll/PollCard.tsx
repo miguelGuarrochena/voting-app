@@ -1,8 +1,9 @@
 'use client';
 
 import { memo, useMemo, useCallback, useState, useEffect } from 'react';
-import { Poll, getPositiveVotes, ALL_SUPPORTED_REACTIONS } from '@/types/poll';
+import { Poll } from '@/types/poll';
 import { usePollInteractions } from '@/hooks/useApi';
+import usePollStore from '@/store/pollStore';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -10,9 +11,6 @@ import Image from 'next/image';
 import { UserAvatar } from '@/components/UserAvatar';
 import { ImageGallery } from './ImageGallery';
 import { useLanguage } from '@/context/LanguageContext';
-
-// Define the reaction emojis
-const REACTION_EMOJIS = ALL_SUPPORTED_REACTIONS;
 
 // Warm gradients for no-image fallbacks
 const GRADIENTS = [
@@ -31,16 +29,21 @@ interface PollCardProps {
   onDelete?: (pollId: string) => void;
 }
 
-export const PollCard = memo(({ poll, compact = false, className = "", onDelete }: PollCardProps) => {
+export const PollCard = memo(({ poll: initialPoll, compact = false, className = "", onDelete }: PollCardProps) => {
   const { t } = useLanguage();
-  const { handleVote, handleReaction, hasVoted, votedOption, userReactions, isInteracting } = usePollInteractions(poll.id);
+  const { handleVote, hasVoted, votedOption } = usePollInteractions(initialPoll.id);
+
+  // Get updated poll from store for reactive vote updates
+  const pollFromStore = usePollStore((state) => state.polls.find((p) => p.id === initialPoll.id));
+  const poll = pollFromStore || initialPoll;
+
   const [mounted, setMounted] = useState(false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
   const [animatedPercentages, setAnimatedPercentages] = useState<Record<string, number>>({});
   const [imageError, setImageError] = useState(false);
   const [optionImageErrors, setOptionImageErrors] = useState<Record<string, boolean>>({});
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -52,7 +55,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
   const { isExpired, timeRemaining, totalVotes, hasVotes, urgencyBadge } = useMemo(() => {
     const now = new Date();
     const expiryDate = new Date(poll.expiresAt);
-    const votes = poll.options.reduce((sum: number, option: any) => sum + getPositiveVotes(option.reactions), 0);
+    const votes = poll.options.reduce((sum: number, option: any) => sum + (option.votes || 0), 0);
     const isExpired = expiryDate < now;
     const diff = expiryDate.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -119,7 +122,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
     const timer = setTimeout(() => {
       const finalPercentages: Record<string, number> = {};
       poll.options.forEach((option: any) => {
-        const percentage = totalVotes > 0 ? Math.round((getPositiveVotes(option.reactions) / totalVotes) * 100) : 0;
+        const percentage = totalVotes > 0 ? Math.round(((option.votes || 0) / totalVotes) * 100) : 0;
         finalPercentages[option.id] = percentage;
       });
       setAnimatedPercentages(finalPercentages);
@@ -134,14 +137,6 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
     return GRADIENTS[index];
   }, []);
   
-  // Get top 3 reactions for an option
-  const getTopReactions = useCallback((reactions: Record<string, number>) => {
-    return Object.entries(reactions)
-      .filter(([_, count]) => count > 0)
-      .sort(([_, a], [__, b]) => b - a)
-      .slice(0, 3);
-  }, []);
-
   const handleVoteClick = useCallback(async (optionId: string) => {
     if (isExpired || hasVoted) return;
     try {
@@ -151,22 +146,13 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
     }
   }, [isExpired, hasVoted, handleVote]);
 
-  const handleReactionClick = useCallback(async (optionId: string, emoji: string) => {
-    if (isExpired) return;
-    try {
-      await handleReaction(optionId, emoji);
-    } catch (error) {
-      console.error('Reaction failed:', error);
-    }
-  }, [isExpired, handleReaction]);
-
   const cardHeight = compact ? 'h-[400px] sm:h-[440px]' : 'h-[480px] sm:h-[520px]';
   
   // Get sorted options for podium display
   const getSortedOptions = useCallback(() => {
     return [...poll.options].sort((a, b) => {
-      const aVotes = getPositiveVotes(a.reactions);
-      const bVotes = getPositiveVotes(b.reactions);
+      const aVotes = a.votes || 0;
+      const bVotes = b.votes || 0;
       return bVotes - aVotes;
     });
   }, [poll.options]);
@@ -313,8 +299,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
             {hasVotes ? (
               <div className="p-4 sm:p-5 space-y-2">
                 {sortedOptions.map((option: any, index: number) => {
-                  const percentage = totalVotes > 0 ? Math.min(Math.round((getPositiveVotes(option.reactions) / totalVotes) * 100), 100) : 0;
-                  const topReactions = getTopReactions(option.reactions);
+                  const percentage = totalVotes > 0 ? Math.min(Math.round(((option.votes || 0) / totalVotes) * 100), 100) : 0;
                   const hasVotedForOption = votedOption === option.id;
                   
                   return (
@@ -392,21 +377,6 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                           />
                         </div>
                         
-                        {/* Top reactions */}
-                        {topReactions.length > 0 && (
-                          <div className="flex items-center gap-1 mt-1.5">
-                            <div className="flex gap-1">
-                              {topReactions.slice(0, 2).map(([emoji, count]) => (
-                                <span key={emoji} className="bg-surface-2 px-1.5 py-0.5 rounded-full text-xs">
-                                  {emoji} {count}
-                                </span>
-                              ))}
-                            </div>
-                            {topReactions.length > 2 && (
-                              <span className="text-xs text-text-muted">+{topReactions.length - 2}</span>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
                   );
@@ -428,7 +398,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
           )}
         </div>
         
-        {/* BOTTOM ZONE - Fixed: Aggregated Reactions + View Poll Link */}
+        {/* BOTTOM ZONE - Fixed: View Poll Link */}
         <div className="flex-shrink-0 bg-[var(--surface)] border-t border-[var(--border)]">
           <div className="flex items-center justify-between p-4 sm:p-5">
             <div className="flex items-center gap-2">
@@ -447,30 +417,6 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                   <span>{t('poll.eliminar')}</span>
                 </button>
               )}
-              {/* Top reactions summary */}
-              {hasVotes && (() => {
-                const allTopReactions: Record<string, number> = {};
-                poll.options.forEach(option => {
-                  const topReactions = getTopReactions(option.reactions);
-                  topReactions.forEach(([emoji, count]) => {
-                    allTopReactions[emoji] = (allTopReactions[emoji] || 0) + count;
-                  });
-                });
-                
-                const top3 = Object.entries(allTopReactions)
-                  .sort(([_, a], [__, b]) => b - a)
-                  .slice(0, 3);
-                
-                return top3.length > 0 ? (
-                  <div className="flex gap-1">
-                    {top3.map(([emoji, count]) => (
-                      <span key={emoji} className="text-xs bg-surface-2 px-2 py-1 rounded-full">
-                        {emoji} {count}
-                      </span>
-                    ))}
-                  </div>
-                ) : null;
-              })()}
             </div>
             
             <span className="text-xs font-medium text-primary hover:text-primary-dark flex items-center gap-1 transition-colors cursor-pointer">
