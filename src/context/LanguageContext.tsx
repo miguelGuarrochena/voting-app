@@ -51,6 +51,22 @@ const translations = {
     'home.tryAgain': 'Try Again',
     'home.refreshPage': 'Refresh Page',
     
+    // Footer
+    'footer.createdBy': 'Created by',
+    
+    // Common
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.failed': 'Failed',
+    'common.tryAgain': 'Try Again',
+    'common.refresh': 'Refresh',
+    'common.searching': 'Searching...',
+    'common.unexpectedError': 'We encountered an unexpected error. Please try refreshing the page.',
+    'common.contactSupport': 'If you believe this is an error, please contact our support team.',
+    'common.pollNotFound': 'Poll not found',
+    'common.pollNotFoundDesc': 'Poll not found. It may have been deleted or never existed.',
+    'common.loadingImages': 'Loading images...',
+    
     // Theme/Language
     'theme.light': 'Light',
     'theme.dark': 'Dark',
@@ -152,6 +168,21 @@ const translations = {
     'poll.voteOnPoll': 'Vote on poll',
     'poll.results': 'Results',
     'poll.dangerZone': 'Danger zone',
+    
+    // Create Poll Form
+    'create.titleRequired': 'Ranking title is required',
+    'create.pollTitleRequired': 'Poll title is required',
+    'create.titleMinLength': 'Title must be at least 3 characters long',
+    'create.titleMaxLength': 'Title must be less than 100 characters',
+    'create.minOptions': 'At least 2 options are required',
+    'create.maxOptions': 'Maximum 10 options allowed',
+    'create.duplicateOptions': 'Duplicate options are not allowed',
+    'create.minParticipants': 'Private polls require at least one participant',
+    'create.failed': 'Failed to create poll. Please try again.',
+    'create.failedRanking': 'Failed to create ranking. Please try again.',
+    'create.creating': 'Creating...',
+    'create.optionRequired': 'Option is required',
+    'create.optionMinLength': 'Option must be at least 1 character long',
   },
   es: {
     // Navigation
@@ -188,6 +219,22 @@ const translations = {
     'home.failedToLoad': 'Error al cargar encuestas',
     'home.tryAgain': 'Intentar de Nuevo',
     'home.refreshPage': 'Actualizar Página',
+    
+    // Footer
+    'footer.createdBy': 'Creado por',
+    
+    // Common
+    'common.loading': 'Cargando...',
+    'common.error': 'Error',
+    'common.failed': 'Falló',
+    'common.tryAgain': 'Intentar de Nuevo',
+    'common.refresh': 'Actualizar',
+    'common.searching': 'Buscando...',
+    'common.unexpectedError': 'Encontramos un error inesperado. Por favor intenta actualizar la página.',
+    'common.contactSupport': 'Si crees que esto es un error, por favor contacta a nuestro equipo de soporte.',
+    'common.pollNotFound': 'Encuesta no encontrada',
+    'common.pollNotFoundDesc': 'Encuesta no encontrada. Puede haber sido eliminada o nunca existió.',
+    'common.loadingImages': 'Cargando imágenes...',
     
     // Theme/Language
     'theme.light': 'Claro',
@@ -290,7 +337,21 @@ const translations = {
     'poll.voteOnPoll': 'Votar',
     'poll.results': 'Resultados',
     'poll.dangerZone': 'Zona de peligro',
-    'poll.eliminar': 'Eliminar',
+    
+    // Create Poll Form
+    'create.titleRequired': 'El título del ranking es requerido',
+    'create.pollTitleRequired': 'El título de la encuesta es requerido',
+    'create.titleMinLength': 'El título debe tener al menos 3 caracteres',
+    'create.titleMaxLength': 'El título debe tener menos de 100 caracteres',
+    'create.minOptions': 'Se requieren al menos 2 opciones',
+    'create.maxOptions': 'Máximo 10 opciones permitidas',
+    'create.duplicateOptions': 'No se permiten opciones duplicadas',
+    'create.minParticipants': 'Las encuestas privadas requieren al menos un participante',
+    'create.failed': 'Falló al crear la encuesta. Por favor intenta de nuevo.',
+    'create.failedRanking': 'Falló al crear el ranking. Por favor intenta de nuevo.',
+    'create.creating': 'Creando...',
+    'create.optionRequired': 'La opción es requerida',
+    'create.optionMinLength': 'La opción debe tener al menos 1 caracter',
   }
 };
 

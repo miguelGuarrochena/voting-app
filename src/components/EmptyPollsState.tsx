@@ -1,21 +1,22 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-  PlusCircleIcon, 
-  SparklesIcon, 
+import {
+  PlusCircleIcon,
+  SparklesIcon,
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
   HeartIcon,
   FireIcon
 } from '@heroicons/react/24/outline';
-import { 
+import {
   PlusCircleIcon as PlusCircleSolid,
   ChatBubbleLeftRightIcon as ChatBubbleSolid,
   HeartIcon as HeartSolid,
   FireIcon as FireSolid
 } from '@heroicons/react/24/solid';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface EmptyPollsStateProps {
   onRefresh?: () => void;
@@ -23,6 +24,7 @@ interface EmptyPollsStateProps {
 }
 
 const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) => {
+  const { t } = useLanguage();
   return (
     <motion.div
       className="flex flex-col items-center justify-center min-h-[600px] px-4 py-16 relative"
@@ -145,7 +147,7 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
               className="group inline-flex items-center gap-2 px-6 py-3 bg-[var(--surface)] border-2 border-[var(--border)] rounded-full font-medium hover:bg-[var(--surface-2)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-              <span>{loading ? 'Searching...' : 'Refresh'}</span>
+              <span>{loading ? t('common.searching') : t('common.refresh')}</span>
             </button>
           )}
           

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -42,13 +43,16 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export const LoadingState = ({ message = 'Loading...', size = 'md', className = '' }: LoadingStateProps) => {
+export const LoadingState = ({ message, size = 'md', className = '' }: LoadingStateProps) => {
+  const { t } = useLanguage();
+  const displayMessage = message || t('common.loading');
+
   return (
     <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4">
         <LoadingSpinner size="lg" className="text-blue-600" />
       </div>
-      <p className="text-gray-600 text-sm">{message}</p>
+      <p className="text-gray-600 text-sm">{displayMessage}</p>
     </div>
   );
 }

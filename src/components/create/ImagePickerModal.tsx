@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { imageService, StockImage } from '@/services/imageService';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ImagePickerModalProps {
   isOpen: boolean;
@@ -11,12 +12,13 @@ interface ImagePickerModalProps {
   title?: string;
 }
 
-const ImagePickerModal = ({ 
-  isOpen, 
-  onClose, 
-  onSelectImage, 
-  title = "Choose an image" 
+const ImagePickerModal = ({
+  isOpen,
+  onClose,
+  onSelectImage,
+  title = "Choose an image"
 }: ImagePickerModalProps) => {
+  const { t } = useLanguage();
   const [images, setImages] = useState<StockImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
