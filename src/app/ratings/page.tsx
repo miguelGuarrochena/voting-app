@@ -5,40 +5,24 @@ import Link from 'next/link';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/PageLayout';
 
-// Mock ratings data for now - will be replaced with real API
-const mockRatings = [
-  {
-    id: '1',
-    title: 'Best pizza in NYC?',
-    description: 'Rate your favorite pizza places',
-    createdBy: 'user1',
-    createdAt: new Date(),
-    isPrivate: false,
-    visibility: 'public',
-    items: [
-      { id: '1-1', ratingId: '1', label: 'Joe\'s Pizza', votes: [] },
-      { id: '1-2', ratingId: '1', label: 'Di Fara', votes: [] },
-      { id: '1-3', ratingId: '1', label: 'Lucali', votes: [] },
-    ]
-  }
-];
-
 export default function RatingsPage() {
   const [mounted, setMounted] = useState(false);
-  const [ratings, setRatings] = useState(mockRatings);
+  const [ratings, setRatings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<'recent' | 'trending'>('recent');
 
   useEffect(() => {
     setMounted(true);
-    // TODO: Load ratings from API
+    // Load ratings from localStorage
+    const storedRatings = JSON.parse(localStorage.getItem('ratings') || '[]');
+    setRatings(storedRatings);
   }, []);
 
   // Apply filter logic
   const sortedRatings = [...ratings].sort((a, b) => {
     if (filter === 'trending') {
-      const aVotes = a.items.reduce((sum, item) => sum + item.votes.length, 0);
-      const bVotes = b.items.reduce((sum, item) => sum + item.votes.length, 0);
+      const aVotes = a.items.reduce((sum: number, item: any) => sum + item.votes.length, 0);
+      const bVotes = b.items.reduce((sum: number, item: any) => sum + item.votes.length, 0);
       return bVotes - aVotes;
     } else {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();

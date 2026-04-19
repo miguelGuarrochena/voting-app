@@ -23,19 +23,19 @@ export const ImageModal = ({ imageUrl, alt, onClose }: ImageModalProps) => {
   }, [onClose]);
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
       onClick={onClose}
     >
       <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={onClose}
-          className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
-          aria-label="Close"
-        >
-          <X className="w-8 h-8" />
-        </button>
         <div className="relative rounded-lg overflow-hidden bg-[var(--surface)]">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors z-10"
+            aria-label="Close"
+          >
+            <X className="w-6 h-6" />
+          </button>
           <Image
             src={imageUrl}
             alt={alt}

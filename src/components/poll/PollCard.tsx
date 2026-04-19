@@ -321,7 +321,18 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                           
                           {/* Option Image */}
                           {option.imageUrl && !optionImageErrors[option.id] ? (
-                            <div className="relative w-6 h-6 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0">
+                            <div
+                              className="relative w-6 h-6 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Calculate index: main image (1 if exists) + options before this one that have images
+                                let imageIndex = mainImage ? 1 : 0;
+                                for (let i = 0; i < index; i++) {
+                                  if (poll.options[i].imageUrl) imageIndex++;
+                                }
+                                handleImageClick(imageIndex);
+                              }}
+                            >
                               <Image
                                 src={option.imageUrl}
                                 alt={option.title}

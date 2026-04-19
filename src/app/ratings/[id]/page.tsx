@@ -5,59 +5,24 @@ import { useParams, useRouter } from 'next/navigation';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/PageLayout';
-
-// Mock rating data - will be replaced with real API
-const mockRating = {
-  id: '1',
-  title: 'Best pizza in NYC?',
-  description: 'Rate your favorite pizza places',
-  createdBy: 'user1',
-  createdAt: new Date(),
-  isPrivate: false,
-  visibility: 'public',
-  items: [
-    { 
-      id: '1-1', 
-      ratingId: '1', 
-      label: 'Joe\'s Pizza', 
-      imageUrl: '',
-      votes: [
-        { id: 'v1', itemId: '1-1', userId: 'user2', stars: 5, timestamp: new Date() },
-        { id: 'v2', itemId: '1-1', userId: 'user3', stars: 4, timestamp: new Date() },
-      ]
-    },
-    { 
-      id: '1-2', 
-      ratingId: '1', 
-      label: 'Di Fara', 
-      imageUrl: '',
-      votes: [
-        { id: 'v3', itemId: '1-2', userId: 'user2', stars: 4, timestamp: new Date() },
-        { id: 'v4', itemId: '1-2', userId: 'user3', stars: 5, timestamp: new Date() },
-      ]
-    },
-    { 
-      id: '1-3', 
-      ratingId: '1', 
-      label: 'Lucali', 
-      imageUrl: '',
-      votes: [
-        { id: 'v5', itemId: '1-3', userId: 'user2', stars: 3, timestamp: new Date() },
-      ]
-    },
-  ]
-};
+import { ImageModal } from '@/components/ImageModal';
 
 export default function RatingDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [rating, setRating] = useState(mockRating);
+  const [rating, setRating] = useState<any>(null);
   const [userVotes, setUserVotes] = useState<Record<string, number>>({});
   const [mounted, setMounted] = useState(false);
+  const [modalImage, setModalImage] = useState<{ url: string; alt: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    // TODO: Load rating from API using params.id
+    // Load rating from localStorage using params.id
+    const storedRatings = JSON.parse(localStorage.getItem('ratings') || '[]');
+    const foundRating = storedRatings.find((r: any) => r.id === params.id);
+    if (foundRating) {
+      setRating(foundRating);
+    }
   }, [params.id]);
 
   if (!mounted) {
@@ -66,6 +31,22 @@ export default function RatingDetailPage() {
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
           <p className="text-gray-600 mt-4">Loading...</p>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  if (!rating) {
+    return (
+      <PageLayout>
+        <div className="flex flex-col items-center justify-center h-[50vh]">
+          <p className="text-gray-600">Rating not found</p>
+          <button
+            onClick={() => router.push('/ratings')}
+            className="mt-4 px-4 py-2 bg-[var(--primary)] text-white rounded-lg"
+          >
+            Back to Ratings
+          </button>
         </div>
       </PageLayout>
     );
@@ -102,7 +83,7 @@ export default function RatingDetailPage() {
         )}
 
         <div className="space-y-4">
-          {rating.items.map((item) => {
+          {rating.items.map((item: any) => {
             const average = getItemAverage(item);
             const userVote = userVotes[item.id];
 
@@ -117,7 +98,8 @@ export default function RatingDetailPage() {
                       <img
                         src={item.imageUrl}
                         alt={item.label}
-                        className="w-full h-48 object-cover rounded-lg mb-3"
+                        className="w-full h-48 object-cover rounded-lg mb-3 cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => setModalImage({ url: item.imageUrl, alt: item.label })}
                       />
                     )}
                     <h3 className="font-semibold text-lg text-[var(--text)]">{item.label}</h3>
@@ -157,6 +139,14 @@ export default function RatingDetailPage() {
             );
           })}
         </div>
+
+        {modalImage && (
+          <ImageModal
+            imageUrl={modalImage.url}
+            alt={modalImage.alt}
+            onClose={() => setModalImage(null)}
+          />
+        )}
       </div>
     </PageLayout>
   );

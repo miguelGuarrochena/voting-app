@@ -11,6 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { UserAvatar } from '@/components/UserAvatar';
 import { RankPollVote } from './RankPollVote';
 import { RankPollResults } from './RankPollResults';
+import { ImageModal } from '@/components/ImageModal';
 
 
 interface PollDetailProps {
@@ -27,50 +28,13 @@ const getAvatarColor = (name: string): string => {
   return `hsl(${hue}, 55%, 50%)`;
 };
 
-// Lightbox component
-const Lightbox = ({ imageUrl, onClose }: { imageUrl: string; onClose: () => void }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.8 }}
-        transition={{ duration: 0.2 }}
-        className="relative max-w-[90vw] max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <img
-          src={imageUrl}
-          alt="Enlarged view"
-          className="max-w-full max-h-full object-contain"
-        />
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </motion.div>
-    </motion.div>
-  );
-};
-
 const PollDetail = ({ pollId }: PollDetailProps) => {
   const { t } = useLanguage();
   const { voteOnOption, getPollById, userVotes, userRankings, rankOptions, canUserAccessPoll, deletePoll } = usePollStore();
   const [activeTab, setActiveTab] = useState<'vote' | 'results'>('vote');
   const [timeRemaining, setTimeRemaining] = useState('');
   const [mounted, setMounted] = useState(false);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [modalImage, setModalImage] = useState<{ url: string; alt: string } | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
   const [hasVoted, setHasVoted] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
@@ -452,8 +416,8 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
                 imageErrors={imageErrors}
                 setImageErrors={setImageErrors}
                 winningOption={winningOption}
-                lightboxImage={lightboxImage}
-                setLightboxImage={setLightboxImage}
+                modalImage={modalImage}
+                setModalImage={setModalImage}
               />
             )}
           </>
@@ -476,8 +440,8 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
                 winningOption={winningOption}
                 imageErrors={imageErrors}
                 setImageErrors={setImageErrors}
-                lightboxImage={lightboxImage}
-                setLightboxImage={setLightboxImage}
+                modalImage={modalImage}
+                setModalImage={setModalImage}
               />
             )}
           </>
@@ -556,8 +520,8 @@ const ResultsContent = ({
   winningOption,
   imageErrors,
   setImageErrors,
-  lightboxImage,
-  setLightboxImage
+  modalImage,
+  setModalImage
 }: {
   poll: Poll;
   totalVotes: number;
@@ -566,8 +530,8 @@ const ResultsContent = ({
   winningOption: Poll['options'][0] | null;
   imageErrors: Record<string, boolean>;
   setImageErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-  lightboxImage: string | null;
-  setLightboxImage: React.Dispatch<React.SetStateAction<string | null>>;
+  modalImage: { url: string; alt: string } | null;
+  setModalImage: React.Dispatch<React.SetStateAction<{ url: string; alt: string } | null>>;
 }) => {
   // Get letter from option title (first letter)
   const getOptionLetter = (title: string): string => {
@@ -745,12 +709,13 @@ const ResultsContent = ({
         </div>
       )}
 
-      {/* Lightbox */}
+      {/* Image Modal */}
       <AnimatePresence>
-        {lightboxImage && (
-          <Lightbox
-            imageUrl={lightboxImage}
-            onClose={() => setLightboxImage(null)}
+        {modalImage && (
+          <ImageModal
+            imageUrl={modalImage.url}
+            alt={modalImage.alt}
+            onClose={() => setModalImage(null)}
           />
         )}
       </AnimatePresence>
@@ -769,8 +734,8 @@ const VoteContent = ({
   imageErrors,
   setImageErrors,
   winningOption,
-  lightboxImage,
-  setLightboxImage
+  modalImage,
+  setModalImage
 }: {
   poll: Poll;
   totalVotes: number;
@@ -781,8 +746,8 @@ const VoteContent = ({
   imageErrors: Record<string, boolean>;
   setImageErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   winningOption: Poll['options'][0] | null;
-  lightboxImage: string | null;
-  setLightboxImage: React.Dispatch<React.SetStateAction<string | null>>;
+  modalImage: { url: string; alt: string } | null;
+  setModalImage: React.Dispatch<React.SetStateAction<{ url: string; alt: string } | null>>;
 }) => {
   // Local state for tracking which option is currently selected (before voting)
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(userVotedOption || null);
@@ -838,7 +803,7 @@ const VoteContent = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setLightboxImage(option.imageUrl || null);
+                    setModalImage({ url: option.imageUrl || '', alt: option.title || '' });
                   }}
                   className="absolute bottom-2 left-2 z-10 w-7 h-7 bg-black/30 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/50 transition"
                 >
@@ -912,12 +877,13 @@ const VoteContent = ({
         })}
       </div>
 
-      {/* Lightbox */}
+      {/* Image Modal */}
       <AnimatePresence>
-        {lightboxImage && (
-          <Lightbox
-            imageUrl={lightboxImage}
-            onClose={() => setLightboxImage(null)}
+        {modalImage && (
+          <ImageModal
+            imageUrl={modalImage.url}
+            alt={modalImage.alt}
+            onClose={() => setModalImage(null)}
           />
         )}
       </AnimatePresence>

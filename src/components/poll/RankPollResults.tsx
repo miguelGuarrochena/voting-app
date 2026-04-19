@@ -94,9 +94,13 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
 
                 {option.imageUrl && (
                   <button
-                    onClick={() => option.imageUrl && setModalImage({ url: option.imageUrl, alt: option.title || '' })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      option.imageUrl && setModalImage({ url: option.imageUrl, alt: option.title || '' });
+                    }}
                     className="mt-2"
                     type="button"
+                    onPointerDownCapture={(e) => e.stopPropagation()}
                   >
                     <img
                       src={option.imageUrl}

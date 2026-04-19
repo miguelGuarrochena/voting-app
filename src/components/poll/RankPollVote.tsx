@@ -40,7 +40,8 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
     transition,
   };
 
-  const handleImageClick = () => {
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (onImageClick && option.imageUrl) {
       onImageClick(option.imageUrl, option.title || '');
     }
@@ -62,6 +63,7 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
           onClick={handleImageClick}
           className="flex-shrink-0"
           type="button"
+          onPointerDownCapture={(e) => e.stopPropagation()}
         >
           <img
             src={option.imageUrl}

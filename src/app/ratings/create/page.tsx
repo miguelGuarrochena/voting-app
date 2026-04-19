@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, XMarkIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/PageLayout';
+import ImagePickerModal from '@/components/create/ImagePickerModal';
 
 type RatingItemForm = {
   id: string;
@@ -22,6 +23,10 @@ export default function CreateRatingPage() {
     { id: crypto.randomUUID(), label: '', imageUrl: '' },
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [imagePickerContext, setImagePickerContext] = useState<{ itemId: string } | null>(null);
+  const [uploadingItem, setUploadingItem] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addItem = () => {
     setItems([...items, { id: crypto.randomUUID(), label: '', imageUrl: '' }]);
@@ -34,6 +39,54 @@ export default function CreateRatingPage() {
 
   const updateItem = (id: string, updates: Partial<RatingItemForm>) => {
     setItems(items.map(item => (item.id === id ? { ...item, ...updates } : item)));
+  };
+
+  const openImagePicker = (itemId: string) => {
+    setImagePickerContext({ itemId });
+    setImagePickerOpen(true);
+  };
+
+  const handleImageSelect = (imageUrl: string) => {
+    if (imagePickerContext?.itemId) {
+      updateItem(imagePickerContext.itemId, { imageUrl });
+    }
+    setImagePickerContext(null);
+    setImagePickerOpen(false);
+  };
+
+  const removeItemImage = (itemId: string) => {
+    updateItem(itemId, { imageUrl: '' });
+  };
+
+  const handleFileUpload = async (itemId: string, file: File) => {
+    if (!file) return;
+
+    setUploadingItem(itemId);
+
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64Url = e.target?.result as string;
+        updateItem(itemId, { imageUrl: base64Url });
+        setUploadingItem(null);
+      };
+      reader.onerror = () => {
+        console.error('Error reading file');
+        setUploadingItem(null);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadingItem(null);
+    }
+  };
+
+  const triggerFileUpload = (itemId: string) => {
+    setImagePickerContext({ itemId });
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const validateForm = () => {
@@ -58,13 +111,29 @@ export default function CreateRatingPage() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // TODO: Create rating via API
-    console.log('Creating rating:', {
+    // Create rating object
+    const newRating = {
+      id: crypto.randomUUID(),
       title,
       description,
       isPrivate,
-      items: items.filter(item => item.label.trim() !== ''),
-    });
+      visibility: isPrivate ? 'private' : 'public',
+      createdAt: new Date().toISOString(),
+      createdBy: 'current-user', // In a real app, this would come from auth
+      items: items
+        .filter(item => item.label.trim() !== '')
+        .map(item => ({
+          id: crypto.randomUUID(),
+          ratingId: crypto.randomUUID(),
+          label: item.label,
+          imageUrl: item.imageUrl,
+          votes: []
+        }))
+    };
+
+    // Save to localStorage (in a real app, this would be an API call)
+    const existingRatings = JSON.parse(localStorage.getItem('ratings') || '[]');
+    localStorage.setItem('ratings', JSON.stringify([...existingRatings, newRating]));
 
     // Redirect to ratings page
     router.push('/ratings');
@@ -148,16 +217,53 @@ export default function CreateRatingPage() {
                       placeholder={`Item ${index + 1}`}
                       maxLength={50}
                     />
-                    {/* Image URL input */}
-                    <div className="mt-2 flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={item.imageUrl}
-                        onChange={(e) => updateItem(item.id, { imageUrl: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
-                        placeholder="Image URL (optional)"
-                      />
-                      {/* TODO: Add file upload button */}
+                    {/* Image section */}
+                    <div className="mt-2">
+                      {item.imageUrl ? (
+                        <div className="relative">
+                          <img
+                            src={item.imageUrl}
+                            alt={item.label}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeItemImage(item.id)}
+                            className="absolute top-2 right-2 w-8 h-8 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-colors"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openImagePicker(item.id)}
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                            >
+                              <PhotoIcon className="w-4 h-4" />
+                              Gallery
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => triggerFileUpload(item.id)}
+                              disabled={uploadingItem === item.id}
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                              <CloudArrowUpIcon className="w-4 h-4" />
+                              {uploadingItem === item.id ? 'Uploading...' : 'Upload'}
+                            </button>
+                          </div>
+                          <input
+                            type="text"
+                            value={item.imageUrl}
+                            onChange={(e) => updateItem(item.id, { imageUrl: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                            placeholder="Or paste URL (for places/stores)"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <button
@@ -191,6 +297,28 @@ export default function CreateRatingPage() {
             Create Rating
           </button>
         </form>
+
+        {/* Image Picker Modal */}
+        <ImagePickerModal
+          isOpen={imagePickerOpen}
+          onClose={() => setImagePickerOpen(false)}
+          onSelectImage={handleImageSelect}
+          title="Choose Item Image"
+        />
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && imagePickerContext?.itemId) {
+              handleFileUpload(imagePickerContext.itemId, file);
+            }
+          }}
+        />
       </div>
     </PageLayout>
   );
