@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatForDateTimeInput, addDays } from '@/utils/date';
 import { createEmptyReactions } from '@/types/poll';
 import { useCreatePoll } from '@/hooks/useApi';
 import ImagePickerModal from './ImagePickerModal';
@@ -28,11 +27,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState('');
   const [description, setDescription] = useState('');
-  const [expirationDate, setExpirationDate] = useState(() => {
-    // Set default expiration to 7 days from now
-    const defaultDate = addDays(new Date(), 7);
-    return formatForDateTimeInput(defaultDate);
-  });
+  const [selectedDuration, setSelectedDuration] = useState('24h'); // Default to 24 hours
   const [isPrivate, setIsPrivate] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [options, setOptions] = useState<FormPollOption[]>([
@@ -50,6 +45,15 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
   const [openEmojiPicker, setOpenEmojiPicker] = useState<string | null>(null);
   const router = useRouter();
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  // Duration options
+  const durationOptions = [
+    { value: '1h', label: '1 hour', hours: 1 },
+    { value: '6h', label: '6 hours', hours: 6 },
+    { value: '24h', label: '24 hours', hours: 24 },
+    { value: '3d', label: '3 days', hours: 72 },
+    { value: '7d', label: '7 days', hours: 168 },
+  ];
 
   // Emoji categories
   const emojiCategories = {
@@ -198,9 +202,9 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
   };
 
   const isFormValid = () => {
-    return title.trim().length >= 3 && 
+    return title.trim().length >= 3 &&
            options.filter(opt => opt.text.trim() !== '').length >= 2 &&
-           expirationDate &&
+           selectedDuration &&
            !loading;
   };
 
@@ -232,19 +236,6 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
       newErrors.options = 'Duplicate options are not allowed';
     }
 
-    // Expiration date validation
-    if (!expirationDate) {
-      newErrors.expiration = 'Expiration date is required';
-    } else {
-      const expiryTime = new Date(expirationDate).getTime();
-      const now = new Date().getTime();
-      const oneHourFromNow = now + (60 * 60 * 1000);
-      
-      if (expiryTime < oneHourFromNow) {
-        newErrors.expiration = 'Poll must expire at least 1 hour from now';
-      }
-    }
-
     // Private poll validation
     if (isPrivate && participants.length === 0) {
       newErrors.participants = 'Private polls require at least one participant';
@@ -271,12 +262,16 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     });
     
     try {
+      // Calculate expiration date from selected duration
+      const selectedOption = durationOptions.find(opt => opt.value === selectedDuration);
+      const expiresAt = new Date(Date.now() + (selectedOption?.hours || 24) * 60 * 60 * 1000);
+
       // Create the new poll
       const newPoll = await createPoll({
         title: title.trim(),
         description: description.trim() || undefined,
         titleImage: titleImage || undefined,
-        expiresAt: new Date(expirationDate),
+        expiresAt: expiresAt,
         visibility: (!isPrivate ? 'public' : 'private') as 'public' | 'private',
         createdBy: 'current-user',
         type: pollType,
@@ -304,20 +299,18 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     }
   };
 
-  const minDate = new Date().toISOString().split('T')[0];
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Poll Basics Section */}
-        <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Poll Basics</h2>
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Poll Basics</h2>
 
           <div className="space-y-6">
             {/* Poll Type Selector - Only show if defaultType is not provided */}
             {!defaultType && (
               <div>
-                <label className="block text-sm font-medium text-[var(--text)] mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Poll Type *
                 </label>
                 <div className="grid grid-cols-2 gap-4">
@@ -327,13 +320,13 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                     className={`p-4 rounded-xl border-2 transition-all ${
                       pollType === 'vote'
                         ? 'border-[var(--primary)] bg-[var(--primary-light)]'
-                        : 'border-[var(--border)] hover:border-gray-300'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
                     <div className="text-center">
                       <div className="text-2xl mb-2">🗳️</div>
-                      <div className="font-medium text-[var(--text)]">Vote Poll</div>
-                      <div className="text-xs text-[var(--text-muted)] mt-1">Each person picks one option</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">Vote Poll</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Each person picks one option</div>
                     </div>
                   </button>
                   <button
@@ -342,13 +335,13 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                     className={`p-4 rounded-xl border-2 transition-all ${
                       pollType === 'rank'
                         ? 'border-[var(--primary)] bg-[var(--primary-light)]'
-                        : 'border-[var(--border)] hover:border-gray-300'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
                     <div className="text-center">
                       <div className="text-2xl mb-2">🏆</div>
-                      <div className="font-medium text-[var(--text)]">Rank Poll</div>
-                      <div className="text-xs text-[var(--text-muted)] mt-1">Order all options by preference</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">Rank Poll</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Order all options by preference</div>
                     </div>
                   </button>
                 </div>
@@ -356,7 +349,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2" htmlFor="title">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="title">
                 Poll Title *
               </label>
               <div className="space-y-3">
@@ -370,8 +363,8 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                       setErrors(prev => ({ ...prev, title: '' }));
                     }
                   }}
-                  className={`w-full px-4 py-3 border rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)] ${
-                    errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-[var(--border)]'
+                  className={`w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
+                    errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-gray-300 dark:border-gray-700'
                   }`}
                   placeholder="What's your poll about?"
                   maxLength={100}
@@ -399,7 +392,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                   </button>
                   {titleImage && (
                     <div className="relative group">
-                      <div className="w-16 h-16 bg-[var(--surface-2)] rounded-lg overflow-hidden">
+                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
                         <img 
                           src={titleImage} 
                           alt="Title image preview" 
@@ -424,60 +417,55 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
               {errors.title && (
                 <p className="mt-2 text-sm text-red-600">{errors.title}</p>
               )}
-              <p className="text-xs text-[var(--text-muted)]">{title.length}/100 characters</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{title.length}/100 characters</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2" htmlFor="description">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="description">
                 Description (Optional)
               </label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-3 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)] min-h-[100px]"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 min-h-[100px]"
                 placeholder="Add more details about your poll..."
                 maxLength={500}
               />
-              <p className="text-xs text-[var(--text-muted)] mt-2">{description.length}/500 characters</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{description.length}/500 characters</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text)] mb-2" htmlFor="expiration">
-                Expiration Date *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="duration">
+                Expiration *
               </label>
-              <input
-                id="expiration"
-                type="datetime-local"
-                min={minDate}
-                value={expirationDate}
-                onChange={(e) => {
-                  setExpirationDate(e.target.value);
-                  if (errors.expiration) {
-                    setErrors(prev => ({ ...prev, expiration: '' }));
-                  }
-                }}
-                className={`w-full px-4 py-3 border rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors ${
-                  errors.expiration ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-[var(--border)]'
-                }`}
-              />
-              {errors.expiration && (
-                <p className="mt-2 text-sm text-red-600">{errors.expiration}</p>
-              )}
+              <select
+                id="duration"
+                value={selectedDuration}
+                onChange={(e) => setSelectedDuration(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors"
+              >
+                {durationOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Poll will automatically close after the selected duration</p>
             </div>
           </div>
           
           {errors.options && (
-            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
-              <p className="text-sm text-red-600">{errors.options}</p>
+            <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.options}</p>
             </div>
           )}
         </div>
 
         {/* Poll Options Section */}
-        <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-4">Poll Options</h2>
-          <p className="font-body text-sm text-[var(--text-muted)] mb-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Poll Options</h2>
+          <p className="font-body text-sm text-gray-500 dark:text-gray-400 mb-6">
             Add at least 2 options. You can include text, emoji, or upload an image for each option.
           </p>
 
@@ -490,18 +478,18 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                       type="text"
                       value={option.text}
                       onChange={(e) => updateOption(option.id, { text: e.target.value })}
-                      className="flex-1 px-4 py-3 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)]"
+                      className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                       placeholder={`Option ${index + 1}`}
                       maxLength={50}
                     />
                     <div className="relative" ref={openEmojiPicker === option.id ? emojiPickerRef : null}>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs text-[var(--text-muted)] mb-1">Emoji (optional)</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">Emoji (optional)</span>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
                             onClick={() => setOpenEmojiPicker(openEmojiPicker === option.id ? null : option.id)}
-                            className="w-12 h-12 px-2 py-2 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] hover:bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-2xl flex items-center justify-center"
+                            className="w-12 h-12 px-2 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-2xl flex items-center justify-center"
                           >
                             {option.emoji || '😶'}
                           </button>
@@ -518,11 +506,11 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                         </div>
                       </div>
                       {openEmojiPicker === option.id && (
-                        <div className="absolute top-full left-0 mt-2 z-50 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] shadow-lg p-3 w-64">
+                        <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 w-64">
                           <div className="space-y-2">
                             {Object.entries(emojiCategories).map(([category, emojis]) => (
                               <div key={category}>
-                                <div className="text-xs text-[var(--text-muted)] capitalize mb-1">{category}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 capitalize mb-1">{category}</div>
                                 <div className="grid grid-cols-5 gap-1">
                                   {emojis.map((emoji) => (
                                     <button
@@ -532,7 +520,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                                         updateOption(option.id, { emoji });
                                         setOpenEmojiPicker(null);
                                       }}
-                                      className="w-10 h-10 text-xl hover:bg-[var(--surface-2)] rounded transition-colors flex items-center justify-center"
+                                      className="w-10 h-10 text-xl hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors flex items-center justify-center"
                                     >
                                       {emoji}
                                     </button>
@@ -555,18 +543,18 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                           handleImageUpload(option.id, file);
                         }
                       }}
-                      className="text-sm text-[var(--text-muted)] file:mr-2 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-[var(--primary-light)] file:text-[var(--primary)] hover:file:bg-[var(--primary)] file:cursor-pointer"
+                      className="text-sm text-gray-500 dark:text-gray-400 file:mr-2 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-[var(--primary-light)] file:text-[var(--primary)] hover:file:bg-[var(--primary)] file:cursor-pointer"
                     />
                     <button
                       type="button"
                       onClick={() => openImagePicker('option', option.id)}
-                      className="text-sm px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-full hover:bg-[var(--surface)] transition-colors font-medium border border-[var(--primary)]"
+                      className="text-sm px-4 py-2 bg-gray-100 dark:bg-gray-800 text-[var(--primary)] rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium border border-[var(--primary)]"
                     >
                       📷 Stock Images
                     </button>
                     {option.image && (
                       <div className="relative group">
-                        <div className="w-12 h-12 bg-[var(--surface-2)] rounded overflow-hidden">
+                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
                           <img 
                             src={option.image} 
                             alt="Option preview" 
@@ -604,15 +592,15 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
           <button
             type="button"
             onClick={addOption}
-            className="mt-6 px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-[var(--radius-md)] hover:bg-[var(--primary)] hover:text-white transition-colors font-medium"
+            className="mt-6 px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors font-medium"
           >
             + Add Option
           </button>
         </div>
 
         {/* Visibility & Privacy Section */}
-        <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Visibility & Privacy</h2>
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Visibility & Privacy</h2>
           
           <div className="space-y-4">
             <div className="flex items-center">
@@ -622,9 +610,9 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                 name="visibility"
                 checked={!isPrivate}
                 onChange={() => setIsPrivate(false)}
-                className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-[var(--border)]"
+                className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 dark:border-gray-600"
               />
-              <label htmlFor="public" className="ml-2 block text-sm font-medium text-[var(--text)]">
+              <label htmlFor="public" className="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-100">
                 Public - Anyone with the link can view and vote
               </label>
             </div>
@@ -636,19 +624,19 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                 name="visibility"
                 checked={isPrivate}
                 onChange={() => setIsPrivate(true)}
-                className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-[var(--border)] mt-1"
+                className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 dark:border-gray-600 mt-1"
               />
               <div className="ml-2">
-                <label htmlFor="private" className="block text-sm font-medium text-[var(--text)]">
+                <label htmlFor="private" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                   Private - Only invited participants can view and vote
                 </label>
                 {isPrivate && (
-                  <p className="text-sm text-blue-600 mt-2">
+                  <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
                     🔒 Only people you share the invite link with can see this poll
                   </p>
                 )}
                 {isPrivate && participants.length === 0 && (
-                  <p className="text-sm text-amber-600 mt-2">
+                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
                     ⚠️ Private polls require at least one participant
                   </p>
                 )}
@@ -660,15 +648,15 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                         id="anonymous"
                         checked={isAnonymous}
                         onChange={(e) => setIsAnonymous(e.target.checked)}
-                        className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-[var(--border)]"
+                        className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 dark:border-gray-600"
                       />
-                      <label htmlFor="anonymous" className="ml-2 text-sm text-[var(--text)]">
+                      <label htmlFor="anonymous" className="ml-2 text-sm text-gray-900 dark:text-gray-100">
                         Anonymous voting (participants' votes are hidden)
                       </label>
                     </div>
 
                     <div className="mt-4">
-                      <h3 className="font-medium text-sm text-[var(--text)] mb-2">Invite Participants</h3>
+                      <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-2">Invite Participants</h3>
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -679,7 +667,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                               addParticipant(e);
                             }
                           }}
-                          className="flex-1 px-4 py-3 border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-[var(--text-muted)]"
+                          className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                           placeholder="Enter email or username"
                         />
                         <button
@@ -693,11 +681,11 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
                       {participants.length > 0 && (
                         <div className="mt-3 space-y-2">
-                          <h4 className="text-sm font-medium text-[var(--text)]">Invited Participants:</h4>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Invited Participants:</h4>
                           <ul className="space-y-1">
                             {participants.map((participant) => (
-                              <li key={participant.id} className="flex justify-between items-center bg-[var(--surface-2)] p-2 rounded-[var(--radius-sm)]">
-                                <span className="text-sm text-[var(--text)]">{participant.emailOrUsername}</span>
+                              <li key={participant.id} className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-2 rounded-sm">
+                                <span className="text-sm text-gray-900 dark:text-gray-100">{participant.emailOrUsername}</span>
                                 <button
                                   type="button"
                                   onClick={() => removeParticipant(participant.id)}
@@ -721,7 +709,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
         {/* Submit Button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="text-sm text-[var(--text-muted)]">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
             <p>• Title is required (min. 3 characters)</p>
             <p>• At least 2 options required</p>
             <p>• Images must be JPG or PNG (max 5MB)</p>
@@ -729,10 +717,10 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
           <button
             type="submit"
             disabled={!isFormValid()}
-            className={`px-8 py-3 rounded-[var(--radius-md)] font-medium transition-all ${
+            className={`px-8 py-3 rounded-md font-medium transition-all ${
               isFormValid()
                 ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white hover:shadow-lg'
-                : 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed opacity-50'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50'
             }`}
           >
             {loading ? 'Creating...' : 'Create Poll'}
@@ -740,7 +728,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
         </div>
         
         {(submitError || errors.submit) && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-[var(--radius-md)]">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
             <div className="flex items-start gap-3">
               <div className="text-red-500 mt-0.5">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -748,13 +736,13 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-800 mb-1">Failed to create poll</p>
-                <p className="text-sm text-red-600">{submitError?.message || errors.submit}</p>
+                <p className="text-sm font-medium text-red-800 dark:text-red-400 mb-1">Failed to create poll</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{submitError?.message || errors.submit}</p>
                 <button
                   onClick={() => {
                     setErrors(prev => ({ ...prev, submit: '' }));
                   }}
-                  className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+                  className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline"
                 >
                   Dismiss
                 </button>

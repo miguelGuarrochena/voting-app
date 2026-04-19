@@ -59,7 +59,7 @@ interface SkeletonCardProps {
 
 export const SkeletonCard = ({ className = '' }: SkeletonCardProps) => {
   return (
-    <div className={`bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-200 animate-pulse ${className}`}>
+    <div className={`bg-white dark:bg-gray-900 rounded-3xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700 animate-pulse ${className}`}>
       <div className="h-48 bg-gray-200" />
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
@@ -94,7 +94,7 @@ export const EmptyState = ({ icon = '📊', title, description, action, classNam
   return (
     <div className={`text-center py-16 ${className}`}>
       <div className="text-5xl md:text-6xl mb-6">{icon}</div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
       <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">{description}</p>
       {action && (
         <button

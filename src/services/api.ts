@@ -218,11 +218,20 @@ export const pollApi = {
   // Create new poll
   createPoll: async (pollData: Omit<Poll, 'id' | 'createdAt' | 'totalReactions' | 'views'>): Promise<ApiResponse<Poll>> => {
     const polls = storage.get<Poll>('polls');
-    
+
+    // Validate expiration date - max 7 days from creation
+    const now = new Date();
+    const maxExpiration = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+    const expiresAt = new Date(pollData.expiresAt);
+
+    if (expiresAt > maxExpiration) {
+      throw new Error('Poll expiration cannot exceed 7 days from creation');
+    }
+
     const newPoll: Poll = {
       ...pollData,
       id: uuidv4(),
-      createdAt: new Date(),
+      createdAt: now,
       totalReactions: 0,
       views: 0,
       options: pollData.options.map(opt => ({
@@ -232,10 +241,10 @@ export const pollApi = {
         rank: 0,
       })),
     };
-    
+
     const updatedPolls = [newPoll, ...polls];
     storage.set('polls', updatedPolls);
-    
+
     return simulateApiCall(newPoll);
   },
 

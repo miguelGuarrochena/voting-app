@@ -53,7 +53,7 @@ const RootLayout = ({
               <AuthProvider>
                 <StoreProvider>
                   <Navbar />
-                  <main className="flex-grow flex flex-col pt-0 lg:pt-20">
+                  <main className="flex-grow flex flex-col pt-0">
                     <ErrorBoundary>
                       {children}
                     </ErrorBoundary>

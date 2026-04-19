@@ -49,16 +49,30 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
   const mainImage = poll.options[0]?.imageUrl;
   
   // Memoize calculations
-  const { isExpired, timeRemaining, totalVotes, hasVotes } = useMemo(() => {
+  const { isExpired, timeRemaining, totalVotes, hasVotes, urgencyBadge } = useMemo(() => {
     const now = new Date();
     const expiryDate = new Date(poll.expiresAt);
     const votes = poll.options.reduce((sum: number, option: any) => sum + getPositiveVotes(option.reactions), 0);
-    
+    const isExpired = expiryDate < now;
+    const diff = expiryDate.getTime() - now.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    let urgencyBadge = null;
+    if (!isExpired && hours < 24) {
+      if (hours < 1) {
+        urgencyBadge = { text: `Closes in ${minutes}m`, color: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' };
+      } else {
+        urgencyBadge = { text: `Closes in ${hours}h`, color: 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' };
+      }
+    }
+
     return {
-      isExpired: expiryDate < now,
+      isExpired,
       timeRemaining: formatDistanceToNow(expiryDate, { addSuffix: true }),
       totalVotes: votes,
-      hasVotes: votes > 0
+      hasVotes: votes > 0,
+      urgencyBadge
     };
   }, [poll.expiresAt, poll.options]);
 
@@ -162,7 +176,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
   return (
     <div className={`block ${className}`}>
       <motion.div 
-        className={`${cardHeight} bg-white rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-border hover:-translate-y-1 active:scale-[0.98] flex flex-col cursor-pointer overflow-hidden group`}
+        className={`${cardHeight} bg-white dark:bg-gray-900 rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-800 hover:-translate-y-1 active:scale-[0.98] flex flex-col cursor-pointer overflow-hidden group`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -201,10 +215,15 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 
                 {/* Status Badge */}
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                  {urgencyBadge && (
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium border ${urgencyBadge.color}`}>
+                      {urgencyBadge.text}
+                    </div>
+                  )}
                   <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
-                    isExpired 
-                      ? 'bg-gray-500/80 text-white' 
+                    isExpired
+                      ? 'bg-gray-500/80 text-white'
                       : 'bg-green-500/80 text-white'
                   }`}>
                     {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
@@ -227,10 +246,15 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 
                 {/* Status Badge */}
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                  {urgencyBadge && (
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium border ${urgencyBadge.color}`}>
+                      {urgencyBadge.text}
+                    </div>
+                  )}
                   <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
-                    isExpired 
-                      ? 'bg-gray-500/80 text-white' 
+                    isExpired
+                      ? 'bg-gray-500/80 text-white'
                       : 'bg-green-500/80 text-white'
                   }`}>
                     {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
@@ -242,14 +266,14 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
           </div>
           
           {/* Title and Meta Info */}
-          <div className="p-4 sm:p-5 bg-white border-b border-border/50">
-            <h3 className="font-display font-bold text-text text-lg sm:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+          <div className="p-4 sm:p-5 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+            <h3 className="font-display font-bold text-gray-900 dark:text-gray-100 text-lg sm:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
               {poll.title}
             </h3>
             
             {/* Meta info */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 text-xs text-text-muted">
+              <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                 <div className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-primary text-xs font-medium">
                   {getCreatorAvatar(poll.createdBy)}
                 </div>
@@ -259,8 +283,8 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
               {/* Status indicator */}
               <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                 isExpired 
-                  ? 'bg-gray-100 text-gray-600' 
-                  : 'bg-green-100 text-green-700'
+                  ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400' 
+                  : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
               }`}>
                 {!isExpired && <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />}
                 {isExpired ? t('poll.ended') : t('poll.active')}
@@ -270,7 +294,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
         </div>
         
         {/* MIDDLE ZONE - Scrollable: Results List */}
-        <div className="flex-1 relative overflow-hidden bg-white">
+        <div className="flex-1 relative overflow-hidden bg-white dark:bg-gray-900">
           <div className="h-full overflow-y-auto" style={{ maxHeight: '240px' }}>
             {hasVotes ? (
               <div className="p-4 sm:p-5 space-y-2">
@@ -315,7 +339,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
                           )}
                           
                           {/* Option Name */}
-                          <span className="font-medium text-xs sm:text-sm text-text truncate flex-1">
+                          <span className="font-medium text-xs sm:text-sm text-gray-900 dark:text-gray-100 truncate flex-1">
                             {option.title}
                           </span>
                           
@@ -365,7 +389,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
               </div>
             ) : (
               <div className="flex-1 flex items-center justify-center p-4 sm:p-5">
-                <div className="text-center text-text-muted">
+                <div className="text-center text-gray-500 dark:text-gray-400">
                   <div className="text-2xl mb-2">📊</div>
                   <p className="text-sm">{t('poll.noVotesYet')}</p>
                 </div>
@@ -375,12 +399,12 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
           
           {/* Scroll fade indicator */}
           {hasVotes && (
-            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-900 via-white/80 dark:via-gray-900/80 to-transparent pointer-events-none" />
           )}
         </div>
         
         {/* BOTTOM ZONE - Fixed: Aggregated Reactions + View Poll Link */}
-        <div className="flex-shrink-0 bg-white border-t border-border">
+        <div className="flex-shrink-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between p-4 sm:p-5">
             <div className="flex items-center gap-2">
               {/* Delete button (if provided) */}

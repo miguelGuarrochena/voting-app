@@ -62,9 +62,9 @@ export default function InvitePage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
+          <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
             <div className="text-6xl mb-4">🔗</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Invalid Invite Link</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Invalid Invite Link</h1>
             <p className="text-gray-600 mb-6">{error}</p>
             <button
               onClick={() => router.push('/')}
@@ -79,20 +79,20 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+        <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
           <div className="text-center">
             <div className="text-6xl mb-4">📨</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">You're Invited!</h1>
-            <p className="text-gray-600 mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">You're Invited!</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               <strong>{poll.createdBy}</strong> has invited you to participate in a poll.
             </p>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-left">
-              <h2 className="font-semibold text-gray-900 mb-2">{poll.title}</h2>
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6 text-left">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{poll.title}</h2>
               {poll.description && (
-                <p className="text-sm text-gray-600">{poll.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{poll.description}</p>
               )}
             </div>
 
@@ -106,7 +106,7 @@ export default function InvitePage() {
 
             <button
               onClick={() => router.push('/')}
-              className="w-full mt-3 px-6 py-3 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              className="w-full mt-3 px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
             >
               Decline
             </button>

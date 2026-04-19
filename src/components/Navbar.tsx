@@ -11,9 +11,9 @@ import {
   CogIcon,
   StarIcon,
   UserCircleIcon,
-  PlusIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import { Plus } from 'lucide-react';
 import { IconLayoutList, IconUser, IconLock, IconLogout } from '@tabler/icons-react';
 import { getCreatorAvatar } from '@/data/mockPolls';
 import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
@@ -26,6 +26,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
 
   // Handle scroll effect for desktop navbar
   useEffect(() => {
@@ -63,7 +64,7 @@ const Navbar = () => {
     return (
       <>
         {/* Top minimal bar */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-[var(--surface)] border-b border-[var(--border)]">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between px-4 py-3">
             {/* Left side - Back button or spacer */}
             <div className="flex-1">
@@ -77,7 +78,7 @@ const Navbar = () => {
                       router.back();
                     }
                   }}
-                  className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors"
+                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   <ArrowLeftIcon className="w-4 h-4" />
                 </button>
@@ -101,12 +102,12 @@ const Navbar = () => {
         </div>
 
         {/* Bottom tab bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface)] border-t border-[var(--border)]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between px-2 py-1 sm:py-2 pb-[env(safe-area-inset-bottom)]">
             <Link
               href="/votes"
               className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/votes' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                pathname === '/votes' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
               }`}
             >
               <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -116,7 +117,7 @@ const Navbar = () => {
             <Link
               href="/ranking"
               className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/ranking' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                pathname === '/ranking' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
               }`}
             >
               <TrophyIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -126,7 +127,7 @@ const Navbar = () => {
             <Link
               href="/spin"
               className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/spin' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                pathname === '/spin' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
               }`}
             >
               <CogIcon className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-occasional" />
@@ -136,7 +137,7 @@ const Navbar = () => {
             <Link
               href="/ratings"
               className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/ratings' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'
+                pathname === '/ratings' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'
               }`}
             >
               <StarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -154,7 +155,7 @@ const Navbar = () => {
 
   // Desktop navbar
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-40 bg-[var(--surface)]/95 backdrop-blur-xl border-b border-[var(--border)] transition-all ${
+    <nav className={`fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-950/95 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all ${
       scrolled ? 'shadow-lg' : ''
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -169,7 +170,7 @@ const Navbar = () => {
             <Link
               href="/votes"
               className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/votes' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                pathname === '/votes' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <ChartBarIcon className="w-5 h-5" />
@@ -183,7 +184,7 @@ const Navbar = () => {
             <Link
               href="/ranking"
               className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/ranking' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                pathname === '/ranking' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <TrophyIcon className="w-5 h-5" />
@@ -197,7 +198,7 @@ const Navbar = () => {
             <Link
               href="/spin"
               className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/spin' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                pathname === '/spin' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <CogIcon className="w-5 h-5 animate-spin-occasional" />
@@ -211,7 +212,7 @@ const Navbar = () => {
             <Link
               href="/ratings"
               className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/ratings' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                pathname === '/ratings' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <StarIcon className="w-5 h-5" />
@@ -234,14 +235,14 @@ const Navbar = () => {
                   >
                     {getCreatorAvatar(user?.name || 'User')}
                   </button>
-                  
+
                   {showUserMenu && (
-                    <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
+                    <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
                       <div className="py-1">
                         <Link
                           href="/settings"
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         >
                           <CogIcon className="w-4 h-4" />
                           <span>{t('nav.settings')}</span>
@@ -251,7 +252,7 @@ const Navbar = () => {
                             handleLogout();
                             setShowUserMenu(false);
                           }}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         >
                           <UserCircleIcon className="w-4 h-4" />
                           <span>{t('nav.logout')}</span>
@@ -260,18 +261,60 @@ const Navbar = () => {
                     </div>
                   )}
                 </div>
-                <Link
-                  href="/create"
-                  className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base"
-                >
-                  {t('nav.createPoll')}
-                </Link>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowCreateMenu(!showCreateMenu)}
+                    className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base flex items-center gap-2"
+                  >
+                    <Plus size={16} />
+                    <span>Create</span>
+                  </button>
+
+                  {showCreateMenu && (
+                    <div className="absolute right-0 top-full mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 min-w-[180px] overflow-hidden">
+                      <div className="py-1">
+                        <Link
+                          href="/create?type=vote"
+                          onClick={() => setShowCreateMenu(false)}
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <ChartBarIcon className="w-4 h-4" />
+                          <span>Vote</span>
+                        </Link>
+                        <Link
+                          href="/create?type=rank"
+                          onClick={() => setShowCreateMenu(false)}
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <TrophyIcon className="w-4 h-4" />
+                          <span>Ranking</span>
+                        </Link>
+                        <Link
+                          href="/spin"
+                          onClick={() => setShowCreateMenu(false)}
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <CogIcon className="w-4 h-4" />
+                          <span>Spin Wheel</span>
+                        </Link>
+                        <Link
+                          href="/ratings/create"
+                          onClick={() => setShowCreateMenu(false)}
+                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <StarIcon className="w-4 h-4" />
+                          <span>Ratings</span>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
                 <Link
                   href="/auth/login"
-                  className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium transition-colors text-sm sm:text-base"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors text-sm sm:text-base"
                 >
                   {t('nav.login')}
                 </Link>
@@ -293,6 +336,14 @@ const Navbar = () => {
         <div
           className="fixed inset-0 z-40"
           onClick={() => setShowUserMenu(false)}
+        />
+      )}
+
+      {/* Click outside to close create menu */}
+      {showCreateMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowCreateMenu(false)}
         />
       )}
     </nav>

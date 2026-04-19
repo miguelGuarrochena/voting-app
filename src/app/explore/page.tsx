@@ -8,7 +8,7 @@ import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 
 // Skeleton loader component
 const PollCardSkeleton = () => (
-  <div className="bg-white rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-[var(--border)] animate-pulse">
+  <div className="bg-white dark:bg-gray-900 rounded-[24px] shadow-[var(--shadow-sm)] overflow-hidden border border-gray-100 dark:border-gray-800 animate-pulse">
     <div className="h-[200px] bg-gray-200" />
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -153,20 +153,20 @@ const ExplorePage = () => {
           {/* Search Bar */}
           <div className="relative max-w-2xl mx-auto">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </div>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search polls by title or options..."
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm transition-colors"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm transition-colors"
             />
           </div>
 
           {/* Sort Options */}
           <div className="flex flex-wrap justify-center gap-2">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <FunnelIcon className="h-4 w-4" />
               <span>Sort by:</span>
             </div>
@@ -177,7 +177,7 @@ const ExplorePage = () => {
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   sortBy === option.value
                     ? 'bg-[var(--primary)] text-white'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
                 title={option.description}
               >

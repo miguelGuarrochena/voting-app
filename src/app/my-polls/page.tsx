@@ -181,9 +181,9 @@ export default function MyPollsPage() {
       {/* Delete Confirmation Dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{t('poll.deletePoll')}</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('poll.deletePoll')}</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               {t('poll.deleteConfirm')}
             </p>
             <div className="flex justify-end gap-3">
@@ -192,12 +192,18 @@ export default function MyPollsPage() {
                   setShowDeleteDialog(false);
                   setPollToDelete(null);
                 }}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors"
               >
                 {t('poll.cancel')}
               </button>
               <button
-                onClick={handleDelete}
+                onClick={() => {
+                  if (pollToDelete) {
+                    handleDelete(pollToDelete);
+                  }
+                  setShowDeleteDialog(false);
+                  setPollToDelete(null);
+                }}
                 className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg font-medium transition-colors"
               >
                 {t('poll.delete')}

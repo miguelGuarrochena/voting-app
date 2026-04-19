@@ -111,15 +111,15 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   if (!canAccess) {
     return (
       <div className="max-w-md mx-auto mt-16 px-4">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Access Denied</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             You don't have permission to view this poll. This is a private poll and you need an invite link to access it.
           </p>
           <button
             onClick={() => window.location.href = '/'}
-            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+            className="px-6 py-3 bg-gray-900 dark:bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
           >
             Back to Feed
           </button>
@@ -142,35 +142,47 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   }, [poll?.expiresAt]); // More specific dependency
   
   const userVotedOption = poll ? userVotes[poll.id] : undefined;
-  
+
+  // Auto-switch to results tab if poll has ended
+  useEffect(() => {
+    if (hasEnded && activeTab === 'vote') {
+      setActiveTab('results');
+    }
+  }, [hasEnded, activeTab]);
+
   // Countdown timer
   useEffect(() => {
     if (!poll || hasEnded) {
-      setTimeRemaining(hasEnded ? 'Ended' : '');
+      setTimeRemaining('This poll is closed');
       return;
     }
-    
+
     const updateTimer = () => {
       const now = new Date();
       const expiryDate = new Date(poll.expiresAt);
       const diff = expiryDate.getTime() - now.getTime();
-      
+
       if (diff <= 0) {
-        setTimeRemaining('Ended');
-        return; // Don't continue if ended
+        setTimeRemaining('This poll is closed');
+        return;
       }
-      
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
-      setTimeRemaining(`${days.toString().padStart(2, '0')} : ${hours.toString().padStart(2, '0')} : ${minutes.toString().padStart(2, '0')} : ${seconds.toString().padStart(2, '0')}`);
+
+      if (hours >= 24) {
+        const days = Math.floor(hours / 24);
+        setTimeRemaining(`Closes in ${days} day${days > 1 ? 's' : ''}`);
+      } else if (hours >= 1) {
+        setTimeRemaining(`Closes in ${hours} hour${hours > 1 ? 's' : ''}`);
+      } else {
+        setTimeRemaining(`Closes in ${minutes} minute${minutes > 1 ? 's' : ''}`);
+      }
     };
-    
+
     updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    
+    const interval = setInterval(updateTimer, 60000); // Update every minute instead of every second
+
     return () => clearInterval(interval);
   }, [poll?.expiresAt, hasEnded]);
 
@@ -312,14 +324,14 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
   return (
     <div className="w-full max-w-2xl mx-auto pb-20 md:pb-0">
       {/* Poll Header */}
-      <div className="bg-white rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4 md:p-6 mb-4 md:mb-6">
+      <div className="bg-white dark:bg-gray-900 rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] border border-gray-100 dark:border-gray-800 p-4 md:p-6 mb-4 md:mb-6">
         <div className="flex flex-row items-start justify-between gap-3 mb-4">
           <div className="flex-1">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-[var(--text)] mb-2">
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               {poll.title}
             </h1>
             {poll.description && (
-              <p className="font-body text-[var(--text-muted)] text-base mb-4">
+              <p className="font-body text-gray-500 dark:text-gray-400 text-base mb-4">
                 {poll.description}
               </p>
             )}
@@ -341,17 +353,17 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             <div className="w-8 h-8 rounded-full bg-[var(--primary-light)] flex items-center justify-center text-[var(--primary)] text-sm font-medium">
               {getCreatorAvatar(poll.createdBy)}
             </div>
-            <span className="text-sm text-[var(--text-muted)]">{poll.createdBy}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">{poll.createdBy}</span>
             <div className={`px-2 py-1 rounded-full text-xs font-medium ${
               hasEnded
-                ? 'bg-gray-100 text-gray-600'
-                : 'bg-green-100 text-green-700'
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
             }`}>
               {hasEnded ? t('poll.ended') : t('poll.active')}
             </div>
           </div>
           {/* Line 2: time • votes • timer */}
-          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
             <span>{mounted ? formatDistanceToNow(new Date(poll.createdAt), { addSuffix: true }) : 'just now'}</span>
             <span>•</span>
             <span>{totalVotes} votes</span>
@@ -366,14 +378,14 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
 
         {/* Invite Link Section - Only for creator of private polls */}
         {isCreator && poll.isPrivate && inviteLink && (
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-blue-800 font-medium">🔒 Invite Link</span>
+                  <span className="text-blue-800 dark:text-blue-300 font-medium">🔒 Invite Link</span>
                 </div>
-                <p className="text-xs text-blue-600 mb-2">Only people with this link can see this poll</p>
-                <div className="bg-white border border-blue-200 rounded-lg px-3 py-2 text-sm text-gray-700 break-all">
+                <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">Only people with this link can see this poll</p>
+                <div className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-300 break-all">
                   {inviteLink}
                 </div>
               </div>
@@ -389,14 +401,14 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-1 mb-4 md:mb-6">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-1 mb-4 md:mb-6">
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTab('vote')}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'vote'
                 ? 'bg-[#f43f5e] text-white'
-                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
             }`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -409,7 +421,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'results'
                 ? 'bg-[#f43f5e] text-white'
-                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
             }`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -488,17 +500,17 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4"
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 max-w-md w-full mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-[var(--text)] mb-2">{t('poll.deletePoll')}</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('poll.deletePoll')}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 {t('poll.deleteConfirm')}
               </p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowDeleteDialog(false)}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors"
                 >
                   {t('poll.cancel')}
                 </button>
@@ -519,14 +531,14 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
 
       {/* Danger Zone - Delete Button */}
       {isCreator && !hasEnded && (
-        <div className="mt-16 pt-8 border-t border-gray-200 pb-32 md:pb-0">
-          <p className="text-xs text-gray-400 uppercase tracking-wide text-center mb-4">
+        <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700 pb-32 md:pb-0">
+          <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide text-center mb-4">
             {t('poll.dangerZone')}
           </p>
           <div className="flex justify-center">
             <button
               onClick={() => setShowDeleteDialog(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-red-300 text-red-500 text-sm font-medium hover:bg-red-50 hover:border-red-400 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-red-300 dark:border-red-700 text-red-500 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-400 dark:hover:border-red-600 transition-all"
             >
               🗑️ {t('poll.deletePoll')}
             </button>

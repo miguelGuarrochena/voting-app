@@ -30,7 +30,7 @@ export function TestCard({ poll }: TestCardProps) {
   const totalVotes = poll.options.reduce((sum, option) => sum + Object.values(option.reactions).reduce((a, b) => a + b, 0), 0);
   
   return (
-    <div className="w-full bg-white border border-gray-300 rounded-lg p-4 overflow-hidden">
+    <div className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg p-4 overflow-hidden">
       <h3 className="font-bold mb-4">{poll.title}</h3>
       <div className="space-y-3">
         {poll.options.map((option) => {
@@ -38,7 +38,7 @@ export function TestCard({ poll }: TestCardProps) {
           const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
           
           return (
-            <div key={option.id} className="border border-gray-200 rounded p-3">
+            <div key={option.id} className="border border-gray-200 dark:border-gray-700 rounded p-3">
               <div className="flex justify-between mb-2">
                 <span>{option.title}</span>
                 <span>{percentage}%</span>

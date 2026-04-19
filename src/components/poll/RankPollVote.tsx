@@ -42,13 +42,13 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
       style={style}
       {...(!isMobile ? attributes : {})}
       {...(!isMobile ? listeners : {})}
-      className={`bg-white border-2 border-gray-200 rounded-xl p-4 mb-3 ${!isMobile ? 'cursor-move hover:border-gray-300 hover:shadow-md' : ''} transition-all flex items-center gap-4 w-full`}
+      className={`bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-3 ${!isMobile ? 'cursor-move hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md' : ''} transition-all flex items-center gap-4 w-full`}
     >
       <div className="flex-shrink-0 w-8 h-8 bg-[var(--primary)] text-white rounded-full flex items-center justify-center font-bold text-sm">
         {index + 1}
       </div>
       <div className="flex-1">
-        <h3 className="font-semibold text-[var(--text)]">{option.title}</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{option.title}</h3>
         {option.imageUrl && (
           <img
             src={option.imageUrl}
@@ -157,19 +157,19 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
 
     return (
       <div className={`w-full space-y-3 ${className}`}>
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
-          <p className="text-green-800 font-medium">✓ You have submitted your ranking</p>
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-4">
+          <p className="text-green-800 dark:text-green-300 font-medium">✓ You have submitted your ranking</p>
         </div>
         {rankedOptions.map((option, index) => (
           <div
             key={option.id}
-            className="bg-white border-2 border-gray-200 rounded-xl p-4 flex items-center gap-4"
+            className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center gap-4"
           >
             <div className="flex-shrink-0 w-8 h-8 bg-[var(--primary)] text-white rounded-full flex items-center justify-center font-bold text-sm">
               {index + 1}
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-[var(--text)]">{option.title}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{option.title}</h3>
               {option.imageUrl && (
                 <img
                   src={option.imageUrl}
