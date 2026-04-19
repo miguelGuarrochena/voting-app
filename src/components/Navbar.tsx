@@ -107,42 +107,42 @@ const Navbar = () => {
           <div className="flex items-center justify-between px-2 py-1 sm:py-2 pb-[env(safe-area-inset-bottom)]">
             <Link
               href="/votes"
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/votes' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/votes' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
               <span className="text-xs mt-1">Votes</span>
             </Link>
 
             <Link
               href="/ranking"
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/ranking' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/ranking' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <TrophyIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              <TrophyIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
               <span className="text-xs mt-1">Ranking</span>
             </Link>
 
             <Link
-              href="/spin"
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/explore' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
+              href="/ratings"
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/ratings' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <ArrowPathIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="text-xs mt-1">Spin</span>
+              <StarIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
+              <span className="text-xs mt-1">Ratings</span>
             </Link>
 
             <Link
-              href="/ratings"
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors flex-1 ${
-                pathname === '/ratings' ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'
+              href="/spin"
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/spin' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <StarIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span className="text-xs mt-1">Ratings</span>
+              <ArrowPathIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
+              <span className="text-xs mt-1">Spin</span>
             </Link>
           </div>
         </div>
@@ -170,58 +170,50 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
             <Link
               href="/votes"
-              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/votes' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                pathname === '/votes'
+                  ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
               }`}
             >
-              <ChartBarIcon className="w-5 h-5" />
+              <ChartBarIcon className="w-5 h-5 transition-transform duration-300" />
               <span>Votes</span>
-              {pathname === '/votes' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
-              )}
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
             </Link>
 
             <Link
               href="/ranking"
-              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/ranking' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                pathname === '/ranking'
+                  ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
               }`}
             >
-              <TrophyIcon className="w-5 h-5" />
+              <TrophyIcon className="w-5 h-5 transition-transform duration-300" />
               <span>Ranking</span>
-              {pathname === '/ranking' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
-              )}
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
-            </Link>
-
-            <Link
-              href="/spin"
-              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/spin' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-              }`}
-            >
-              <ArrowPathIcon className="w-5 h-5" />
-              <span>Spin</span>
-              {pathname === '/spin' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
-              )}
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
             </Link>
 
             <Link
               href="/ratings"
-              className={`relative text-base lg:text-lg font-medium transition-colors flex items-center space-x-2 ${
-                pathname === '/ratings' ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+              className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                pathname === '/ratings'
+                  ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
               }`}
             >
-              <StarIcon className="w-5 h-5" />
+              <StarIcon className="w-5 h-5 transition-transform duration-300" />
               <span>Ratings</span>
-              {pathname === '/ratings' && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-100 transition-transform" />
-              )}
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--primary)] transform scale-x-0 transition-transform hover:scale-x-100" />
+            </Link>
+
+            <Link
+              href="/spin"
+              className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                pathname === '/spin'
+                  ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+              }`}
+            >
+              <ArrowPathIcon className="w-5 h-5 transition-transform duration-300" />
+              <span>Spin</span>
             </Link>
           </div>
 
