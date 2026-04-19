@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Poll } from '@/types/poll';
+import { ImageModal } from '@/components/ImageModal';
 
 interface RankPollResultsProps {
   poll: Poll;
@@ -11,6 +12,8 @@ interface RankPollResultsProps {
 }
 
 export const RankPollResults = ({ poll, allRankings, totalParticipants, className = '' }: RankPollResultsProps) => {
+  const [modalImage, setModalImage] = useState<{ url: string; alt: string } | null>(null);
+
   // Calculate Borda count scores for each option
   const optionScores = useMemo(() => {
     const scores: Record<string, number> = {};
@@ -90,11 +93,20 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
                 </h3>
 
                 {option.imageUrl && (
-                  <img
-                    src={option.imageUrl}
-                    alt={option.title}
-                    className="w-20 h-20 object-cover rounded-lg mt-2"
-                  />
+                  <button
+                    onClick={() => option.imageUrl && setModalImage({ url: option.imageUrl, alt: option.title })}
+                    className="mt-2"
+                    type="button"
+                  >
+                    <img
+                      src={option.imageUrl}
+                      alt={option.title}
+                      className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </button>
                 )}
 
                 {/* Point display */}
@@ -120,6 +132,14 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
         <p>Total participants: {totalParticipants}</p>
         <p>Total rankings: {Object.keys(allRankings).length}</p>
       </div>
+
+      {modalImage && (
+        <ImageModal
+          imageUrl={modalImage.url}
+          alt={modalImage.alt}
+          onClose={() => setModalImage(null)}
+        />
+      )}
     </div>
   );
 };

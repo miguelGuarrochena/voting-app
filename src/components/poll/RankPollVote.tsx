@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor, KeyboardSensor, closestCenter } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Poll } from '@/types/poll';
+import { ImageModal } from '@/components/ImageModal';
 
 interface RankPollVoteProps {
   poll: Poll;
@@ -15,13 +16,14 @@ interface RankPollVoteProps {
 }
 
 // Sortable item component
-function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOptions }: {
+function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOptions, onImageClick }: {
   option: Poll['options'][0];
   index: number;
   isMobile: boolean;
   onMoveUp?: (index: number) => void;
   onMoveDown?: (index: number) => void;
   totalOptions: number;
+  onImageClick?: (imageUrl: string, alt: string) => void;
 }) {
   const {
     attributes,
@@ -48,11 +50,20 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
         {index + 1}
       </div>
       {option.imageUrl && (
-        <img
-          src={option.imageUrl}
-          alt={option.title}
-          className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
-        />
+        <button
+          onClick={() => onImageClick?.(option.imageUrl, option.title)}
+          className="flex-shrink-0"
+          type="button"
+        >
+          <img
+            src={option.imageUrl}
+            alt={option.title}
+            className="w-12 h-12 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </button>
       )}
       <div className="flex-1">
         <h3 className="font-semibold text-[var(--text)]">{option.title}</h3>
@@ -95,6 +106,7 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
   const [options, setOptions] = useState(poll.options);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [modalImage, setModalImage] = useState<{ url: string; alt: string } | null>(null);
 
   // Detect mobile screen width
   useEffect(() => {
@@ -173,6 +185,9 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
                 src={option.imageUrl}
                 alt={option.title}
                 className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             )}
             <div className="flex-1">
@@ -208,6 +223,7 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
                 onMoveUp={moveUp}
                 onMoveDown={moveDown}
                 totalOptions={options.length}
+                onImageClick={(url, alt) => setModalImage({ url, alt })}
               />
             ))}
           </SortableContext>
@@ -223,6 +239,7 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
               onMoveUp={moveUp}
               onMoveDown={moveDown}
               totalOptions={options.length}
+              onImageClick={(url, alt) => setModalImage({ url, alt })}
             />
           ))}
         </SortableContext>
@@ -235,6 +252,14 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
       >
         {isSubmitting ? 'Submitting...' : 'Submit Ranking'}
       </button>
+
+      {modalImage && (
+        <ImageModal
+          imageUrl={modalImage.url}
+          alt={modalImage.alt}
+          onClose={() => setModalImage(null)}
+        />
+      )}
     </div>
   );
 };

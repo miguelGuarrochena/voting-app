@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { getCreatorAvatar } from '@/data/mockPolls';
+import { UserAvatar } from '@/components/UserAvatar';
 import { ImageGallery } from './ImageGallery';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -274,9 +274,7 @@ export const PollCard = memo(({ poll, compact = false, className = "", onDelete 
             {/* Meta info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                <div className="w-6 h-6 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-xs font-medium">
-                  {getCreatorAvatar(poll.createdBy)}
-                </div>
+                <UserAvatar name={poll.createdBy} size="sm" />
                 <span>{totalVotes} votes</span>
               </div>
               

@@ -8,7 +8,7 @@ import confetti from 'canvas-confetti';
 import usePollStore from '@/store/pollStore';
 import { Poll, PollOption, getPositiveVotes } from '@/types/poll';
 import { useLanguage } from '@/context/LanguageContext';
-import { getCreatorAvatar } from '@/data/mockPolls';
+import { UserAvatar } from '@/components/UserAvatar';
 import { RankPollVote } from './RankPollVote';
 import { RankPollResults } from './RankPollResults';
 
@@ -350,9 +350,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
         <div className="flex flex-col gap-1">
           {/* Line 1: avatar + username + Active badge */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-sm font-semibold">
-              {getCreatorAvatar(poll.createdBy)}
-            </div>
+            <UserAvatar name={poll.createdBy} size="md" />
             <span className="text-sm text-[var(--text-muted)]">{poll.createdBy}</span>
             <div className={`px-2 py-1 rounded-full text-xs font-medium ${
               hasEnded

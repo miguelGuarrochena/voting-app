@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe } from 'lucide-react';
 import { IconLayoutList, IconUser, IconLock, IconLogout } from '@tabler/icons-react';
-import { getCreatorAvatar } from '@/data/mockPolls';
+import { UserAvatar } from '@/components/UserAvatar';
 import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -142,16 +142,6 @@ const Navbar = () => {
                     <CogIcon className="w-5 h-5" />
                     <span>{t('nav.settings')}</span>
                   </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setShowMobileMenu(false);
-                    }}
-                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                  >
-                    <UserCircleIcon className="w-5 h-5" />
-                    <span>{t('nav.logout')}</span>
-                  </button>
                 </>
               ) : (
                 <>
@@ -172,6 +162,20 @@ const Navbar = () => {
                     <span>{t('nav.signup')}</span>
                   </Link>
                 </>
+              )}
+
+              {/* Logout at the end for authenticated users */}
+              {isAuthenticated && (
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setShowMobileMenu(false);
+                  }}
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors border-t border-[var(--border)] mt-2"
+                >
+                  <UserCircleIcon className="w-5 h-5" />
+                  <span>{t('nav.logout')}</span>
+                </button>
               )}
             </div>
           </div>
@@ -306,39 +310,6 @@ const Navbar = () => {
               <>
                 <div className="relative">
                   <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-sm font-semibold hover:bg-[var(--primary-dark)] transition-colors"
-                  >
-                    {getCreatorAvatar(user?.name || 'User')}
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
-                      <div className="py-1">
-                        <Link
-                          href="/settings"
-                          onClick={() => setShowUserMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                        >
-                          <CogIcon className="w-4 h-4" />
-                          <span>{t('nav.settings')}</span>
-                        </Link>
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            setShowUserMenu(false);
-                          }}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                        >
-                          <UserCircleIcon className="w-4 h-4" />
-                          <span>{t('nav.logout')}</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="relative">
-                  <button
                     onClick={() => setShowCreateMenu(!showCreateMenu)}
                     className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base flex items-center gap-2"
                   >
@@ -403,6 +374,48 @@ const Navbar = () => {
               </>
             )}
             <ThemeLanguageSwitcher />
+
+            {/* User avatar at the end */}
+            {isAuthenticated && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <UserAvatar
+                    name={user?.name || 'User'}
+                    avatarUrl={user?.avatar}
+                    size="md"
+                    className="sm:w-10 sm:h-10"
+                  />
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
+                    <div className="py-1">
+                      <Link
+                        href="/settings"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                      >
+                        <CogIcon className="w-4 h-4" />
+                        <span>{t('nav.settings')}</span>
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setShowUserMenu(false);
+                        }}
+                        className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                      >
+                        <UserCircleIcon className="w-4 h-4" />
+                        <span>{t('nav.logout')}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
