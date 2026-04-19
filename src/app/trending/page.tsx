@@ -97,7 +97,7 @@ const TrendingPage = () => {
         >
           <div className="bg-[var(--surface)] rounded-xl p-4 text-center border border-[var(--border)]">
             <div className="text-2xl font-bold text-[var(--primary)]">{trendingPolls.length}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Active Polls</div>
+            <div className="text-sm text-[var(--text-muted)]">Active Polls</div>
           </div>
           <div className="bg-[var(--surface)] rounded-xl p-4 text-center border border-[var(--border)]">
             <div className="text-2xl font-bold text-[var(--primary)]">
@@ -105,13 +105,13 @@ const TrendingPage = () => {
                 sum + poll.options.reduce((optSum, option) => optSum + (option.votes || 0), 0), 0
               )}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Total Votes</div>
+            <div className="text-sm text-[var(--text-muted)]">Total Votes</div>
           </div>
           <div className="bg-[var(--surface)] rounded-xl p-4 text-center border border-[var(--border)]">
             <div className="text-2xl font-bold text-[var(--primary)]">
               {trendingPolls.filter(poll => new Date(poll.expiresAt) > new Date()).length}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Still Active</div>
+            <div className="text-sm text-[var(--text-muted)]">Still Active</div>
           </div>
         </motion.div>
 

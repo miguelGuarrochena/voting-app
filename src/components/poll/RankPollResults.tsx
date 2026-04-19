@@ -85,7 +85,7 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
 
               {/* Option content */}
               <div className="flex-1">
-                <h3 className={`font-semibold ${isWinner ? 'text-yellow-700 dark:text-yellow-400' : 'text-gray-900 dark:text-gray-100'} mb-2`}>
+                <h3 className={`font-semibold ${isWinner ? 'text-yellow-700 dark:text-yellow-400' : 'text-[var(--text)]'} mb-2`}>
                   {option.title}
                 </h3>
 
@@ -99,9 +99,9 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
 
                 {/* Point display */}
                 <div className="mt-3">
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">
+                  <p className="text-sm text-[var(--text-muted)]">
                     <strong>{score}</strong> {score === 1 ? 'point' : 'points'}
-                  </span>
+                  </p>
                 </div>
               </div>
 
@@ -116,7 +116,7 @@ export const RankPollResults = ({ poll, allRankings, totalParticipants, classNam
         );
       })}
 
-      <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+      <div className="text-center text-sm text-[var(--text-muted)] mt-6">
         <p>Total participants: {totalParticipants}</p>
         <p>Total rankings: {Object.keys(allRankings).length}</p>
       </div>

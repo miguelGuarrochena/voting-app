@@ -55,7 +55,7 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
         />
       )}
       <div className="flex-1">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{option.title}</h3>
+        <h3 className="font-semibold text-[var(--text)]">{option.title}</h3>
       </div>
       {isMobile ? (
         <div className="flex flex-col gap-1">
@@ -81,7 +81,7 @@ function SortableOption({ option, index, isMobile, onMoveUp, onMoveDown, totalOp
           </button>
         </div>
       ) : (
-        <div className="text-gray-400">
+        <div className="text-[var(--text-muted)]">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
           </svg>
@@ -176,7 +176,7 @@ export const RankPollVote = ({ poll, onSubmitRanking, hasRanked, userRanking, cl
               />
             )}
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{option.title}</h3>
+              <h3 className="font-semibold text-[var(--text)]">{option.title}</h3>
             </div>
           </div>
         ))}

@@ -385,7 +385,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
                   <span className="text-blue-800 dark:text-blue-300 font-medium">🔒 Invite Link</span>
                 </div>
                 <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">Only people with this link can see this poll</p>
-                <div className="bg-white dark:bg-black border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-300 break-all">
+                <div className="bg-[var(--surface)] border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2 text-sm text-[var(--text)] break-all">
                   {inviteLink}
                 </div>
               </div>
@@ -408,7 +408,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'vote'
                 ? 'bg-[#f43f5e] text-white'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -421,7 +421,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'results'
                 ? 'bg-[#f43f5e] text-white'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
