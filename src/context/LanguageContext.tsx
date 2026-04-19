@@ -51,9 +51,6 @@ const translations = {
     'home.tryAgain': 'Try Again',
     'home.refreshPage': 'Refresh Page',
     
-    // Footer
-    'footer.copyright': `© ${new Date().getFullYear()} Polls. Create and share opinions.`,
-    
     // Theme/Language
     'theme.light': 'Light',
     'theme.dark': 'Dark',
@@ -191,9 +188,6 @@ const translations = {
     'home.failedToLoad': 'Error al cargar encuestas',
     'home.tryAgain': 'Intentar de Nuevo',
     'home.refreshPage': 'Actualizar Página',
-    
-    // Footer
-    'footer.copyright': `© ${new Date().getFullYear()} Polls. Crea y comparte opiniones.`,
     
     // Theme/Language
     'theme.light': 'Claro',
