@@ -323,6 +323,14 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
             }`}>
               {hasEnded ? t('poll.ended') : t('poll.active')}
             </div>
+            {poll.isPrivate && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-purple-200 dark:border-purple-800 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                {t('poll.private')}
+              </div>
+            )}
           </div>
           {/* Line 2: time • votes • timer */}
           <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] flex-wrap">

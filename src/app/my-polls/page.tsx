@@ -113,18 +113,14 @@ export default function MyPollsPage() {
             {privatePolls.map(poll => {
               const hasEnded = new Date(poll.expiresAt) <= new Date();
               return (
-                <div key={poll.id} className="relative">
-                  <div className="absolute top-2 right-2 z-10 bg-gray-900/80 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                    🔒 {t('poll.private')}
-                  </div>
-                  <PollCard 
-                    poll={poll} 
-                    onDelete={poll.createdBy === currentUserId && !hasEnded ? (pollId) => {
-                      setPollToDelete(pollId);
-                      setShowDeleteDialog(true);
-                    } : undefined}
-                  />
-                </div>
+                <PollCard 
+                  key={poll.id} 
+                  poll={poll} 
+                  onDelete={poll.createdBy === currentUserId && !hasEnded ? (pollId) => {
+                    setPollToDelete(pollId);
+                    setShowDeleteDialog(true);
+                  } : undefined}
+                />
               );
             })}
           </div>
@@ -148,15 +144,7 @@ export default function MyPollsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {invitedPolls.map(poll => (
-              <div key={poll.id} className="relative">
-                <div className="absolute top-2 right-2 z-10 bg-blue-600/90 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                  🔒 Invited
-                </div>
-                <PollCard poll={poll} />
-                <div className="mt-2 text-xs text-[var(--text-muted)] text-center">
-                  {t('myPolls.createdBy')} {poll.createdBy}
-                </div>
-              </div>
+              <PollCard key={poll.id} poll={poll} />
             ))}
           </div>
         )}
