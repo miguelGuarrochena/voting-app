@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import { useUsername } from '@/context/UsernameContext';
 import { getPollData, storePollData, hasVotedInDuel, markDuelVote, getDuelVote, deleteTournamentData, isExpired } from '@/lib/token';
 import { VersusTournament } from '@/types/versus';
@@ -31,6 +32,8 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const [userBracket, setUserBracket] = useState<any>(null); // User's current selections
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [shareResultText, setShareResultText] = useState('Compartir Resultado');
+  const bracketRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const justCreated = searchParams.get('created') === 'true';
 
@@ -84,12 +87,33 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const handleSelectWinner = (duelId: string, winner: any) => {
     if (!tournament) return;
 
+    const currentBracket = userBracket || tournament.bracket;
+
+    // Find which round this duel belongs to
+    let targetRound = -1;
+    for (const round of currentBracket.rounds) {
+      for (const duel of round.duels) {
+        if (duel.id === duelId) {
+          targetRound = round.roundNumber;
+          break;
+        }
+      }
+      if (targetRound !== -1) break;
+    }
+
+    // Check if previous round is complete (except for round 1)
+    if (targetRound > 1) {
+      const previousRound = currentBracket.rounds[targetRound - 2];
+      const isPreviousRoundComplete = previousRound.duels.every((d: any) => d.selectedWinner !== null);
+      if (!isPreviousRoundComplete) {
+        setToastMessage('Completa la ronda anterior primero');
+        setShowToast(true);
+        return;
+      }
+    }
+
     // Update user bracket with selection
-    const updatedBracket = selectWinner(
-      userBracket || tournament.bracket,
-      duelId,
-      winner
-    );
+    const updatedBracket = selectWinner(currentBracket, duelId, winner);
 
     // Calculate completed bracket to advance winners to next rounds
     const calculatedBracket = calculateCompletedBracket(updatedBracket);
@@ -149,6 +173,51 @@ export default function VersusTournamentPage({ params }: PageProps) {
       setShowToast(true);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleShareResult = async () => {
+    if (!displayBracket.champion || !tournament || !bracketRef.current) return;
+
+    try {
+      setShareResultText('Generando...');
+
+      // Capture bracket as image
+      const canvas = await html2canvas(bracketRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+        allowTaint: true,
+        useCORS: true,
+      });
+
+      // Convert to blob
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+
+        // Copy image to clipboard
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          setShareResultText('¡Copiado!');
+          setTimeout(() => setShareResultText('Compartir Resultado'), 2000);
+        } catch (err) {
+          console.error('Failed to copy image:', err);
+          // Fallback: download the image
+          const url = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = `bracket-${tournament.title}.png`;
+          link.href = url;
+          link.click();
+          setShareResultText('¡Descargado!');
+          setTimeout(() => setShareResultText('Compartir Resultado'), 2000);
+        }
+      });
+    } catch (err) {
+      console.error('Failed to capture bracket:', err);
+      setShareResultText('Error');
+      setTimeout(() => setShareResultText('Compartir Resultado'), 2000);
     }
   };
 
@@ -247,21 +316,8 @@ export default function VersusTournamentPage({ params }: PageProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Progress */}
-              {!userBracket && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full">
-                  <div className="w-24 bg-[var(--bg)] rounded-full h-2">
-                    <div 
-                      className="bg-[var(--primary)] h-2 rounded-full transition-all" 
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-[var(--text-muted)]">{progress}%</span>
-                </div>
-              )}
-
               {/* Submit Button */}
-              {!userBracket && progress === 100 && (
+              {!userBracket && progress > 0 && progress === 100 && (
                 <button
                   onClick={handleSubmitBracket}
                   className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
@@ -270,14 +326,27 @@ export default function VersusTournamentPage({ params }: PageProps) {
                 </button>
               )}
 
+              {/* Share Result Button (when bracket is completed) */}
+              {userBracket && displayBracket.champion && (
+                <button
+                  onClick={handleShareResult}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors font-medium"
+                >
+                  <Share2 size={18} />
+                  {shareResultText}
+                </button>
+              )}
+
               {/* Share Button */}
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
-              >
-                <Share2 size={18} />
-                Compartir
-              </button>
+              {!displayBracket.champion && (
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
+                >
+                  <Share2 size={18} />
+                  Compartir
+                </button>
+              )}
 
               {/* Status Chip */}
               {statusInfo && (
@@ -301,14 +370,23 @@ export default function VersusTournamentPage({ params }: PageProps) {
         {/* Bracket */}
         <div className="flex items-center justify-center">
           <div className="w-full overflow-x-auto">
-            <BracketView
-              bracket={displayBracket}
-              votesToWin={1}
-              currentRound={0}
-              username={username}
-              onVote={handleSelectWinner}
-              getUserVote={getUserSelection}
-            />
+            <div ref={bracketRef} className="bg-white p-8 rounded-2xl border-2 border-gray-300 overflow-visible">
+              {/* Header for image */}
+              <div className="text-center mb-6 pb-4 border-b border-gray-300">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">{tournament.title}</h2>
+                <p className="text-sm text-gray-600">
+                  Bracket de {username || 'Anónimo'} • {new Date().toLocaleDateString()}
+                </p>
+              </div>
+              <BracketView
+                bracket={displayBracket}
+                votesToWin={1}
+                currentRound={0}
+                username={username}
+                onVote={handleSelectWinner}
+                getUserVote={getUserSelection}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -318,10 +396,9 @@ export default function VersusTournamentPage({ params }: PageProps) {
         <CelebrationScreen
           champion={displayBracket.champion}
           tournamentTitle={tournament.title}
-          onShareResult={() => {}}
+          onShareResult={handleShareResult}
         />
       )}
-      <Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
     </div>
   );
 }

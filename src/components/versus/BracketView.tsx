@@ -55,7 +55,7 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             <div key={`left-${round.roundNumber}`} className="flex flex-col gap-3">
               {/* Round Label */}
               <div className="text-center pb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600">
                   {getSpanishRoundLabel(round.roundNumber, totalRounds)}
                 </h3>
               </div>
@@ -94,10 +94,10 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             initial={{ scale: 0, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", damping: 15 }}
-            className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl p-6 shadow-2xl border-4 border-yellow-300 relative"
+            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-2xl border-4 border-blue-400 relative"
           >
             <motion.div
-              className="absolute inset-0 bg-yellow-400 rounded-2xl blur-xl opacity-50"
+              className="absolute inset-0 bg-blue-500 rounded-2xl blur-xl opacity-50"
               animate={{
                 scale: [1, 1.1, 1],
                 opacity: [0.5, 0.7, 0.5],
@@ -107,14 +107,14 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             <div className="relative z-10">
               <Trophy className="w-12 h-12 text-white mx-auto mb-2" />
               <div className="text-center">
-                <p className="text-xs font-bold text-yellow-100 mb-1">TU CAMPEÓN</p>
+                <p className="text-xs font-bold text-white/90 mb-1">TU CAMPEÓN</p>
                 <p className="text-lg font-bold text-white">{bracket.champion.title}</p>
               </div>
             </div>
           </motion.div>
         ) : (
           <div className="flex flex-col items-center">
-            <h3 className="text-sm font-bold text-[var(--primary)] mb-3 uppercase tracking-wider">Final</h3>
+            <h3 className="text-sm font-bold text-blue-600 mb-3 uppercase tracking-wider">Final</h3>
             {bracket.rounds[finalRoundIndex] && bracket.rounds[finalRoundIndex].duels[0] && (
               <DuelSelectionCard
                 duel={bracket.rounds[finalRoundIndex].duels[0]}
@@ -137,7 +137,7 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             <div key={`right-${round.roundNumber}`} className="flex flex-col gap-3">
               {/* Round Label */}
               <div className="text-center pb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600">
                   {getSpanishRoundLabel(round.roundNumber, totalRounds)}
                 </h3>
               </div>
@@ -181,25 +181,34 @@ interface DuelSelectionCardProps {
 }
 
 const DuelSelectionCard = ({ duel, username, onVote, userSelection }: DuelSelectionCardProps) => {
+  // Disable both buttons if either option is a placeholder
+  const isDuelDisabled = !duel.optionA.id || duel.optionA.title === '???' || !duel.optionB.id || duel.optionB.title === '???';
+
   return (
-    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3 min-w-[140px]">
+    <div className="bg-gray-100 border border-gray-300 rounded-lg p-3 min-w-[140px]">
       <div className="space-y-2">
         <button
-          onClick={() => onVote(duel.optionA)}
+          onClick={() => !isDuelDisabled && onVote(duel.optionA)}
+          disabled={isDuelDisabled}
           className={`w-full text-left p-2 rounded transition-all ${
             userSelection?.id === duel.optionA.id
-              ? 'bg-[var(--primary)] text-white'
-              : 'bg-[var(--surface-2)] hover:bg-[var(--surface)]'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+              : isDuelDisabled
+              ? 'bg-gray-200 opacity-50 cursor-not-allowed text-gray-400'
+              : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200'
           }`}
         >
           <span className="text-sm font-medium">{duel.optionA.title}</span>
         </button>
         <button
-          onClick={() => onVote(duel.optionB)}
+          onClick={() => !isDuelDisabled && onVote(duel.optionB)}
+          disabled={isDuelDisabled}
           className={`w-full text-left p-2 rounded transition-all ${
             userSelection?.id === duel.optionB.id
-              ? 'bg-[var(--primary)] text-white'
-              : 'bg-[var(--surface-2)] hover:bg-[var(--surface)]'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+              : isDuelDisabled
+              ? 'bg-gray-200 opacity-50 cursor-not-allowed text-gray-400'
+              : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200'
           }`}
         >
           <span className="text-sm font-medium">{duel.optionB.title}</span>
