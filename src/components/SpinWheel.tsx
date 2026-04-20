@@ -841,9 +841,6 @@ export const SpinWheel = () => {
       <div className="pt-0 lg:pt-20" />
 
       <div className="pt-0 pb-12 px-4 lg:py-12">
-        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[var(--primary-light)] opacity-30 rounded-full blur-3xl transform translate-x-16 -translate-y-16" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[var(--primary-light)] opacity-20 rounded-full blur-3xl transform -translate-x-32 translate-y-32" />
-
         <div className="max-w-6xl mx-auto relative">
           <motion.div className="text-center mb-12" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="lg:hidden font-display text-2xl md:text-3xl font-bold text-[var(--text)] mb-4">
