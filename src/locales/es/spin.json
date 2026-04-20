@@ -29,5 +29,11 @@
   "configureOptions": "Configurar Opciones",
   "spinWheel": "Girar Rueda",
   "continueToWheel": "Continuar a la Rueda",
-  "editOptions": "Editar Opciones"
+  "editOptions": "Editar Opciones",
+  "clearAll": "🗑 Limpiar todo",
+  "clearAllConfirmation": "¿Estás seguro de que quieres limpiar todas las opciones?",
+  "clearAllModalTitle": "¿Limpiar todo?",
+  "clearAllModalSubtitle": "Se eliminarán todas las opciones de la rueda.",
+  "cancel": "Cancelar",
+  "clear": "Limpiar"
 }

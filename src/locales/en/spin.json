@@ -29,5 +29,11 @@
   "configureOptions": "Configure Options",
   "spinWheel": "Spin Wheel",
   "continueToWheel": "Continue to Wheel",
-  "editOptions": "Edit Options"
+  "editOptions": "Edit Options",
+  "clearAll": "🗑 Clear all",
+  "clearAllConfirmation": "Are you sure you want to clear all options?",
+  "clearAllModalTitle": "Clear all?",
+  "clearAllModalSubtitle": "All wheel options will be removed.",
+  "cancel": "Cancel",
+  "clear": "Clear"
 }

@@ -523,6 +523,7 @@ import Link from 'next/link';
 import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Trash2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface WheelOption {
   id: string;
@@ -551,6 +552,7 @@ export const SpinWheel = () => {
   const [editingText, setEditingText] = useState('');
   const [addingAfterId, setAddingAfterId] = useState<string | null>(null);
   const [step, setStep] = useState(1);
+  const [showClearModal, setShowClearModal] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
   const currentAngleRef = useRef<number>(0);
@@ -777,6 +779,16 @@ export const SpinWheel = () => {
     setOptions(updatedOptions);
   }, [options, ensureUniqueColors]);
 
+  const clearAll = useCallback(() => {
+    setOptions([
+      { id: '1', text: '', color: DEFAULT_COLORS[0] },
+      { id: '2', text: '', color: DEFAULT_COLORS[1] },
+    ]);
+    setValidationError('');
+    setSelectedOption(null);
+    setShowResult(false);
+  }, []);
+
   const spin = useCallback(() => {
     if (isSpinning || options.length < 2) return;
     setValidationError('');
@@ -923,7 +935,17 @@ export const SpinWheel = () => {
               {/* Add Option - Eliminado, ahora está integrado en cada opción */}
 
               <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-6">
-                <h3 className="font-display text-xl font-bold text-[var(--text)] mb-4">{t('spin.currentOptions')}</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-display text-xl font-bold text-[var(--text)]">{t('spin.currentOptions')}</h3>
+                  {options.some(opt => opt.text.trim() !== '') && (
+                    <button
+                      onClick={() => setShowClearModal(true)}
+                      className="text-sm px-3 py-1.5 border border-[var(--border)] text-[var(--text-muted)] hover:text-red-500 hover:border-red-500 rounded-lg transition-colors font-medium"
+                    >
+                      {t('spin.clearAll')}
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {options.map((option, index) => (
                     <div key={option.id}>
@@ -1044,7 +1066,17 @@ export const SpinWheel = () => {
                 className="space-y-4"
               >
                 <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-md)] border border-[var(--border)] p-4">
-                  <h3 className="font-display text-base font-bold text-[var(--text)] mb-3">{t('spin.currentOptions')}</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-display text-base font-bold text-[var(--text)]">{t('spin.currentOptions')}</h3>
+                    {options.some(opt => opt.text.trim() !== '') && (
+                      <button
+                        onClick={() => setShowClearModal(true)}
+                        className="text-xs px-2 py-1 border border-[var(--border)] text-[var(--text-muted)] hover:text-red-500 hover:border-red-500 rounded-lg transition-colors font-medium"
+                      >
+                        {t('spin.clearAll')}
+                      </button>
+                    )}
+                  </div>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {options.map((option, index) => (
                       <div key={option.id}>
@@ -1225,6 +1257,16 @@ export const SpinWheel = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showClearModal}
+        onClose={() => setShowClearModal(false)}
+        onConfirm={clearAll}
+        title={t('spin.clearAllModalTitle')}
+        subtitle={t('spin.clearAllModalSubtitle')}
+        cancelText={t('spin.cancel')}
+        confirmText={t('spin.clear')}
+      />
     </div>
   );
 };
