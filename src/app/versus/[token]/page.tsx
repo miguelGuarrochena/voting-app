@@ -4,8 +4,11 @@ import { useState, useEffect, use, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { getPollData, storePollData, hasVotedInDuel, markDuelVote, getDuelVote, deleteTournamentData, isExpired } from '@/lib/token';
-import { VersusTournament } from '@/types/versus';
+import { isExpired } from '@/lib/token';
+import { getTournament, updateTournamentBracket, submitDuelVote, getDuelVotes, hasVotedInDuel, deleteTournament } from '@/lib/db';
+import { generateBracket } from '@/lib/bracket';
+import { VersusTournament, VersusOption } from '@/types/versus';
+import { supabase } from '@/lib/supabase';
 import { BracketView } from '@/components/versus/BracketView';
 import { CelebrationScreen } from '@/components/versus/CelebrationScreen';
 import { ExpiredTournament } from '@/components/versus/ExpiredTournament';
@@ -39,14 +42,14 @@ export default function VersusTournamentPage({ params }: PageProps) {
 
   // Load tournament data
   useEffect(() => {
-    // Show toast if just created
-    if (justCreated) {
-      toast(t('versus.tournamentCreated'));
-      window.history.replaceState({}, '', `/versus/${token}`);
-    }
+    const loadTournament = async () => {
+      // Show toast if just created
+      if (justCreated) {
+        toast(t('versus.tournamentCreated'));
+        window.history.replaceState({}, '', `/versus/${token}`);
+      }
 
-    const loadTournament = () => {
-      const data = getPollData(token, 'versus');
+      const data = await getTournament(token);
       if (!data) {
         setNotFound(true);
         setLoading(false);
@@ -67,6 +70,44 @@ export default function VersusTournamentPage({ params }: PageProps) {
     };
 
     loadTournament();
+
+    // Set up Realtime subscription for tournament updates
+    const tournamentChannel = supabase
+      .channel('tournament-updates')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tournaments',
+        filter: `token=eq.${token}`
+      }, async (payload) => {
+        const data = await getTournament(token);
+        if (data) {
+          setTournament(data);
+        }
+      })
+      .subscribe();
+
+    // Set up Realtime subscription for duel votes
+    const duelVotesChannel = supabase
+      .channel('duel-votes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'duel_votes',
+        filter: `tournament_token=eq.${token}`
+      }, async (payload) => {
+        // Reload tournament data to get updated vote counts
+        const data = await getTournament(token);
+        if (data) {
+          setTournament(data);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tournamentChannel);
+      supabase.removeChannel(duelVotesChannel);
+    };
   }, [token, username]);
 
   // Countdown timer
@@ -119,7 +160,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
     setUserBracket(calculatedBracket);
   };
 
-  const handleSubmitBracket = () => {
+  const handleSubmitBracket = async () => {
     if (!tournament || !username || !userBracket) return;
 
     if (!isBracketComplete(userBracket)) {
@@ -130,19 +171,23 @@ export default function VersusTournamentPage({ params }: PageProps) {
     // Create completed user bracket
     const completedUserBracket = createUserBracket(username, userBracket);
 
-    // Save to tournament
-    const updatedTournament = {
-      ...tournament,
-      userBrackets: {
-        ...tournament.userBrackets,
-        [username]: completedUserBracket,
-      },
-    };
+    // Update tournament bracket in Supabase
+    const success = await updateTournamentBracket(token, completedUserBracket.bracket);
 
-    storePollData(token, updatedTournament, 'versus');
-    setTournament(updatedTournament);
+    if (!success) {
+      toast.error('Error al enviar tu bracket');
+      return;
+    }
+
+    // Update local state
     setUserBracket(completedUserBracket.bracket);
     setShowCelebration(true);
+
+    // Reload tournament to get updated data
+    const updatedTournament = await getTournament(token);
+    if (updatedTournament) {
+      setTournament(updatedTournament);
+    }
   };
 
   const getProgress = () => {

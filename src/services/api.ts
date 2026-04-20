@@ -1,6 +1,5 @@
 import { Poll, PollOption, createEmptyReactions } from '@/types/poll';
 import { v4 as uuidv4 } from 'uuid';
-import { defaultPolls, initializeDefaultPolls } from '@/data/defaultPolls';
 
 export interface ApiConfig {
   delay?: number;
@@ -97,106 +96,14 @@ export const storage = {
   }
 };
 
-// Generate realistic mock polls
-const generateMockPolls = (): Poll[] => {
-  const pollTemplates = [
-    {
-      title: "Best programming language for beginners?",
-      description: "What's your recommendation for someone starting their coding journey?",
-      options: ["Python", "JavaScript", "Java", "C#", "Go"]
-    },
-    {
-      title: "Preferred work environment",
-      description: "Where do you work most productively?",
-      options: ["Office", "Home", "Hybrid", "Co-working space", "Cafe"]
-    },
-    {
-      title: "Morning routine essential",
-      description: "What's the one thing you can't start your day without?",
-      options: ["Coffee", "Exercise", "Meditation", "Reading", "Music"]
-    },
-    {
-      title: "Best way to learn new skills",
-      description: "What's your preferred learning method?",
-      options: ["Video tutorials", "Books", "Hands-on practice", "Mentorship", "Courses"]
-    },
-    {
-      title: "Favorite type of break",
-      description: "How do you recharge during work breaks?",
-      options: ["Short walk", "Social media", "Chat with colleagues", "Listen to music", "Power nap"]
-    },
-    {
-      title: "Ideal team size",
-      description: "What's the perfect team size for productivity?",
-      options: ["2-3 people", "4-6 people", "7-10 people", "11-15 people", "16+ people"]
-    },
-    {
-      title: "Best time for deep work",
-      description: "When are you most productive?",
-      options: ["Early morning", "Late morning", "Afternoon", "Evening", "Late night"]
-    },
-    {
-      title: "Preferred meeting length",
-      description: "What's the ideal meeting duration?",
-      options: ["15 minutes", "30 minutes", "45 minutes", "1 hour", "As long as needed"]
-    }
-  ];
-
-  const now = new Date();
-  
-  return pollTemplates.map((template, index) => {
-    const expiresAt = new Date(now.getTime() + (index + 1) * 24 * 60 * 60 * 1000); // 1-8 days from now
-    const createdAt = new Date(now.getTime() - index * 2 * 60 * 60 * 1000); // Created in past
-    
-    const options: PollOption[] = template.options.map((title, optionIndex) => ({
-      id: uuidv4(),
-      pollId: '',
-      title,
-      votes: Math.floor(Math.random() * 50) + 5, // 5-54 votes
-      reactions: createEmptyReactions(),
-      rank: optionIndex + 1,
-      imageUrl: Math.random() > 0.7 ? `https://picsum.photos/seed/${title.replace(/\s+/g, '')}/400/300.jpg` : undefined
-    }));
-
-    // Add some random reactions
-    options.forEach(option => {
-      const reactionCount = Math.floor(Math.random() * 8);
-      const reactions = ['👍', '❤️', '😄', '🔥', '👏', '🎉', '😊', '👌'];
-      for (let i = 0; i < reactionCount; i++) {
-        const reaction = reactions[Math.floor(Math.random() * reactions.length)];
-        option.reactions[reaction] = Math.floor(Math.random() * 3) + 1;
-      }
-    });
-
-    return {
-      id: uuidv4(),
-      title: template.title,
-      description: template.description,
-      titleImage: Math.random() > 0.6 ? `https://picsum.photos/seed/poll${index}/800/400.jpg` : undefined,
-      expiresAt,
-      createdAt,
-      isPublic: true,
-      visibility: 'public' as const,
-      createdBy: `user${index + 1}`,
-      totalReactions: options.reduce((sum, opt) => sum + Object.values(opt.reactions).reduce((a, b) => a + b, 0), 0),
-      views: Math.floor(Math.random() * 200) + 20,
-      options
-    };
-  });
-};
-
-// Initialize mock data with default polls
-const initializeMockData = (): Poll[] => {
-  return initializeDefaultPolls();
-};
 
 // API Service
 export const pollApi = {
   // Get all polls
   getPolls: async (): Promise<ApiResponse<Poll[]>> => {
     const polls = storage.get<Poll>('polls');
-    // Siempre asegurar que haya polls disponibles
-    const availablePolls = polls.length > 0 ? polls : initializeDefaultPolls();
+    // Polls are now loaded from Supabase in individual pages
+    const availablePolls = polls.length > 0 ? polls : [];
     return simulateApiCall(availablePolls);
   },
 
@@ -336,14 +243,3 @@ export const pollApi = {
     return simulateApiCall(undefined as any);
   }
 };
-
-// Initialize data on import
-initializeMockData();
-
-// Ensure default polls are always available
-if (typeof window !== 'undefined') {
-  const currentPolls = storage.get<Poll>('polls');
-  if (currentPolls.length === 0) {
-    initializeMockData();
-  }
-}

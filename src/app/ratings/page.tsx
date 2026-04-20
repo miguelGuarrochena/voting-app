@@ -120,7 +120,7 @@ export default function RatingsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sortedRatings.filter(r => r.visibility === 'public' && !r.isPrivate).map((rating) => (
+            {sortedRatings.map((rating) => (
               <Link
                 key={rating.token}
                 href={`/ratings/${rating.token}`}

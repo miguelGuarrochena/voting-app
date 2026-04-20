@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PlusIcon, Trash2, ArrowLeft } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
+import toast from 'react-hot-toast';
 import { useUsername } from '@/context/UsernameContext';
-import { generateToken, generateShareLink, storePollData } from '@/lib/token';
+import { generateShareLink } from '@/lib/token';
+import { createTournament } from '@/lib/db';
 import { generateBracket } from '@/lib/bracket';
 import { VersusTournament, VersusOption } from '@/types/versus';
 
@@ -86,7 +88,7 @@ export default function CreateVersusPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
@@ -94,10 +96,6 @@ export default function CreateVersusPage() {
     const selectedOption = durationOptions.find(opt => opt.value === selectedDuration);
     const durationMs = (selectedOption?.days || 3) * 24 * 60 * 60 * 1000;
     const expiresAt = new Date(Date.now() + durationMs);
-
-    // Generate token
-    const token = generateToken();
-    const shareLink = generateShareLink(token, 'versus');
 
     // Prepare options - fill with TBD if needed to reach bracket size
     const validOptions = options
@@ -118,20 +116,20 @@ export default function CreateVersusPage() {
     // Generate bracket
     const bracket = generateBracket(validOptions);
 
-    // Create tournament data
-    const tournamentData: VersusTournament = {
-      token,
-      title: title.trim(),
-      createdBy: username || 'Anónimo',
-      options: validOptions,
-      expiresAt: expiresAt.toISOString(),
-      bracket,
-      userBrackets: {},
-      createdAt: new Date().toISOString(),
-    };
+    // Create tournament via Supabase
+    const token = await createTournament(
+      title.trim(),
+      username || 'Anónimo',
+      expiresAt,
+      validOptions,
+      1, // votesToWin
+      bracket
+    );
 
-    // Store in localStorage
-    storePollData(token, tournamentData, 'versus');
+    if (!token) {
+      toast.error('Error al crear el torneo');
+      return;
+    }
 
     // Redirect directly to detail page with success flag
     router.push(`/versus/${token}?created=true`);

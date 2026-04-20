@@ -234,14 +234,6 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
 
                 {/* Single Status Chip */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-                  {poll.isPrivate && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-purple-200 dark:border-purple-800 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 backdrop-blur-sm">
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      {t('poll.private')}
-                    </div>
-                  )}
                   <div
                     className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm"
                     style={{
@@ -278,14 +270,6 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
 
                 {/* Single Status Chip */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-                  {poll.isPrivate && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-purple-200 dark:border-purple-800 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 backdrop-blur-sm">
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      {t('poll.private')}
-                    </div>
-                  )}
                   <div
                     className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm"
                     style={{

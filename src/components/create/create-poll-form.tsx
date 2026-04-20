@@ -3,12 +3,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createEmptyReactions } from '@/types/poll';
-import { useCreatePoll } from '@/hooks/useApi';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import ImagePickerModal from './ImagePickerModal';
-import { generateToken, generateShareLink, storePollData } from '@/lib/token';
+import { generateShareLink } from '@/lib/token';
+import { createPoll } from '@/lib/db';
 import { Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 
 type FormPollOption = {
@@ -16,11 +17,6 @@ type FormPollOption = {
   text: string;
   image: string;
   emoji?: string;
-};
-
-type Participant = {
-  id: string;
-  emailOrUsername: string;
 };
 
 interface CreatePollFormProps {
@@ -31,21 +27,19 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
   const router = useRouter();
   const { username } = useUsername();
   const { t } = useLanguage();
-  const { createPoll, loading, error: submitError } = useCreatePoll();
+  const [loading, setLoading] = useState(false);
 
   const [pollType, setPollType] = useState<'vote' | 'rank'>(defaultType || 'vote');
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState('');
   const [description, setDescription] = useState('');
   const [selectedDuration, setSelectedDuration] = useState('24h'); // Default to 24 hours
-  const [isPrivate, setIsPrivate] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [options, setOptions] = useState<FormPollOption[]>([
     { id: crypto.randomUUID(), text: '', image: '' },
     { id: crypto.randomUUID(), text: '', image: '' },
   ]);
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const [newParticipant, setNewParticipant] = useState('');
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [imagePickerContext, setImagePickerContext] = useState<{
@@ -114,16 +108,6 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
         option.id === id ? { ...option, ...updates } : option
       )
     );
-  };
-
-  const addParticipant = (e?: React.FormEvent | React.KeyboardEvent) => {
-    e?.preventDefault();
-    if (!newParticipant.trim()) return;
-    setParticipants([
-      ...participants,
-      { id: crypto.randomUUID(), emailOrUsername: newParticipant },
-    ]);
-    setNewParticipant('');
   };
 
   const handleImageUpload = (optionId: string, file: File) => {
@@ -216,10 +200,6 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
     setImagePickerContext(null);
   };
 
-  const removeParticipant = (id: string) => {
-    setParticipants(participants.filter(p => p.id !== id));
-  };
-
   const isFormValid = () => {
     return title.trim().length >= 3 &&
            options.filter(opt => opt.text.trim() !== '').length >= 2 &&
@@ -255,11 +235,6 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       newErrors.options = 'Duplicate options are not allowed';
     }
 
-    // Private poll validation
-    if (isPrivate && participants.length === 0) {
-      newErrors.participants = 'Private polls require at least one participant';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -271,14 +246,8 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       return;
     }
 
-    // Log submission data for debugging
-    console.log('[CreatePoll] Submitting poll data:', {
-      title: title.trim(),
-      options: options.filter(option => option.text.trim() !== ''),
-      type: pollType,
-      isPrivate: isPrivate,
-      invitedUsers: participants.map(p => p.emailOrUsername)
-    });
+    setLoading(true);
+    setSubmitError(null);
 
     try {
       // Calculate expiration date from selected duration
@@ -291,39 +260,35 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       }
       const expiresAt = new Date(Date.now() + durationMs);
 
-      // Generate token
-      const token = generateToken();
       const pollTypeForUrl = pollType === 'rank' ? 'ranking' : pollType === 'vote' ? 'vote' : 'vote';
-      const shareLink = generateShareLink(token, pollTypeForUrl as 'vote' | 'ranking' | 'rating');
+      const dbType = pollType === 'rank' ? 'ranking' : 'vote';
 
-      // Create poll data object
-      const pollData = {
-        token,
-        title: title.trim(),
-        description: description.trim() || undefined,
-        titleImage: titleImage || undefined,
-        expiresAt: expiresAt.toISOString(),
-        type: pollType,
-        createdBy: username || 'Anonymous',
-        isPrivate: isPrivate,
-        visibility: isPrivate ? 'private' : 'public',
-        invitedUsers: participants.map(p => p.emailOrUsername),
-        options: options
-          .filter(option => option.text.trim() !== '')
-          .map(option => ({
-            id: crypto.randomUUID(),
-            title: option.text.trim(),
-            imageUrl: option.image || undefined,
-            emoji: option.emoji,
-            votes: 0,
-            reactions: createEmptyReactions(),
-          })),
-        votes: [],
-        createdAt: new Date().toISOString(),
-      };
+      // Prepare options
+      const pollOptions = options
+        .filter(option => option.text.trim() !== '')
+        .map(option => ({
+          id: crypto.randomUUID(),
+          title: option.text.trim(),
+          imageUrl: option.image || undefined,
+          emoji: option.emoji,
+          votes: 0,
+          reactions: createEmptyReactions(),
+        }));
 
-      // Store in localStorage
-      storePollData(token, pollData, pollTypeForUrl as 'vote' | 'ranking' | 'rating');
+      // Create poll via Supabase
+      const token = await createPoll(
+        dbType as 'vote' | 'ranking' | 'rating',
+        title.trim(),
+        username || 'Anonymous',
+        expiresAt,
+        pollOptions
+      );
+
+      if (!token) {
+        toast.error(pollType === 'rank' ? 'Failed to create ranking. Please try again.' : 'Failed to create poll. Please try again.');
+        setLoading(false);
+        return;
+      }
 
       console.log('[CreatePoll] Poll created successfully with token:', token);
 
@@ -331,7 +296,11 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       router.push(`/${pollTypeForUrl}/${token}?created=true`);
     } catch (error) {
       console.error('[CreatePoll] Failed to create poll:', error);
-      setErrors({ submit: pollType === 'rank' ? 'Failed to create ranking. Please try again.' : 'Failed to create poll. Please try again.' });
+      const errorMessage = pollType === 'rank' ? 'Failed to create ranking. Please try again.' : 'Failed to create poll. Please try again.';
+      setSubmitError(errorMessage);
+      setErrors({ submit: errorMessage });
+      toast.error(errorMessage);
+      setLoading(false);
     }
   };
 
@@ -633,115 +602,6 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
           </button>
         </div>
 
-        {/* Visibility & Privacy Section */}
-        <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">Visibility & Privacy</h2>
-          
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <input
-                type="radio"
-                id="public"
-                name="visibility"
-                checked={!isPrivate}
-                onChange={() => setIsPrivate(false)}
-                className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 dark:border-gray-600"
-              />
-              <label htmlFor="public" className="ml-2 block text-sm font-medium text-gray-900 dark:text-gray-100">
-                Public - Anyone with the link can view and {pollType === 'rank' ? 'rank' : 'vote'}
-              </label>
-            </div>
-            
-            <div className="flex items-start">
-              <input
-                type="radio"
-                id="private"
-                name="visibility"
-                checked={isPrivate}
-                onChange={() => setIsPrivate(true)}
-                className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 dark:border-gray-600 mt-1"
-              />
-              <div className="ml-2">
-                <label htmlFor="private" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Private - Only invited participants can view and {pollType === 'rank' ? 'rank' : 'vote'}
-                </label>
-                {isPrivate && (
-                  <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
-                    🔒 Only people you share the invite link with can see this {pollType === 'rank' ? 'ranking' : 'poll'}
-                  </p>
-                )}
-                {isPrivate && participants.length === 0 && (
-                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-                    ⚠️ Private {pollType === 'rank' ? 'rankings' : 'polls'} require at least one participant
-                  </p>
-                )}
-                {isPrivate && (
-                  <div className="mt-3 ml-4 space-y-4">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="anonymous"
-                        checked={isAnonymous}
-                        onChange={(e) => setIsAnonymous(e.target.checked)}
-                        className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 dark:border-gray-600"
-                      />
-                      <label htmlFor="anonymous" className="ml-2 text-sm text-gray-900 dark:text-gray-100">
-                        Anonymous voting (participants' votes are hidden)
-                      </label>
-                    </div>
-
-                    <div className="mt-4">
-                      <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-2">Invite Participants</h3>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newParticipant}
-                          onChange={(e) => setNewParticipant(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              addParticipant(e);
-                            }
-                          }}
-                          className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                          placeholder="Enter email or username"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => addParticipant()}
-                          className="px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-[var(--radius-md)] hover:bg-[var(--primary)] hover:text-white transition-colors font-medium"
-                        >
-                          Add
-                        </button>
-                      </div>
-
-                      {participants.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Invited Participants:</h4>
-                          <ul className="space-y-1">
-                            {participants.map((participant) => (
-                              <li key={participant.id} className="flex justify-between items-center bg-gray-100 dark:bg-gray-800 p-2 rounded-sm">
-                                <span className="text-sm text-gray-900 dark:text-gray-100">{participant.emailOrUsername}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => removeParticipant(participant.id)}
-                                  className="text-red-500 hover:text-red-700 cursor-pointer"
-                                  title="Remove participant"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Submit Button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -772,10 +632,11 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-red-800 dark:text-red-400 mb-1">Failed to create poll</p>
-                <p className="text-sm text-red-600 dark:text-red-400">{submitError?.message || errors.submit}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{submitError || errors.submit}</p>
                 <button
                   onClick={() => {
                     setErrors(prev => ({ ...prev, submit: '' }));
+                    setSubmitError(null);
                   }}
                   className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline"
                 >

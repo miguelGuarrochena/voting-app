@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { getPollData, isExpired, hasVoted, markAsVoted, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import Link from 'next/link';
 import { Star, Share2, ArrowLeft, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { supabase } from '@/lib/supabase';
 
 export default function RatingTokenPage() {
   const params = useParams();
   const { username } = useUsername();
   const token = params.token as string;
   const [pollData, setPollData] = useState<any>(null);
+  const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ratings, setRatings] = useState<Record<string, number>>({});
@@ -24,74 +27,143 @@ export default function RatingTokenPage() {
   const justCreated = searchParams.get('created') === 'true';
 
   useEffect(() => {
-    // Show toast if just created
-    if (justCreated) {
-      toast('¡Rating creado con éxito! 🎉');
-      // Remove the query param from URL without triggering a reload
-      window.history.replaceState({}, '', `/ratings/${token}`);
-    }
-
-    // Load poll data from localStorage
-    const data = getPollData(token, 'rating');
-    if (!data) {
-      setError('Rating not found');
-      setLoading(false);
-      return;
-    }
-
-    setPollData(data);
-    setExpired(isExpired(new Date(data.expiresAt)));
-    setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
-    setHasVotedState(hasVoted(token, 'rating'));
-    setLoading(false);
-
-    // Update time remaining every second
-    const interval = setInterval(() => {
-      const remaining = getTimeRemaining(new Date(data.expiresAt));
-      setTimeRemaining(remaining);
-      if (remaining <= 0) {
-        setExpired(true);
-        clearInterval(interval);
+    const loadRating = async () => {
+      // Show toast if just created
+      if (justCreated) {
+        toast('¡Rating creado con éxito! 🎉');
+        // Remove the query param from URL without triggering a reload
+        window.history.replaceState({}, '', `/ratings/${token}`);
       }
-    }, 1000);
 
-    return () => clearInterval(interval);
-  }, [token]);
+      // Load poll data from Supabase
+      const data = await getPoll(token);
+      if (!data) {
+        setError('Rating not found');
+        setLoading(false);
+        return;
+      }
+
+      setPollData(data);
+      setExpired(isExpired(new Date(data.expiresAt)));
+      setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
+      setLoading(false);
+
+      // Load responses to check if user has voted
+      const responses = await getPollResponses(token);
+      setResponses(responses);
+      const userResponse = responses.find(r => r.username === username);
+      setHasVotedState(!!userResponse);
+
+      // Update time remaining every second
+      const interval = setInterval(() => {
+        const remaining = getTimeRemaining(new Date(data.expiresAt));
+        setTimeRemaining(remaining);
+        if (remaining <= 0) {
+          setExpired(true);
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    };
+
+    loadRating();
+
+    // Set up Realtime subscription
+    const channel = supabase
+      .channel('poll-responses')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'poll_responses',
+        filter: `poll_token=eq.${token}`
+      }, async (payload) => {
+        // Reload responses when new response comes in
+        const responses = await getPollResponses(token);
+        setResponses(responses);
+        const userResponse = responses.find(r => r.username === username);
+        setHasVotedState(!!userResponse);
+
+        // Recalculate rating totals
+        const ratingTotals: Record<string, { total: number; count: number }> = {};
+        responses.forEach(response => {
+          const responseRatings = response.response.ratings || {};
+          Object.entries(responseRatings).forEach(([optionId, rating]: [string, any]) => {
+            if (!ratingTotals[optionId]) {
+              ratingTotals[optionId] = { total: 0, count: 0 };
+            }
+            ratingTotals[optionId].total += rating;
+            ratingTotals[optionId].count += 1;
+          });
+        });
+
+        // Update poll options with new rating totals
+        setPollData((prev: any) => ({
+          ...prev,
+          options: prev.options.map((opt: any) => ({
+            ...opt,
+            totalRating: ratingTotals[opt.id]?.total || 0,
+            ratingCount: ratingTotals[opt.id]?.count || 0
+          })),
+          ratings: responses.map(r => ({ ratings: r.response.ratings, voter: r.username, timestamp: r.created_at }))
+        }));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [token, username]);
 
   const handleStarClick = (optionId: string, rating: number) => {
     setRatings(prev => ({ ...prev, [optionId]: rating }));
   };
 
-  const handleSubmitRating = () => {
+  const handleSubmitRating = async () => {
     if (!pollData || Object.keys(ratings).length === 0) return;
 
-    // Mark as voted
-    markAsVoted(token, 'rating');
-    setHasVotedState(true);
+    // Submit response to Supabase
+    const success = await submitResponse(token, username || 'Anonymous', { ratings });
+    
+    if (!success) {
+      toast.error('Error al enviar tus valoraciones');
+      return;
+    }
 
-    // Update poll data with new ratings
-    const updatedOptions = pollData.options.map((opt: any) => {
-      const newRating = ratings[opt.id] || 0;
-      const currentTotalRating = opt.totalRating || 0;
-      const currentRatingCount = opt.ratingCount || 0;
-      
-      return {
-        ...opt,
-        totalRating: currentTotalRating + newRating,
-        ratingCount: currentRatingCount + (newRating > 0 ? 1 : 0),
-      };
+    setHasVotedState(true);
+    toast('¡Valoraciones enviadas! 🎉');
+
+    // Reload responses to get updated rating totals
+    const newResponses = await getPollResponses(token);
+    setResponses(newResponses);
+
+    // Calculate rating totals from responses
+    const ratingTotals: Record<string, { total: number; count: number }> = {};
+    newResponses.forEach(response => {
+      const responseRatings = response.response.ratings || {};
+      Object.entries(responseRatings).forEach(([optionId, rating]: [string, any]) => {
+        if (!ratingTotals[optionId]) {
+          ratingTotals[optionId] = { total: 0, count: 0 };
+        }
+        ratingTotals[optionId].total += rating;
+        ratingTotals[optionId].count += 1;
+      });
     });
+
+    // Update poll data with new rating totals
+    const updatedOptions = pollData.options.map((opt: any) => ({
+      ...opt,
+      totalRating: ratingTotals[opt.id]?.total || 0,
+      ratingCount: ratingTotals[opt.id]?.count || 0,
+    }));
 
     const updatedPollData = {
       ...pollData,
       options: updatedOptions,
-      ratings: [...(pollData.ratings || []), { ratings, voter: username || 'Anonymous', timestamp: new Date().toISOString() }],
+      ratings: newResponses.map(r => ({ ratings: r.response.ratings, voter: r.username, timestamp: r.created_at })),
     };
 
     setPollData(updatedPollData);
-
-    // Store updated data in localStorage
-    localStorage.setItem(`pickly_rating_${token}`, JSON.stringify(updatedPollData));
   };
 
   const handleShare = async () => {
@@ -213,13 +285,13 @@ export default function RatingTokenPage() {
                   );
                 })}
             </div>
-            {pollData.ratings && pollData.ratings.length > 0 && (
+            {responses.length > 0 && (
               <div className="mb-6">
                 <p className="text-sm text-[var(--text-muted)] mb-2">Participants:</p>
                 <div className="flex flex-wrap gap-1">
-                  {pollData.ratings.map((r: any, idx: number) => (
+                  {responses.map((r: any, idx: number) => (
                     <span key={idx} className="text-xs bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] px-2 py-1 rounded-full text-[var(--primary)]">
-                      {r.voter}
+                      {r.username}
                     </span>
                   ))}
                 </div>
@@ -332,13 +404,13 @@ export default function RatingTokenPage() {
                     </div>
                   );
                 })}
-              {pollData.ratings && pollData.ratings.length > 0 && (
+              {responses.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-[var(--border)]">
                   <p className="text-sm text-[var(--text-muted)] mb-2">Participants:</p>
                   <div className="flex flex-wrap gap-1">
-                    {pollData.ratings.map((r: any, idx: number) => (
+                    {responses.map((r: any, idx: number) => (
                       <span key={idx} className="text-xs bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] px-2 py-1 rounded-full text-[var(--primary)]">
-                        {r.voter}
+                        {r.username}
                       </span>
                     ))}
                   </div>

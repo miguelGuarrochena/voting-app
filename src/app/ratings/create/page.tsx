@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { PlusIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import { Trash2, ArrowLeft } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
+import toast from 'react-hot-toast';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
 import { useUsername } from '@/context/UsernameContext';
-import { generateToken, generateShareLink, storePollData } from '@/lib/token';
+import { generateShareLink } from '@/lib/token';
+import { createPoll } from '@/lib/db';
 
 type RatingItemForm = {
   id: string;
@@ -23,7 +25,6 @@ export default function CreateRatingPage() {
   const { username } = useUsername();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState('24h');
   const [items, setItems] = useState<RatingItemForm[]>([
     { id: crypto.randomUUID(), label: '', imageUrl: '' },
@@ -127,7 +128,7 @@ export default function CreateRatingPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
@@ -141,37 +142,32 @@ export default function CreateRatingPage() {
     }
     const expiresAt = new Date(Date.now() + durationMs);
 
-    // Generate token
-    const token = generateToken();
-    const shareLink = generateShareLink(token, 'rating');
-
     // Create rating data object
-    const ratingData = {
-      token,
-      title,
-      description,
-      isPrivate,
-      visibility: isPrivate ? 'private' : 'public',
-      expiresAt: expiresAt.toISOString(),
-      type: 'rating',
-      createdBy: username || 'Anonymous',
-      options: items
-        .filter(item => item.label.trim() !== '')
-        .map(item => ({
-          id: crypto.randomUUID(),
-          title: item.label,
-          imageUrl: item.imageUrl,
-          locationUrl: item.locationUrl,
-          comment: item.comment,
-          totalRating: 0,
-          ratingCount: 0,
-        })),
-      ratings: [],
-      createdAt: new Date().toISOString(),
-    };
+    const options = items
+      .filter(item => item.label.trim() !== '')
+      .map(item => ({
+        id: crypto.randomUUID(),
+        title: item.label,
+        imageUrl: item.imageUrl,
+        locationUrl: item.locationUrl,
+        comment: item.comment,
+        totalRating: 0,
+        ratingCount: 0,
+      }));
 
-    // Store in localStorage
-    storePollData(token, ratingData, 'rating');
+    // Create poll via Supabase
+    const token = await createPoll(
+      'rating',
+      title,
+      username || 'Anonymous',
+      expiresAt,
+      options
+    );
+
+    if (!token) {
+      toast.error('Error al crear la valoración');
+      return;
+    }
 
     // Redirect directly to detail page with success flag
     router.push(`/ratings/${token}?created=true`);
@@ -246,20 +242,6 @@ export default function CreateRatingPage() {
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Privacy */}
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="private"
-              checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
-              className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-[var(--border)]"
-            />
-            <label htmlFor="private" className="ml-2 block text-sm text-[var(--text)]">
-              Private - Only you can see this rating
-            </label>
           </div>
 
           {/* Items */}

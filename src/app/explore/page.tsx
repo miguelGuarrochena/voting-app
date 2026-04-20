@@ -57,7 +57,7 @@ const ExplorePage = () => {
 
   // Filter and sort polls
   const filteredPolls = useMemo(() => {
-    let filtered = polls.filter(poll => poll.visibility === 'public');
+    let filtered = polls;
 
     // Apply search filter
     if (searchQuery.trim()) {

@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { getPollData, isExpired, hasVoted, markAsVoted, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import Link from 'next/link';
 import { Share2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { supabase } from '@/lib/supabase';
 
 export default function VoteTokenPage() {
   const params = useParams();
   const { username } = useUsername();
   const token = params.token as string;
   const [pollData, setPollData] = useState<any>(null);
+  const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -24,65 +27,131 @@ export default function VoteTokenPage() {
   const justCreated = searchParams.get('created') === 'true';
 
   useEffect(() => {
-    // Show toast if just created
-    if (justCreated) {
-      toast('¡Voto creado con éxito! 🎉');
-      // Remove the query param from URL without triggering a reload
-      window.history.replaceState({}, '', `/votes/${token}`);
-    }
+    const loadPoll = async () => {
+      // Show toast if just created
+      if (justCreated) {
+        toast('¡Voto creado con éxito! 🎉');
+        // Remove the query param from URL without triggering a reload
+        window.history.replaceState({}, '', `/votes/${token}`);
+      }
 
-    // Load poll data from localStorage
-    const data = getPollData(token, 'vote');
-    if (!data) {
-      setError('Poll not found');
+      // Load poll data from Supabase
+      const data = await getPoll(token);
+      if (!data) {
+        setError('Poll not found');
+        setLoading(false);
+        return;
+      }
+
+      setPollData(data);
+      setExpired(isExpired(new Date(data.expiresAt)));
+      setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
       setLoading(false);
+
+      // Load responses to check if user has voted
+      const responses = await getPollResponses(token);
+      setResponses(responses);
+      const userResponse = responses.find(r => r.username === username);
+      setHasVotedState(!!userResponse);
+
+      // Update time remaining every second
+      const interval = setInterval(() => {
+        const remaining = getTimeRemaining(new Date(data.expiresAt));
+        setTimeRemaining(remaining);
+        if (remaining <= 0) {
+          setExpired(true);
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    };
+
+    loadPoll();
+
+    // Set up Realtime subscription
+    const channel = supabase
+      .channel('poll-responses')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'poll_responses',
+        filter: `poll_token=eq.${token}`
+      }, async (payload) => {
+        // Reload responses when new response comes in
+        const responses = await getPollResponses(token);
+        setResponses(responses);
+        const userResponse = responses.find(r => r.username === username);
+        setHasVotedState(!!userResponse);
+
+        // Recalculate vote counts
+        const voteCounts: Record<string, number> = {};
+        responses.forEach(response => {
+          const optionId = response.response.optionId;
+          voteCounts[optionId] = (voteCounts[optionId] || 0) + 1;
+        });
+
+        // Update poll options with new vote counts
+        setPollData((prev: any) => ({
+          ...prev,
+          options: prev.options.map((opt: any) => ({
+            ...opt,
+            votes: voteCounts[opt.id] || 0
+          })),
+          votes: responses.map(r => ({ optionId: r.response.optionId, voter: r.username, timestamp: r.created_at }))
+        }));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [token, username]);
+
+  const handleVote = async () => {
+    if (!selectedOption || !pollData) return;
+
+    // Submit response to Supabase
+    const success = await submitResponse(token, username || 'Anonymous', { optionId: selectedOption });
+    
+    if (!success) {
+      toast.error('Error al enviar tu voto');
       return;
     }
 
-    setPollData(data);
-    setExpired(isExpired(new Date(data.expiresAt)));
-    setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
-    setHasVotedState(hasVoted(token, 'vote'));
-    setLoading(false);
-
-    // Update time remaining every second
-    const interval = setInterval(() => {
-      const remaining = getTimeRemaining(new Date(data.expiresAt));
-      setTimeRemaining(remaining);
-      if (remaining <= 0) {
-        setExpired(true);
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [token]);
-
-  const handleVote = () => {
-    if (!selectedOption || !pollData) return;
-
-    // Mark as voted
-    markAsVoted(token, 'vote');
     setHasVotedState(true);
+    toast('¡Voto enviado! 🎉');
 
-    // Update poll data with new vote
-    const updatedOptions = pollData.options.map((opt: any) => {
-      if (opt.id === selectedOption) {
-        return { ...opt, votes: opt.votes + 1 };
+    // Reload responses to get updated vote counts
+    const newResponses = await getPollResponses(token);
+    setResponses(newResponses);
+
+    // Calculate vote counts from responses
+    const voteCounts: Record<string, number> = {};
+    const votersByOption: Record<string, string[]> = {};
+
+    newResponses.forEach(response => {
+      const optionId = response.response.optionId;
+      voteCounts[optionId] = (voteCounts[optionId] || 0) + 1;
+      if (!votersByOption[optionId]) {
+        votersByOption[optionId] = [];
       }
-      return opt;
+      votersByOption[optionId].push(response.username);
     });
+
+    // Update poll data with new vote counts
+    const updatedOptions = pollData.options.map((opt: any) => ({
+      ...opt,
+      votes: voteCounts[opt.id] || 0
+    }));
 
     const updatedPollData = {
       ...pollData,
       options: updatedOptions,
-      votes: [...pollData.votes, { optionId: selectedOption, voter: username || 'Anonymous', timestamp: new Date().toISOString() }],
+      votes: newResponses.map(r => ({ optionId: r.response.optionId, voter: r.username, timestamp: r.created_at })),
     };
 
     setPollData(updatedPollData);
-
-    // Store updated data in localStorage
-    localStorage.setItem(`pickly_vote_${token}`, JSON.stringify(updatedPollData));
   };
 
   const handleShare = async () => {
@@ -154,7 +223,7 @@ export default function VoteTokenPage() {
                 .map((option: any) => {
                   const totalVotes = pollData.options.reduce((sum: number, opt: any) => sum + opt.votes, 0);
                   const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
-                  const voters = pollData.votes.filter((v: any) => v.optionId === option.id).map((v: any) => v.voter);
+                  const voters = responses.filter((r: any) => r.response.optionId === option.id).map((r: any) => r.username);
 
                   return (
                     <div key={option.id} className="bg-[var(--surface-2)] rounded-lg p-4">
@@ -237,7 +306,7 @@ export default function VoteTokenPage() {
                 .map((option: any) => {
                   const totalVotes = pollData.options.reduce((sum: number, opt: any) => sum + opt.votes, 0);
                   const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
-                  const voters = pollData.votes.filter((v: any) => v.optionId === option.id).map((v: any) => v.voter);
+                  const voters = responses.filter((r: any) => r.response.optionId === option.id).map((r: any) => r.username);
 
                   return (
                     <div key={option.id} className="bg-[var(--surface-2)] rounded-lg p-4">

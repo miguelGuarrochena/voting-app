@@ -9,6 +9,7 @@ import StoreProvider from '@/providers/StoreProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Footer from '@/components/Footer';
 import OnboardingScreen from '@/components/OnboardingScreen';
+import { CleanupEffect } from '@/components/CleanupEffect';
 import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -54,6 +55,7 @@ const RootLayout = ({
             <ThemeProvider>
               <LanguageProvider>
                 <StoreProvider>
+                  <CleanupEffect />
                   <OnboardingScreen />
                   <Navbar />
                   <main className="flex-grow flex flex-col">

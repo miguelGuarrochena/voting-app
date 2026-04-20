@@ -21,10 +21,8 @@ export default function VotesPage() {
   }, [loadPolls]);
 
   // Get vote-type polls only
-  const votePolls = polls.filter(poll => 
-    poll.type === 'vote' && 
-    poll.visibility === 'public' && 
-    !poll.isPrivate
+  const votePolls = polls.filter(poll =>
+    poll.type === 'vote'
   );
 
   // Apply filter logic

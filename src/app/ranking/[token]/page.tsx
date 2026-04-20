@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { getPollData, isExpired, hasVoted, markAsVoted, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import Link from 'next/link';
 import { Share2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { supabase } from '@/lib/supabase';
 
 export default function RankingTokenPage() {
   const params = useParams();
   const { username } = useUsername();
   const token = params.token as string;
   const [pollData, setPollData] = useState<any>(null);
+  const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rankings, setRankings] = useState<string[]>([]);
@@ -25,39 +28,88 @@ export default function RankingTokenPage() {
   const justCreated = searchParams.get('created') === 'true';
 
   useEffect(() => {
-    // Show toast if just created
-    if (justCreated) {
-      toast('¡Ranking creado con éxito! 🎉');
-      // Remove the query param from URL without triggering a reload
-      window.history.replaceState({}, '', `/ranking/${token}`);
-    }
-
-    // Load poll data from localStorage
-    const data = getPollData(token, 'ranking');
-    if (!data) {
-      setError('Ranking not found');
-      setLoading(false);
-      return;
-    }
-
-    setPollData(data);
-    setExpired(isExpired(new Date(data.expiresAt)));
-    setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
-    setHasVotedState(hasVoted(token, 'ranking'));
-    setLoading(false);
-
-    // Update time remaining every second
-    const interval = setInterval(() => {
-      const remaining = getTimeRemaining(new Date(data.expiresAt));
-      setTimeRemaining(remaining);
-      if (remaining <= 0) {
-        setExpired(true);
-        clearInterval(interval);
+    const loadRanking = async () => {
+      // Show toast if just created
+      if (justCreated) {
+        toast('¡Ranking creado con éxito! 🎉');
+        // Remove the query param from URL without triggering a reload
+        window.history.replaceState({}, '', `/ranking/${token}`);
       }
-    }, 1000);
 
-    return () => clearInterval(interval);
-  }, [token]);
+      // Load poll data from Supabase
+      const data = await getPoll(token);
+      if (!data) {
+        setError('Ranking not found');
+        setLoading(false);
+        return;
+      }
+
+      setPollData(data);
+      setExpired(isExpired(new Date(data.expiresAt)));
+      setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
+      setLoading(false);
+
+      // Load responses to check if user has voted
+      const responses = await getPollResponses(token);
+      setResponses(responses);
+      const userResponse = responses.find(r => r.username === username);
+      setHasVotedState(!!userResponse);
+
+      // Update time remaining every second
+      const interval = setInterval(() => {
+        const remaining = getTimeRemaining(new Date(data.expiresAt));
+        setTimeRemaining(remaining);
+        if (remaining <= 0) {
+          setExpired(true);
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    };
+
+    loadRanking();
+
+    // Set up Realtime subscription
+    const channel = supabase
+      .channel('poll-responses')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'poll_responses',
+        filter: `poll_token=eq.${token}`
+      }, async (payload) => {
+        // Reload responses when new response comes in
+        const responses = await getPollResponses(token);
+        setResponses(responses);
+        const userResponse = responses.find(r => r.username === username);
+        setHasVotedState(!!userResponse);
+
+        // Recalculate ranking scores
+        const rankingScores: Record<string, number> = {};
+        responses.forEach(response => {
+          const rankings = response.response.rankings || [];
+          rankings.forEach((optionId: string, index: number) => {
+            rankingScores[optionId] = (rankingScores[optionId] || 0) + (rankings.length - index);
+          });
+        });
+
+        // Update poll options with new ranking scores
+        setPollData((prev: any) => ({
+          ...prev,
+          options: prev.options.map((opt: any) => ({
+            ...opt,
+            rankingScore: rankingScores[opt.id] || 0
+          })),
+          rankings: responses.map(r => ({ rankings: r.response.rankings, voter: r.username, timestamp: r.created_at }))
+        }));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [token, username]);
 
   useEffect(() => {
     if (pollData && !hasVotedState) {
@@ -86,35 +138,46 @@ export default function RankingTokenPage() {
     setDraggedItem(null);
   };
 
-  const handleSubmitRanking = () => {
+  const handleSubmitRanking = async () => {
     if (!pollData) return;
 
-    // Mark as voted
-    markAsVoted(token, 'ranking');
-    setHasVotedState(true);
+    // Submit response to Supabase
+    const success = await submitResponse(token, username || 'Anonymous', { rankings });
+    
+    if (!success) {
+      toast.error('Error al enviar tu ranking');
+      return;
+    }
 
-    // Calculate ranking scores (higher position = higher score)
+    setHasVotedState(true);
+    toast('¡Ranking enviado! 🎉');
+
+    // Reload responses to get updated ranking scores
+    const newResponses = await getPollResponses(token);
+    setResponses(newResponses);
+
+    // Calculate ranking scores from responses
     const rankingScores: Record<string, number> = {};
-    rankings.forEach((optionId, index) => {
-      rankingScores[optionId] = rankings.length - index;
+    newResponses.forEach(response => {
+      const responseRankings = response.response.rankings || [];
+      responseRankings.forEach((optionId: string, index: number) => {
+        rankingScores[optionId] = (rankingScores[optionId] || 0) + (responseRankings.length - index);
+      });
     });
 
-    // Update poll data with new ranking
+    // Update poll data with new ranking scores
     const updatedOptions = pollData.options.map((opt: any) => ({
       ...opt,
-      rankingScore: (opt.rankingScore || 0) + (rankingScores[opt.id] || 0),
+      rankingScore: rankingScores[opt.id] || 0,
     }));
 
     const updatedPollData = {
       ...pollData,
       options: updatedOptions,
-      rankings: [...(pollData.rankings || []), { rankings, voter: username || 'Anonymous', timestamp: new Date().toISOString() }],
+      rankings: newResponses.map(r => ({ rankings: r.response.rankings, voter: r.username, timestamp: r.created_at })),
     };
 
     setPollData(updatedPollData);
-
-    // Store updated data in localStorage
-    localStorage.setItem(`pickly_ranking_${token}`, JSON.stringify(updatedPollData));
   };
 
   const handleShare = async () => {
@@ -196,13 +259,13 @@ export default function RankingTokenPage() {
                   </div>
                 ))}
             </div>
-            {pollData.rankings && pollData.rankings.length > 0 && (
+            {responses.length > 0 && (
               <div className="mb-6">
                 <p className="text-sm text-[var(--text-muted)] mb-2">Participants:</p>
                 <div className="flex flex-wrap gap-1">
-                  {pollData.rankings.map((r: any, idx: number) => (
+                  {responses.map((r: any, idx: number) => (
                     <span key={idx} className="text-xs bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] px-2 py-1 rounded-full text-[var(--primary)]">
-                      {r.voter}
+                      {r.username}
                     </span>
                   ))}
                 </div>
@@ -264,8 +327,8 @@ export default function RankingTokenPage() {
               {pollData.options
                 .sort((a: any, b: any) => (b.rankingScore || 0) - (a.rankingScore || 0))
                 .map((option: any, index: number) => {
-                  const rankers = pollData.rankings?.filter((r: any) => r.rankings.includes(option.id)).map((r: any) => r.voter) || [];
-                  
+                  const rankers = responses.filter((r: any) => r.response.rankings?.includes(option.id)).map((r: any) => r.username) || [];
+
                   return (
                     <div
                       key={option.id}
@@ -279,13 +342,13 @@ export default function RankingTokenPage() {
                     </div>
                   );
                 })}
-              {pollData.rankings && pollData.rankings.length > 0 && (
+              {responses.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-[var(--border)]">
                   <p className="text-sm text-[var(--text-muted)] mb-2">Participants:</p>
                   <div className="flex flex-wrap gap-1">
-                    {pollData.rankings.map((r: any, idx: number) => (
+                    {responses.map((r: any, idx: number) => (
                       <span key={idx} className="text-xs bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] px-2 py-1 rounded-full text-[var(--primary)]">
-                        {r.voter}
+                        {r.username}
                       </span>
                     ))}
                   </div>

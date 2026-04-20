@@ -131,3 +131,31 @@ export function deleteTournamentData(token: string): void {
   const storageKey = `pickly_versus_${token}`;
   localStorage.removeItem(storageKey);
 }
+
+/**
+ * Cleans up all localStorage keys related to polls, votes, rankings, ratings, tournaments, and duel votes.
+ * Only keeps pickly_username.
+ */
+export function cleanupLocalStorage(): void {
+  if (typeof window === 'undefined') return;
+
+  const keysToRemove: string[] = [];
+
+  // Iterate through all localStorage keys
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key) continue;
+
+    // Keep pickly_username, remove everything else starting with 'pickly_'
+    if (key.startsWith('pickly_') && key !== 'pickly_username') {
+      keysToRemove.push(key);
+    }
+  }
+
+  // Remove all identified keys
+  keysToRemove.forEach(key => {
+    localStorage.removeItem(key);
+  });
+
+  console.log(`Cleaned up ${keysToRemove.length} localStorage keys`);
+}

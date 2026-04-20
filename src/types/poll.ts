@@ -25,8 +25,6 @@ export interface Rating {
   description?: string;
   createdBy: string;
   createdAt: Date;
-  isPrivate: boolean;
-  visibility: 'public' | 'private';
   items: RatingItem[];
 }
 
@@ -73,14 +71,10 @@ export interface Poll {
   createdBy: string;
   createdAt: Date;
   expiresAt: Date;
-  visibility: 'public' | 'private';
   options: PollOption[];
   totalReactions: number;
   views: number;
   type?: 'vote' | 'rank';       // default: 'vote' (existing behavior)
-  isPrivate?: boolean;           // default: false (existing behavior)
-  invitedUsers?: string[];       // list of userIds or emails who have access
-  inviteToken?: string;          // unique token for shareable invite link
 }
 
 export interface FeedState {

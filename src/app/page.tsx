@@ -50,9 +50,8 @@ export default function Home() {
     loadPolls();
   }, [loadPolls]);
 
-  // Get recent public polls across all types
+  // Get recent polls across all types
   const recentPolls = polls
-    .filter(poll => poll.visibility === 'public' && !poll.isPrivate)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 4);
 

@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Poll, PollOption, ReactionCount, UserReaction, UserVote, createEmptyReactions } from '@/types/poll';
-import { initializeDefaultPolls } from '@/data/defaultPolls';
 
 // Helper function to create a new empty reaction count
 const createEmptyReactionsLocal = (): ReactionCount => ({});
@@ -25,11 +24,7 @@ interface PollStore {
   addView: (pollId: string) => void;
   getPollById: (pollId: string) => Poll | null;
   getMyPolls: (userId: string) => Poll[];
-  getPrivatePolls: (userId: string) => Poll[];
   rankOptions: (pollId: string, userId: string, rankedOptionIds: string[]) => void;
-  inviteUserToPoll: (pollId: string, userId: string) => void;
-  canUserAccessPoll: (pollId: string, userId: string) => boolean;
-  getPollByInviteToken: (token: string) => Poll | undefined;
   deletePoll: (pollId: string) => void;
 }
 
@@ -37,8 +32,8 @@ interface PollStore {
 const usePollStore = create<PollStore>()(
   persist(
     (set, get) => ({
-      // Initial state - load from localStorage to match API
-      polls: typeof window !== 'undefined' ? initializeDefaultPolls() : [],
+      // Initial state - empty polls array (data comes from Supabase)
+      polls: [],
       filter: 'trending',
       currentPoll: null,
       userReactions: {},
@@ -48,7 +43,7 @@ const usePollStore = create<PollStore>()(
 
       // Actions
       setFilter: (filter) => set({ filter }),
-      
+
       loadPolls: async () => {
         const { polls, isLoading } = get();
 
@@ -64,18 +59,19 @@ const usePollStore = create<PollStore>()(
 
         try {
           set({ isLoading: true });
-          // In a real app, this would be an API call
-          // For now, we'll use a small timeout to simulate network request
+          // Polls are loaded from Supabase in individual pages
+          // This store is for UI state management only
           await new Promise(resolve => setTimeout(resolve, 100));
-          set({ polls: initializeDefaultPolls() });
+          set({ polls: [] });
         } finally {
           set({ isLoading: false });
         }
       },
-      
+
       loadPoll: async (pollId: string) => {
-        // In a real app, this would be an API call
-        const poll = initializeDefaultPolls().find((p: Poll) => p.id === pollId) || null;
+        // Poll is loaded from Supabase in individual pages
+        // This store is for UI state management only
+        const poll = get().polls.find((p: Poll) => p.id === pollId) || null;
         set({ currentPoll: poll });
 
         // Track view
@@ -126,9 +122,6 @@ const usePollStore = create<PollStore>()(
       
       createPoll: async (pollData: Omit<Poll, 'id' | 'createdAt' | 'totalReactions' | 'views'>) => {
         // In a real app, this would be an API call
-        const isPrivate = pollData.isPrivate ?? false;
-        const inviteToken = isPrivate ? Math.random().toString(36).substring(2, 10) : undefined;
-
         const newPoll: Poll = {
           ...pollData,
           id: uuidv4(),
@@ -136,9 +129,6 @@ const usePollStore = create<PollStore>()(
           totalReactions: 0,
           views: 0,
           type: pollData.type ?? 'vote',
-          isPrivate: isPrivate,
-          invitedUsers: pollData.invitedUsers ?? [],
-          inviteToken: inviteToken,
           options: pollData.options.map(opt => ({
             ...opt,
             reactions: createEmptyReactionsLocal(),
@@ -314,11 +304,7 @@ const usePollStore = create<PollStore>()(
       getMyPolls: (userId: string) => {
         return get().polls.filter(poll => poll.createdBy === userId);
       },
-      
-      getPrivatePolls: (userId: string) => {
-        return get().polls.filter(poll => poll.isPrivate === true && poll.createdBy === userId);
-      },
-      
+
       rankOptions: (pollId: string, userId: string, rankedOptionIds: string[]) => {
         set(state => ({
           userRankings: {
@@ -329,49 +315,6 @@ const usePollStore = create<PollStore>()(
             }
           }
         }));
-      },
-
-      inviteUserToPoll: (pollId: string, userId: string) => {
-        set(state => {
-          const poll = state.polls.find(p => p.id === pollId);
-          if (!poll) return state;
-
-          const invitedUsers = poll.invitedUsers || [];
-          if (invitedUsers.includes(userId)) return state;
-
-          const updatedPolls = state.polls.map(p =>
-            p.id === pollId
-              ? { ...p, invitedUsers: [...invitedUsers, userId] }
-              : p
-          );
-
-          return {
-            polls: updatedPolls,
-            currentPoll: state.currentPoll?.id === pollId
-              ? { ...state.currentPoll, invitedUsers: [...invitedUsers, userId] }
-              : state.currentPoll
-          };
-        });
-      },
-
-      canUserAccessPoll: (pollId: string, userId: string) => {
-        const poll = get().polls.find(p => p.id === pollId);
-        if (!poll) return false;
-
-        // If poll is not private, everyone can access
-        if (!poll.isPrivate) return true;
-
-        // Creator always has access
-        if (poll.createdBy === userId) return true;
-
-        // Check if user is in invited list
-        if (poll.invitedUsers?.includes(userId)) return true;
-
-        return false;
-      },
-
-      getPollByInviteToken: (token: string) => {
-        return get().polls.find(p => p.inviteToken === token);
       },
 
       deletePoll: (pollId: string) => {

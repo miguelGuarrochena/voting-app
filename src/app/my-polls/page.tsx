@@ -34,30 +34,21 @@ export default function MyPollsPage() {
   };
 
   const myPolls = getMyPolls(currentUserId);
-  const publicPolls = myPolls.filter(p => !p.isPrivate);
-  const privatePolls = myPolls.filter(p => p.isPrivate === true);
-
-  // Polls the user is invited to (but didn't create)
-  const invitedPolls = polls.filter(p =>
-    p.isPrivate === true &&
-    p.invitedUsers?.includes(currentUserId) &&
-    p.createdBy !== currentUserId
-  );
 
   return (
     <>
     <div className="px-3 sm:px-6 py-8 pb-24 md:pb-8">
         <h1 className="font-display text-3xl font-bold text-[var(--text)] mb-8">{t('poll.myPolls')}</h1>
 
-      {/* Public Polls Section */}
+      {/* My Polls Section */}
       <div className="mb-12">
         <h2 className="font-display text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
-          <span>🌍</span>
-          <span>{t('poll.myPublicPolls')}</span>
-          <span className="text-sm font-normal text-[var(--text-muted)]">({publicPolls.length})</span>
+          <span>📊</span>
+          <span>My Polls</span>
+          <span className="text-sm font-normal text-[var(--text-muted)]">({myPolls.length})</span>
         </h2>
 
-        {publicPolls.length === 0 ? (
+        {myPolls.length === 0 ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
             <h3 className="font-semibold text-[var(--text)] text-lg mb-2">{t('myPolls.noPublicPolls')}</h3>
@@ -71,7 +62,7 @@ export default function MyPollsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {publicPolls.map(poll => {
+            {myPolls.map(poll => {
               const hasEnded = new Date(poll.expiresAt) <= new Date();
               return (
                 <PollCard 
@@ -87,83 +78,6 @@ export default function MyPollsPage() {
           </div>
         )}
       </div>
-
-      {/* Private Polls Section */}
-      <div className="mb-12">
-        <h2 className="font-display text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
-          <span>🔒</span>
-          <span>{t('poll.myPrivatePolls')}</span>
-          <span className="text-sm font-normal text-[var(--text-muted)]">({privatePolls.length})</span>
-        </h2>
-
-        {privatePolls.length === 0 ? (
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-12 text-center">
-            <div className="text-6xl mb-4">🔒</div>
-            <h3 className="font-semibold text-[var(--text)] text-lg mb-2">{t('myPolls.noPrivatePolls')}</h3>
-            <p className="text-[var(--text-muted)] mb-6">{t('myPolls.createPrivateDesc')}</p>
-            <a
-              href="/create"
-              className="inline-block px-6 py-3 bg-[var(--primary)] text-white rounded-[var(--radius-md)] font-medium hover:bg-[var(--primary-dark)] transition-colors"
-            >
-              {t('myPolls.createPrivatePoll')}
-            </a>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {privatePolls.map(poll => {
-              const hasEnded = new Date(poll.expiresAt) <= new Date();
-              return (
-                <PollCard 
-                  key={poll.id} 
-                  poll={poll} 
-                  onDelete={poll.createdBy === currentUserId && !hasEnded ? (pollId) => {
-                    setPollToDelete(pollId);
-                    setShowDeleteDialog(true);
-                  } : undefined}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Polls I'm Invited To Section */}
-      <div>
-        <h2 className="font-display text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
-          <span>📨</span>
-          <span>{t('myPolls.invitedTo')}</span>
-          <span className="text-sm font-normal text-[var(--text-muted)]">({invitedPolls.length})</span>
-        </h2>
-
-        {invitedPolls.length === 0 ? (
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-12 text-center">
-            <div className="text-6xl mb-4">📭</div>
-            <h3 className="font-semibold text-[var(--text)] text-lg mb-2">{t('myPolls.noPendingInvites')}</h3>
-            <p className="text-[var(--text-muted)]">{t('myPolls.invitesDesc')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {invitedPolls.map(poll => (
-              <PollCard key={poll.id} poll={poll} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Empty State - No polls at all */}
-      {myPolls.length === 0 && (
-        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-12 text-center">
-          <div className="text-6xl mb-4">📊</div>
-          <h3 className="font-semibold text-[var(--text)] text-lg mb-2">{t('myPolls.noPolls')}</h3>
-          <p className="text-[var(--text-muted)] mb-6">{t('myPolls.startCreating')}</p>
-          <a
-            href="/create"
-            className="inline-block px-6 py-3 bg-[var(--primary)] text-white rounded-[var(--radius-md)] font-medium hover:bg-[var(--primary-dark)] transition-colors"
-          >
-            {t('myPolls.createFirst')}
-          </a>
-        </div>
-      )}
     </div>
 
       {/* Delete Confirmation Dialog */}
