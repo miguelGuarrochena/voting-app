@@ -14,6 +14,8 @@ type RatingItemForm = {
   id: string;
   label: string;
   imageUrl: string;
+  locationUrl?: string;
+  comment?: string;
 };
 
 export default function CreateRatingPage() {
@@ -159,6 +161,8 @@ export default function CreateRatingPage() {
           id: crypto.randomUUID(),
           title: item.label,
           imageUrl: item.imageUrl,
+          locationUrl: item.locationUrl,
+          comment: item.comment,
           totalRating: 0,
           ratingCount: 0,
         })),
@@ -275,9 +279,23 @@ export default function CreateRatingPage() {
                       placeholder={`Item ${index + 1}`}
                       maxLength={50}
                     />
+                    <textarea
+                      value={item.comment || ''}
+                      onChange={(e) => updateItem(item.id, { comment: e.target.value })}
+                      className="w-full mt-2 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500 min-h-[60px]"
+                      placeholder="Add a comment (optional)"
+                      maxLength={200}
+                    />
+                    <input
+                      type="text"
+                      value={item.locationUrl || ''}
+                      onChange={(e) => updateItem(item.id, { locationUrl: e.target.value })}
+                      className="w-full mt-2 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                      placeholder="URL de la web (opcional)"
+                    />
                     {/* Image section */}
-                    <div className="mt-2">
-                      {item.imageUrl ? (
+                    <div className="mt-2 space-y-2">
+                      {item.imageUrl && (
                         <div className="relative">
                           <img
                             src={item.imageUrl}
@@ -292,36 +310,33 @@ export default function CreateRatingPage() {
                             <Trash2 size={16} />
                           </button>
                         </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openImagePicker(item.id)}
-                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
-                            >
-                              <PhotoIcon className="w-4 h-4" />
-                              Gallery
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => triggerFileUpload(item.id)}
-                              disabled={uploadingItem === item.id}
-                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                              <CloudArrowUpIcon className="w-4 h-4" />
-                              {uploadingItem === item.id ? 'Uploading...' : 'Upload'}
-                            </button>
-                          </div>
-                          <input
-                            type="text"
-                            value={item.imageUrl}
-                            onChange={(e) => updateItem(item.id, { imageUrl: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
-                            placeholder="Or paste URL (for places/stores)"
-                          />
-                        </div>
                       )}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openImagePicker(item.id)}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                        >
+                          <PhotoIcon className="w-4 h-4" />
+                          Gallery
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => triggerFileUpload(item.id)}
+                          disabled={uploadingItem === item.id}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <CloudArrowUpIcon className="w-4 h-4" />
+                          {uploadingItem === item.id ? 'Uploading...' : 'Upload'}
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={item.imageUrl}
+                        onChange={(e) => updateItem(item.id, { imageUrl: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                        placeholder="O pega URL de imagen (opcional)"
+                      />
                     </div>
                   </div>
                   <button

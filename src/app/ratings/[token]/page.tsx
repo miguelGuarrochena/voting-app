@@ -6,7 +6,7 @@ import { getPollData, isExpired, hasVoted, markAsVoted, getTimeRemaining, format
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import Link from 'next/link';
-import { Star, Share2, ArrowLeft } from 'lucide-react';
+import { Star, Share2, ArrowLeft, ExternalLink } from 'lucide-react';
 import Toast from '@/components/ui/Toast';
 
 export default function RatingTokenPage() {
@@ -173,8 +173,30 @@ export default function RatingTokenPage() {
 
                   return (
                     <div key={option.id} className="bg-[var(--surface-2)] rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
+                      {option.imageUrl && (
+                        <img
+                          src={option.imageUrl}
+                          alt={option.title}
+                          className="w-full h-32 object-cover rounded-lg mb-3"
+                        />
+                      )}
+                      <div className="mb-2">
                         <span className="font-medium text-[var(--text)]">{option.title}</span>
+                        {option.comment && (
+                          <p className="text-sm text-[var(--text-muted)] mt-1">{option.comment}</p>
+                        )}
+                        {option.locationUrl && (
+                          <a
+                            href={option.locationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-[var(--primary)] hover:underline mt-1 inline-flex items-center gap-1"
+                          >
+                            {option.locationUrl} <ExternalLink size={14} />
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center gap-2">
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -271,8 +293,30 @@ export default function RatingTokenPage() {
 
                   return (
                     <div key={option.id} className="bg-[var(--surface-2)] rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
+                      {option.imageUrl && (
+                        <img
+                          src={option.imageUrl}
+                          alt={option.title}
+                          className="w-full h-32 object-cover rounded-lg mb-3"
+                        />
+                      )}
+                      <div className="mb-2">
                         <span className="font-medium text-[var(--text)]">{option.title}</span>
+                        {option.comment && (
+                          <p className="text-sm text-[var(--text-muted)] mt-1">{option.comment}</p>
+                        )}
+                        {option.locationUrl && (
+                          <a
+                            href={option.locationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-[var(--primary)] hover:underline mt-1 inline-flex items-center gap-1"
+                          >
+                            {option.locationUrl} <ExternalLink size={14} />
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center gap-2">
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -311,8 +355,30 @@ export default function RatingTokenPage() {
               <p className="text-[var(--text-muted)] mb-4">Rate each item from 1 to 5 stars:</p>
               {pollData.options.map((option: any) => (
                 <div key={option.id} className="bg-[var(--surface-2)] rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-3">
+                  {option.imageUrl && (
+                    <img
+                      src={option.imageUrl}
+                      alt={option.title}
+                      className="w-full h-32 object-cover rounded-lg mb-3"
+                    />
+                  )}
+                  <div className="mb-3">
                     <span className="font-medium text-[var(--text)]">{option.title}</span>
+                    {option.comment && (
+                      <p className="text-sm text-[var(--text-muted)] mt-1">{option.comment}</p>
+                    )}
+                    {option.locationUrl && (
+                      <a
+                        href={option.locationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-[var(--primary)] hover:underline mt-1 inline-flex items-center gap-1"
+                      >
+                        {option.locationUrl} <ExternalLink size={14} />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-center mb-3">
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
