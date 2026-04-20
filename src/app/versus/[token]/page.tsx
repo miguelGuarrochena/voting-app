@@ -11,7 +11,7 @@ import { ExpiredTournament } from '@/components/versus/ExpiredTournament';
 import { selectWinner, calculateCompletedBracket, isBracketComplete, getBracketProgress, createUserBracket } from '@/lib/bracket';
 import { Swords, Clock, AlertTriangle, Share2, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Toast from '@/components/ui/Toast';
+import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -30,8 +30,6 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [userBracket, setUserBracket] = useState<any>(null); // User's current selections
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [shareResultText, setShareResultText] = useState('Compartir Resultado');
   const bracketRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
@@ -41,8 +39,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
   useEffect(() => {
     // Show toast if just created
     if (justCreated) {
-      setToastMessage('Torneo creado');
-      setShowToast(true);
+      toast('Torneo creado');
       window.history.replaceState({}, '', `/versus/${token}`);
     }
 
@@ -106,8 +103,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
       const previousRound = currentBracket.rounds[targetRound - 2];
       const isPreviousRoundComplete = previousRound.duels.every((d: any) => d.selectedWinner !== null);
       if (!isPreviousRoundComplete) {
-        setToastMessage('Completa la ronda anterior primero');
-        setShowToast(true);
+        toast('Completa la ronda anterior primero');
         return;
       }
     }
@@ -125,8 +121,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
     if (!tournament || !username || !userBracket) return;
 
     if (!isBracketComplete(userBracket)) {
-      setToastMessage('Completa todos los duelos antes de enviar');
-      setShowToast(true);
+      toast('Completa todos los duelos antes de enviar');
       return;
     }
 
@@ -169,8 +164,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
-      setToastMessage('Link copiado');
-      setShowToast(true);
+      toast('Link copiado');
     } catch (err) {
       console.error('Failed to copy:', err);
     }

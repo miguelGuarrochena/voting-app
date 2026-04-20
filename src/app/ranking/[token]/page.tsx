@@ -7,7 +7,7 @@ import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import Link from 'next/link';
 import { Share2, ArrowLeft } from 'lucide-react';
-import Toast from '@/components/ui/Toast';
+import toast from 'react-hot-toast';
 
 export default function RankingTokenPage() {
   const params = useParams();
@@ -21,16 +21,13 @@ export default function RankingTokenPage() {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [expired, setExpired] = useState(false);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const searchParams = useSearchParams();
   const justCreated = searchParams.get('created') === 'true';
 
   useEffect(() => {
     // Show toast if just created
     if (justCreated) {
-      setToastMessage('¡Ranking creado con éxito! 🎉');
-      setShowToast(true);
+      toast('¡Ranking creado con éxito! 🎉');
       // Remove the query param from URL without triggering a reload
       window.history.replaceState({}, '', `/ranking/${token}`);
     }
@@ -124,8 +121,7 @@ export default function RankingTokenPage() {
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
-      setToastMessage('¡Link copiado! 🎉');
-      setShowToast(true);
+      toast('¡Link copiado! 🎉');
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -342,7 +338,6 @@ export default function RankingTokenPage() {
           </Link>
         </div>
       </div>
-      <Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
     </PageLayout>
   );
 }

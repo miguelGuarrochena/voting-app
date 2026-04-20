@@ -9,6 +9,7 @@ import StoreProvider from '@/providers/StoreProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Footer from '@/components/Footer';
 import OnboardingScreen from '@/components/OnboardingScreen';
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -66,6 +67,14 @@ const RootLayout = ({
             </ThemeProvider>
           </UsernameProvider>
         </ErrorBoundary>
+        <Toaster position="bottom-center" toastOptions={{
+          duration: 3000,
+          style: {
+            background: 'var(--surface)',
+            color: 'var(--text)',
+            border: '1px solid var(--border)',
+          },
+        }} />
       </body>
     </html>
   );
