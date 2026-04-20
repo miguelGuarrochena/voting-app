@@ -1,0 +1,31 @@
+{
+  "hero": {
+    "title": "¿Qué opinas",
+    "titleHighlight": "tú",
+    "titleEnd": "?",
+    "subtitle": "Vota sobre cualquier cosa. Comparte instantáneamente. Ve los resultados en tiempo real."
+  },
+  "createPoll": "Crear encuesta →",
+  "browsePolls": "Explorar encuestas",
+  "liveNow": "En vivo",
+  "noActivePolls": "No hay encuestas activas en este momento.",
+  "searchPlaceholder": "Buscar encuestas...",
+  "trending": "Tendencias",
+  "recent": "Recientes",
+  "expiringSoon": "Terminan Pronto",
+  "searchResults": "Resultados de Búsqueda",
+  "whatsHappening": "Qué está pasando",
+  "loading": "Cargando...",
+  "failedToLoad": "Error al cargar encuestas",
+  "tryAgain": "Intentar de Nuevo",
+  "refreshPage": "Actualizar Página",
+  "subtitle": "Decisiones grupales divertidas. Crea y comparte al instante. ✨",
+  "recentActivity": "Actividad reciente",
+  "noActivityYet": "Sin actividad aún — ¡sé el primero en crear algo!",
+  "votesDesc": "Haz una pregunta, deja que la gente elija una respuesta",
+  "rankingDesc": "Deja que la gente clasifique las opciones por preferencia",
+  "ratingsDesc": "Califica y compara elementos con estrellas",
+  "spinDesc": "Gira para decidir al azar",
+  "rankingBadge": "Ranking",
+  "voteBadge": "Voto"
+}

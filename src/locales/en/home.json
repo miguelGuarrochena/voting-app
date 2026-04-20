@@ -1,0 +1,31 @@
+{
+  "hero": {
+    "title": "What does",
+    "titleHighlight": "everyone",
+    "titleEnd": "think?",
+    "subtitle": "Vote on anything. Share it instantly. See results in real time."
+  },
+  "createPoll": "Create a poll →",
+  "browsePolls": "Browse polls",
+  "liveNow": "Live now",
+  "noActivePolls": "No active polls at the moment.",
+  "searchPlaceholder": "Search polls...",
+  "trending": "Trending",
+  "recent": "Recent",
+  "expiringSoon": "Expiring Soon",
+  "searchResults": "Search Results",
+  "whatsHappening": "What's happening",
+  "loading": "Loading...",
+  "failedToLoad": "Failed to load polls",
+  "tryAgain": "Try Again",
+  "refreshPage": "Refresh Page",
+  "subtitle": "Fun group decisions. Create and share instantly. ✨",
+  "recentActivity": "Recent activity",
+  "noActivityYet": "No activity yet — be the first to create something!",
+  "votesDesc": "Ask a question, let people choose an answer",
+  "rankingDesc": "Let people rank options by preference",
+  "ratingsDesc": "Rate and compare items with stars",
+  "spinDesc": "Spin to decide randomly",
+  "rankingBadge": "Ranking",
+  "voteBadge": "Vote"
+}

@@ -1,0 +1,20 @@
+{
+  "titleRequired": "El título del ranking es requerido",
+  "pollTitleRequired": "El título de la encuesta es requerido",
+  "titleMinLength": "El título debe tener al menos 3 caracteres",
+  "titleMaxLength": "El título debe tener menos de 100 caracteres",
+  "minOptions": "Se requieren al menos 2 opciones",
+  "maxOptions": "Máximo 10 opciones permitidas",
+  "duplicateOptions": "No se permiten opciones duplicadas",
+  "minParticipants": "Las encuestas privadas requieren al menos un participante",
+  "failed": "Falló al crear la encuesta. Por favor intenta de nuevo.",
+  "failedRanking": "Falló al crear el ranking. Por favor intenta de nuevo.",
+  "creating": "Creando...",
+  "optionRequired": "La opción es requerida",
+  "optionMinLength": "La opción debe tener al menos 1 caracter",
+  "newVote": "Crear una Nueva Votación",
+  "newRanking": "Crear un Nuevo Ranking",
+  "newPoll": "Crear una Nueva Encuesta",
+  "description": "Comparte tus pensamientos y reúne opiniones de tu comunidad",
+  "back": "Volver"
+}

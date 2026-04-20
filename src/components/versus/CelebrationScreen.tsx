@@ -4,6 +4,7 @@ import { VersusOption } from '@/types/versus';
 import { motion } from 'framer-motion';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface CelebrationScreenProps {
   champion: VersusOption;
@@ -13,9 +14,10 @@ interface CelebrationScreenProps {
 
 export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult }: CelebrationScreenProps) => {
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   const handleCopyResult = async () => {
-    const resultText = `¡${champion.title} ganó el torneo '${tournamentTitle}' en Pickly! 🏆`;
+    const resultText = `${champion.title} ${t('versus.wonTournament')} '${tournamentTitle}' ${t('versus.inPickly')} 🏆`;
     try {
       await navigator.clipboard.writeText(resultText);
       setCopied(true);
@@ -58,7 +60,7 @@ export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult }: 
           transition={{ delay: 0.5 }}
           className="text-[var(--text-muted)] mb-8"
         >
-          is the champion of {tournamentTitle}!
+          {t('versus.isChampionOf')} {tournamentTitle}!
         </motion.p>
 
         {/* Share Button */}
@@ -70,7 +72,7 @@ export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult }: 
           className="w-full px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2"
         >
           {copied ? <Check size={18} /> : <Copy size={18} />}
-          {copied ? 'Copied!' : 'Compartir resultado'}
+          {copied ? t('versus.copied') : t('versus.shareResult')}
         </motion.button>
 
         {/* Confetti emojis */}

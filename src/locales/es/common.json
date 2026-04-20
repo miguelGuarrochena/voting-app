@@ -1,0 +1,14 @@
+{
+  "loading": "Cargando...",
+  "error": "Error",
+  "failed": "Falló",
+  "tryAgain": "Intentar de Nuevo",
+  "refresh": "Actualizar",
+  "searching": "Buscando...",
+  "unexpectedError": "Encontramos un error inesperado. Por favor intenta actualizar la página.",
+  "contactSupport": "Si crees que esto es un error, por favor contacta a nuestro equipo de soporte.",
+  "pollNotFound": "Encuesta no encontrada",
+  "pollNotFoundDesc": "Encuesta no encontrada. Puede haber sido eliminada o nunca existió.",
+  "loadingImages": "Cargando imágenes...",
+  "emptyState": "Compartí un link para que tus amigos puedan votar ✨"
+}

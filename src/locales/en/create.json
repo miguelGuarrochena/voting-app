@@ -1,0 +1,20 @@
+{
+  "titleRequired": "Ranking title is required",
+  "pollTitleRequired": "Poll title is required",
+  "titleMinLength": "Title must be at least 3 characters long",
+  "titleMaxLength": "Title must be less than 100 characters",
+  "minOptions": "At least 2 options are required",
+  "maxOptions": "Maximum 10 options allowed",
+  "duplicateOptions": "Duplicate options are not allowed",
+  "minParticipants": "Private polls require at least one participant",
+  "failed": "Failed to create poll. Please try again.",
+  "failedRanking": "Failed to create ranking. Please try again.",
+  "creating": "Creating...",
+  "optionRequired": "Option is required",
+  "optionMinLength": "Option must be at least 1 character long",
+  "newVote": "Create a New Vote",
+  "newRanking": "Create a New Ranking",
+  "newPoll": "Create a New Poll",
+  "description": "Share your thoughts and gather opinions from your community",
+  "back": "Back"
+}

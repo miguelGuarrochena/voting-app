@@ -1,0 +1,9 @@
+{
+  "title": "Votaciones",
+  "subtitle": "Vota por tus opciones favoritas",
+  "createVote": "Crear Votación",
+  "recent": "Recientes",
+  "loadingVotes": "Cargando votaciones...",
+  "noVotesYet": "Sin votaciones aún",
+  "beFirst": "¡Sé el primero en crear una votación!"
+}

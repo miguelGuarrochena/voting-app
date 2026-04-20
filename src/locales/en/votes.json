@@ -1,0 +1,9 @@
+{
+  "title": "Votes",
+  "subtitle": "Vote on your favorite options",
+  "createVote": "Create Vote",
+  "recent": "Recent",
+  "loadingVotes": "Loading votes...",
+  "noVotesYet": "No votes yet",
+  "beFirst": "Be the first to create a vote!"
+}

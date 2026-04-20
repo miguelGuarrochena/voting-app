@@ -38,7 +38,7 @@ const ThemeLanguageSwitcher = () => {
         <button
           onClick={() => setShowLanguageMenu(!showLanguageMenu)}
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-[var(--surface-2)] transition-all duration-200 group"
-          title={language === 'en' ? 'Cambiar a Español' : 'Switch to English'}
+          title={language === 'en' ? t('theme.switchToSpanish') : t('theme.switchToEnglish')}
         >
           <div className="flex items-center gap-1.5">
             <GlobeAltIcon className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--text)] transition-colors" />
@@ -70,7 +70,7 @@ const ThemeLanguageSwitcher = () => {
               >
                 <div className="flex items-center gap-2">
                   <span>🇺🇸</span>
-                  <span>English</span>
+                  <span>{t('theme.lang.en')}</span>
                 </div>
               </button>
               <button
@@ -88,7 +88,7 @@ const ThemeLanguageSwitcher = () => {
               >
                 <div className="flex items-center gap-2">
                   <span>🇪🇸</span>
-                  <span>Español</span>
+                  <span>{t('theme.lang.es')}</span>
                 </div>
               </button>
             </div>

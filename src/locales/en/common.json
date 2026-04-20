@@ -1,0 +1,14 @@
+{
+  "loading": "Loading...",
+  "error": "Error",
+  "failed": "Failed",
+  "tryAgain": "Try Again",
+  "refresh": "Refresh",
+  "searching": "Searching...",
+  "unexpectedError": "We encountered an unexpected error. Please try refreshing the page.",
+  "contactSupport": "If you believe this is an error, please contact our support team.",
+  "pollNotFound": "Poll not found",
+  "pollNotFoundDesc": "Poll not found. It may have been deleted or never existed.",
+  "loadingImages": "Loading images...",
+  "emptyState": "Share a link for your friends to vote ✨"
+}
