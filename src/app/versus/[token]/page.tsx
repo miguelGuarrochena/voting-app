@@ -415,11 +415,11 @@ export default function VersusTournamentPage({ params }: PageProps) {
         {/* Bracket */}
         <div className="flex items-center justify-center">
           <div className="w-full">
-            <div ref={bracketRef} className="bg-white p-2 sm:p-4 md:p-8 rounded-2xl border-2 border-gray-300 overflow-visible">
+            <div ref={bracketRef} className="bg-[var(--surface)] p-2 sm:p-4 md:p-8 rounded-2xl border-2 border-[var(--border)] overflow-visible">
               {/* Header for image (hidden on mobile) */}
-              <div className="hidden md:block text-center mb-6 pb-4 border-b border-gray-300">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{tournament.title}</h2>
-                <p className="text-sm text-gray-600">
+              <div className="hidden md:block text-center mb-6 pb-4 border-b border-[var(--border)]">
+                <h2 className="text-2xl font-bold text-[var(--text)] mb-2">{tournament.title}</h2>
+                <p className="text-sm text-[var(--text-muted)]">
                   {t('versus.bracketOf')} {username || t('versus.anonymous')} • {new Date().toLocaleDateString()}
                 </p>
               </div>

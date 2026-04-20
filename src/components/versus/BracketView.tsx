@@ -72,18 +72,18 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             disabled={isFirstRound}
             className={`p-2 rounded-lg transition-colors ${
               isFirstRound
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-500 text-white hover:bg-blue-600'
+                ? 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed'
+                : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]'
             }`}
           >
             <ChevronLeft size={20} />
           </button>
 
           <div className="text-center">
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-bold text-[var(--text)]">
               {getSpanishRoundLabel(currentRound.roundNumber, totalRounds)}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-[var(--text-muted)]">
               Ronda {currentRoundIndex + 1} de {totalRounds}
             </p>
           </div>
@@ -93,8 +93,8 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             disabled={isLastRound}
             className={`p-2 rounded-lg transition-colors ${
               isLastRound
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-500 text-white hover:bg-blue-600'
+                ? 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed'
+                : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]'
             }`}
           >
             <ChevronRight size={20} />
@@ -107,10 +107,10 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             initial={{ scale: 0, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", damping: 15 }}
-            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 sm:p-6 shadow-2xl border-4 border-blue-400 relative mb-4"
+            className="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] rounded-2xl p-4 sm:p-6 shadow-2xl border-4 border-[var(--primary-light)] relative mb-4"
           >
             <motion.div
-              className="absolute inset-0 bg-blue-500 rounded-2xl blur-xl opacity-50"
+              className="absolute inset-0 bg-[var(--primary)] rounded-2xl blur-xl opacity-50"
               animate={{
                 scale: [1, 1.1, 1],
                 opacity: [0.5, 0.7, 0.5],
@@ -160,8 +160,8 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
               onClick={() => setCurrentRoundIndex(index)}
               className={`w-2 h-2 rounded-full transition-all ${
                 index === currentRoundIndex
-                  ? 'bg-blue-500 w-4'
-                  : 'bg-gray-300 hover:bg-gray-400'
+                  ? 'bg-[var(--primary)] w-4'
+                  : 'bg-[var(--border)] hover:bg-[var(--surface-2)]'
               }`}
             />
           ))}
@@ -182,7 +182,7 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             <div key={`left-${round.roundNumber}`} className="flex flex-col gap-3">
               {/* Round Label */}
               <div className="text-center pb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
                   {getSpanishRoundLabel(round.roundNumber, totalRounds)}
                 </h3>
               </div>
@@ -221,10 +221,10 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             initial={{ scale: 0, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", damping: 15 }}
-            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-2xl border-4 border-blue-400 relative"
+            className="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] rounded-2xl p-6 shadow-2xl border-4 border-[var(--primary-light)] relative"
           >
             <motion.div
-              className="absolute inset-0 bg-blue-500 rounded-2xl blur-xl opacity-50"
+              className="absolute inset-0 bg-[var(--primary)] rounded-2xl blur-xl opacity-50"
               animate={{
                 scale: [1, 1.1, 1],
                 opacity: [0.5, 0.7, 0.5],
@@ -241,7 +241,7 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
           </motion.div>
         ) : (
           <div className="flex flex-col items-center">
-            <h3 className="text-sm font-bold text-blue-600 mb-3 uppercase tracking-wider">Final</h3>
+            <h3 className="text-sm font-bold text-[var(--primary)] mb-3 uppercase tracking-wider">Final</h3>
             {bracket.rounds[finalRoundIndex] && bracket.rounds[finalRoundIndex].duels[0] && (
               <DuelSelectionCard
                 duel={bracket.rounds[finalRoundIndex].duels[0]}
@@ -264,7 +264,7 @@ export const BracketView = ({ bracket, votesToWin, currentRound, username, onVot
             <div key={`right-${round.roundNumber}`} className="flex flex-col gap-3">
               {/* Round Label */}
               <div className="text-center pb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
                   {getSpanishRoundLabel(round.roundNumber, totalRounds)}
                 </h3>
               </div>
@@ -312,17 +312,17 @@ const DuelSelectionCard = ({ duel, username, onVote, userSelection }: DuelSelect
   const isDuelDisabled = !duel.optionA.id || duel.optionA.title === '???' || !duel.optionB.id || duel.optionB.title === '???';
 
   return (
-    <div className="bg-gray-100 border border-gray-300 rounded-lg p-2 sm:p-3">
+    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-2 sm:p-3">
       <div className="space-y-2">
         <button
           onClick={() => !isDuelDisabled && onVote(duel.optionA)}
           disabled={isDuelDisabled}
           className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all ${
             userSelection?.id === duel.optionA.id
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+              ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white shadow-md'
               : isDuelDisabled
-              ? 'bg-gray-200 opacity-50 cursor-not-allowed text-gray-400'
-              : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 shadow-sm hover:shadow'
+              ? 'bg-[var(--surface-2)] opacity-50 cursor-not-allowed text-[var(--text-muted)]'
+              : 'bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] shadow-sm hover:shadow'
           }`}
         >
           <span className="text-sm font-medium">{duel.optionA.title}</span>
@@ -332,10 +332,10 @@ const DuelSelectionCard = ({ duel, username, onVote, userSelection }: DuelSelect
           disabled={isDuelDisabled}
           className={`w-full text-left p-2 sm:p-3 rounded-lg transition-all ${
             userSelection?.id === duel.optionB.id
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+              ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white shadow-md'
               : isDuelDisabled
-              ? 'bg-gray-200 opacity-50 cursor-not-allowed text-gray-400'
-              : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 shadow-sm hover:shadow'
+              ? 'bg-[var(--surface-2)] opacity-50 cursor-not-allowed text-[var(--text-muted)]'
+              : 'bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] shadow-sm hover:shadow'
           }`}
         >
           <span className="text-sm font-medium">{duel.optionB.title}</span>

@@ -10,10 +10,6 @@ const FeedGrid = () => {
   const filter = usePollStore((state) => state.filter);
   const loadPolls = usePollStore((state) => state.loadPolls);
   const setFilter = usePollStore((state) => state.setFilter);
-  const canUserAccessPoll = usePollStore((state) => state.canUserAccessPoll);
-
-  // Current user ID (in a real app, this would come from auth context)
-  const currentUserId = 'current-user';
   
   // Memoize filter handlers to prevent unnecessary re-renders
   const handleFilterChange = useCallback((newFilter: 'trending' | 'recent' | 'expiring') => {
@@ -27,10 +23,7 @@ const FeedGrid = () => {
   
   // Memoize sorted polls to prevent unnecessary re-renders
   const sortedPolls = useMemo(() => {
-    // Filter polls by access - only show polls the user can access
-    const accessiblePolls = polls.filter(p => canUserAccessPoll(p.id, currentUserId));
-
-    return [...accessiblePolls].sort((a, b) => {
+    return [...polls].sort((a, b) => {
       if (filter === 'recent') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       } else if (filter === 'expiring') {
@@ -40,7 +33,7 @@ const FeedGrid = () => {
         return b.totalReactions - a.totalReactions;
       }
     });
-  }, [polls, filter, canUserAccessPoll, currentUserId]);
+  }, [polls, filter]);
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

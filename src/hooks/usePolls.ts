@@ -15,12 +15,9 @@ export const usePolls = () => {
 
   const getFilteredPolls = (
     searchQuery: string = '',
-    sortBy: SortOption = 'recent',
-    visibility?: 'public' | 'private'
+    sortBy: SortOption = 'recent'
   ) => {
-    let filtered = polls.filter(poll => 
-      visibility ? poll.visibility === visibility : true
-    );
+    let filtered = polls;
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -66,14 +63,14 @@ export const usePolls = () => {
   };
 
   const getActivePolls = (limit?: number) => {
-    const active = polls.filter(poll => 
-      new Date(poll.expiresAt) > new Date() && poll.visibility === 'public'
+    const active = polls.filter(poll =>
+      new Date(poll.expiresAt) > new Date()
     );
     return limit ? active.slice(0, limit) : active;
   };
 
   const getTrendingPolls = (limit?: number) => {
-    const trending = getFilteredPolls('', 'trending', 'public');
+    const trending = getFilteredPolls('', 'trending');
     return limit ? trending.slice(0, limit) : trending;
   };
 
