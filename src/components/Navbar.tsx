@@ -24,6 +24,7 @@ const Navbar = () => {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isMedium, setIsMedium] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUsernameMenu, setShowUsernameMenu] = useState(false);
   const [showCreateMenu, setShowCreateMenu] = useState(false);
@@ -33,13 +34,13 @@ const Navbar = () => {
   // Handle scroll effect for desktop navbar
   useEffect(() => {
     const handleScroll = () => {
-      if (!isMobile) {
+      if (!isMobile && !isMedium) {
         setScrolled(window.scrollY > 20);
       }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
+  }, [isMobile, isMedium]);
 
   const handleChangeUsername = () => {
     if (newUsername.trim().length >= 2 && newUsername.trim().length <= 20) {
@@ -58,7 +59,9 @@ const Navbar = () => {
   // Handle mobile detection
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const width = window.innerWidth;
+      setIsMobile(width < 640);
+      setIsMedium(width >= 640 && width < 1024);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -271,8 +274,8 @@ const Navbar = () => {
         </div>
 
         {/* Add padding to account for fixed elements */}
-        <div className="h-14 sm:h-16"></div>
-        <div className="h-16 sm:h-20"></div>
+        <div className="h-14"></div>
+        <div className="h-16"></div>
 
         {/* Change Username Modal - outside nav to cover full screen */}
         {showChangeUsernameModal && (
@@ -320,72 +323,97 @@ const Navbar = () => {
         scrolled ? 'shadow-lg shadow-[var(--primary)]/10' : ''
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-18">
+          <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2 group">
               <span className="text-2xl sm:text-3xl font-bold text-[var(--primary)] font-display transition-transform group-hover:scale-105">✨ Pickly</span>
             </Link>
 
             {/* Center nav links */}
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden sm:flex items-center space-x-1">
               <Link
                 href="/votes"
-                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/votes'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <ChartBarIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/votes' ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="font-medium">{t('nav.votes')}</span>
+                {!isMedium && <span className="font-medium">{t('nav.votes')}</span>}
+                {isMedium && (
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                    {t('nav.votes')}
+                  </span>
+                )}
               </Link>
 
               <Link
                 href="/ranking"
-                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/ranking'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <TrophyIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/ranking' ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="font-medium">{t('nav.ranking')}</span>
+                {!isMedium && <span className="font-medium">{t('nav.ranking')}</span>}
+                {isMedium && (
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                    {t('nav.ranking')}
+                  </span>
+                )}
               </Link>
 
               <Link
                 href="/ratings"
-                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/ratings'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <StarIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/ratings' ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="font-medium">{t('nav.ratings')}</span>
+                {!isMedium && <span className="font-medium">{t('nav.ratings')}</span>}
+                {isMedium && (
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                    {t('nav.ratings')}
+                  </span>
+                )}
               </Link>
 
               <Link
                 href="/spin"
-                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/spin'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <ArrowPathIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/spin' ? 'scale-110' : 'group-hover:rotate-180'}`} />
-                <span className="font-medium">{t('nav.spin')}</span>
+                {!isMedium && <span className="font-medium">{t('nav.spin')}</span>}
+                {isMedium && (
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                    {t('nav.spin')}
+                  </span>
+                )}
               </Link>
 
               <Link
                 href="/versus"
-                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/versus'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <Swords className={`w-5 h-5 transition-all duration-300 ${pathname === '/versus' ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="font-medium">{t('nav.versus')}</span>
+                {!isMedium && <span className="font-medium">{t('nav.versus')}</span>}
+                {isMedium && (
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                    {t('nav.versus')}
+                  </span>
+                )}
               </Link>
             </div>
 
@@ -396,10 +424,15 @@ const Navbar = () => {
                   <div className="relative">
                     <button
                       onClick={() => setShowCreateMenu(!showCreateMenu)}
-                      className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white px-5 py-2.5 rounded-full font-medium hover:shadow-lg hover:shadow-[var(--primary)]/30 hover:scale-105 transition-all duration-300 text-sm flex items-center gap-2"
+                      className={`relative group bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white ${isMedium ? 'px-3 py-2.5' : 'px-5 py-2.5'} rounded-full font-medium hover:shadow-lg hover:shadow-[var(--primary)]/30 hover:scale-105 transition-all duration-300 text-sm flex items-center ${isMedium ? 'justify-center' : 'gap-2'}`}
                     >
                       <Plus size={16} className="transition-transform group-hover:rotate-90" />
-                      <span>{t('nav.create')}</span>
+                      {!isMedium && <span>{t('nav.create')}</span>}
+                      {isMedium && (
+                        <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                          {t('nav.create')}
+                        </span>
+                      )}
                     </button>
 
                     {showCreateMenu && (
@@ -506,7 +539,7 @@ const Navbar = () => {
       )}
 
       {/* Add padding to account for fixed navbar */}
-      <div className="h-16 sm:h-18"></div>
+      <div className="h-16"></div>
 
       {/* Change Username Modal - outside nav to cover full screen */}
       {showChangeUsernameModal && (
