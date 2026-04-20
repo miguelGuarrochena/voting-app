@@ -1,0 +1,10 @@
+{
+  "title": "Rankings",
+  "subtitle": "Ordená las opciones por preferencia",
+  "createRanking": "Crear Ranking",
+  "recent": "Recientes",
+  "loadingRankings": "Cargando rankings...",
+  "noRankingsYet": "Sin rankings aún",
+  "beFirst": "¡Sé el primero en crear un ranking!",
+  "emptyState": "Compartí un link para que tus amigos puedan rankear ✨"
+}

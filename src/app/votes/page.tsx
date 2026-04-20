@@ -56,7 +56,7 @@ export default function VotesPage() {
         {/* Empty State */}
         <div className="text-center py-16">
           <div className="text-6xl mb-4">🗳️</div>
-          <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('common.emptyState')}</h3>
+          <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('votes.emptyState')}</h3>
         </div>
       {/* Mobile FAB */}
       <Link

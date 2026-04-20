@@ -18,6 +18,8 @@ import formEn from '@/locales/en/form.json';
 import exploreEn from '@/locales/en/explore.json';
 import versusEn from '@/locales/en/versus.json';
 import footerEn from '@/locales/en/footer.json';
+import rankingEn from '@/locales/en/ranking.json';
+import ratingsEn from '@/locales/en/ratings.json';
 
 import commonEs from '@/locales/es/common.json';
 import navEs from '@/locales/es/nav.json';
@@ -34,6 +36,8 @@ import formEs from '@/locales/es/form.json';
 import exploreEs from '@/locales/es/explore.json';
 import versusEs from '@/locales/es/versus.json';
 import footerEs from '@/locales/es/footer.json';
+import rankingEs from '@/locales/es/ranking.json';
+import ratingsEs from '@/locales/es/ratings.json';
 
 type Language = 'en' | 'es';
 
@@ -77,7 +81,9 @@ const translations = {
     ...flattenObject(formEn, 'form'),
     ...flattenObject(exploreEn, 'explore'),
     ...flattenObject(versusEn, 'versus'),
-    ...flattenObject(footerEn, 'footer')
+    ...flattenObject(footerEn, 'footer'),
+    ...flattenObject(rankingEn, 'ranking'),
+    ...flattenObject(ratingsEn, 'ratings')
   },
   es: {
     ...flattenObject(commonEs, 'common'),
@@ -94,7 +100,9 @@ const translations = {
     ...flattenObject(formEs, 'form'),
     ...flattenObject(exploreEs, 'explore'),
     ...flattenObject(versusEs, 'versus'),
-    ...flattenObject(footerEs, 'footer')
+    ...flattenObject(footerEs, 'footer'),
+    ...flattenObject(rankingEs, 'ranking'),
+    ...flattenObject(ratingsEs, 'ratings')
   }
 };
 

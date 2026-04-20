@@ -1,0 +1,10 @@
+{
+  "title": "Ratings",
+  "subtitle": "Puntuá las opciones del 1 al 5",
+  "createRating": "Crear Rating",
+  "recent": "Recientes",
+  "loadingRatings": "Cargando ratings...",
+  "noRatingsYet": "Sin ratings aún",
+  "beFirst": "¡Sé el primero en crear un rating!",
+  "emptyState": "Compartí un link para que tus amigos puedan puntuar ✨"
+}

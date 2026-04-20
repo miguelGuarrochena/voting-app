@@ -39,15 +39,15 @@ export default function RankingPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)]">Rankings</h1>
-            <p className="text-[var(--text-muted)] mt-1">Rank options by preference</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)]">{t('ranking.title')}</h1>
+            <p className="text-[var(--text-muted)] mt-1">{t('ranking.subtitle')}</p>
           </div>
           <Link
             href="/create?type=rank"
             className="hidden sm:flex items-center gap-2 bg-[var(--primary)] text-white px-4 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
           >
             <PlusIcon className="w-5 h-5" />
-            <span>Create Ranking</span>
+            <span>{t('ranking.createRanking')}</span>
           </Link>
         </div>
 
@@ -55,7 +55,7 @@ export default function RankingPage() {
         {/* Empty State */}
         <div className="text-center py-16">
           <div className="text-6xl mb-4">🏆</div>
-          <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('common.emptyState')}</h3>
+          <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('ranking.emptyState')}</h3>
         </div>
 
       {/* Mobile FAB */}

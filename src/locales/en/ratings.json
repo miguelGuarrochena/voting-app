@@ -1,0 +1,10 @@
+{
+  "title": "Ratings",
+  "subtitle": "Rate options from 1 to 5",
+  "createRating": "Create Rating",
+  "recent": "Recent",
+  "loadingRatings": "Loading ratings...",
+  "noRatingsYet": "No ratings yet",
+  "beFirst": "Be the first to create a rating!",
+  "emptyState": "Share a link so your friends can rate ✨"
+}

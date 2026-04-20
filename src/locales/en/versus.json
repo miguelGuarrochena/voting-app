@@ -25,5 +25,8 @@
   "seconds": "s",
   "isChampionOf": "is the champion of",
   "wonTournament": "won the tournament",
-  "inPickly": "in Pickly"
+  "inPickly": "in Pickly",
+  "emptyState": "Share a link so your friends can compete ✨",
+  "createTournament": "Create Tournament",
+  "subtitle": "Tournament-style elimination brackets"
 }

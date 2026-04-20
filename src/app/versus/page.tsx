@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Swords, Plus } from 'lucide-react';
+import { Swords } from 'lucide-react';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/PageLayout';
 import { getPollData, isExpired } from '@/lib/token';
 import { VersusTournament } from '@/types/versus';
@@ -93,21 +94,30 @@ export default function VersusPage() {
     <PageLayout className="pb-24 md:pb-8">
       <div className="max-w-4xl mx-auto py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2 flex items-center gap-3">
-            <Swords className="w-8 h-8 sm:w-10 sm:h-10" />
-            Versus
-          </h1>
-          <p className="text-[var(--text-muted)]">
-            Tournament-style elimination brackets
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2 flex items-center gap-3">
+              <Swords className="w-8 h-8 sm:w-10 sm:h-10" />
+              Versus
+            </h1>
+            <p className="text-[var(--text-muted)]">
+              {t('versus.subtitle')}
+            </p>
+          </div>
+          <Link
+            href="/versus/create"
+            className="hidden md:flex items-center gap-2 bg-[var(--primary)] text-white px-4 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span>{t('versus.createTournament')}</span>
+          </Link>
         </div>
 
         {/* Tournament List */}
         {tournaments.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">⚔️</div>
-            <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('common.emptyState')}</h3>
+            <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('versus.emptyState')}</h3>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -168,7 +178,7 @@ export default function VersusPage() {
         href="/versus/create"
         className="sm:hidden fixed bottom-24 right-4 w-14 h-14 bg-[var(--primary)] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--primary-dark)] transition-colors z-40"
       >
-        <Plus size={24} />
+        <PlusIcon className="w-6 h-6" />
       </Link>
     </PageLayout>
   );

@@ -5,5 +5,6 @@
   "recent": "Recientes",
   "loadingVotes": "Cargando votaciones...",
   "noVotesYet": "Sin votaciones aún",
-  "beFirst": "¡Sé el primero en crear una votación!"
+  "beFirst": "¡Sé el primero en crear una votación!",
+  "emptyState": "Compartí un link para que tus amigos puedan votar ✨"
 }
