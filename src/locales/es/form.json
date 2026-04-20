@@ -53,5 +53,7 @@
     "7d": "7 días"
   },
   "onlyJpgPng": "Solo se permiten imágenes JPG y PNG",
-  "imageSize": "El tamaño de la imagen debe ser menor a 5MB"
+  "imageSize": "El tamaño de la imagen debe ser menor a 5MB",
+  "chooseFile": "Elegir archivo",
+  "noFileChosen": "Ningún archivo elegido"
 }

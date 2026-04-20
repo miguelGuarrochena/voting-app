@@ -16,10 +16,11 @@ const ImagePickerModal = ({
   isOpen,
   onClose,
   onSelectImage,
-  title = "Choose an image"
+  title
 }: ImagePickerModalProps) => {
   const { t } = useLanguage();
   const [images, setImages] = useState<StockImage[]>([]);
+  const modalTitle = title || t('common.chooseImage');
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -99,7 +100,7 @@ const ImagePickerModal = ({
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-[var(--text)]">{title}</h2>
+              <h2 className="text-xl font-semibold text-[var(--text)]">{modalTitle}</h2>
               <button
                 onClick={handleClose}
                 className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
@@ -132,14 +133,14 @@ const ImagePickerModal = ({
                   >
                     <img
                       src={image.thumbnail}
-                      alt={image.author ? `Photo by ${image.author}` : 'Stock image'}
+                      alt={image.author ? t('common.photoBy').replace('{author}', image.author) : 'Stock image'}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity">
                       <div className="absolute bottom-2 left-2 right-2 text-white text-xs">
                         {image.author && (
-                          <p>Photo by {image.author}</p>
+                          <p>{t('common.photoBy').replace('{author}', image.author)}</p>
                         )}
                       </div>
                     </div>
@@ -162,7 +163,7 @@ const ImagePickerModal = ({
                   onClick={handleLoadMore}
                   className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Load More Images
+                  {t('common.loadMoreImages')}
                 </button>
               </div>
             )}
@@ -171,7 +172,7 @@ const ImagePickerModal = ({
           {/* Footer */}
           <div className="border-t border-[var(--border)] p-4 bg-[var(--surface)]">
             <p className="text-xs text-[var(--text-muted)] text-center">
-              Images provided by free stock photo services. Always check licensing terms for commercial use.
+              {t('common.imageAttribution')}
             </p>
           </div>
         </motion.div>

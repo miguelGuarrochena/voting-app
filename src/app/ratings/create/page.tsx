@@ -9,6 +9,7 @@ import { PageLayout } from '@/components/PageLayout';
 import toast from 'react-hot-toast';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
 import { useUsername } from '@/context/UsernameContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { generateShareLink } from '@/lib/token';
 import { createPoll } from '@/lib/db';
 
@@ -23,6 +24,7 @@ type RatingItemForm = {
 export default function CreateRatingPage() {
   const router = useRouter();
   const { username } = useUsername();
+  const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedDuration, setSelectedDuration] = useState('24h');
@@ -34,19 +36,20 @@ export default function CreateRatingPage() {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [imagePickerContext, setImagePickerContext] = useState<{ itemId: string } | null>(null);
   const [uploadingItem, setUploadingItem] = useState<string | null>(null);
+  const [itemFileNames, setItemFileNames] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Duration options
   const durationOptions = [
-    { value: '15min', label: '15 minutes', minutes: 15 },
-    { value: '30min', label: '30 minutes', minutes: 30 },
-    { value: '1h', label: '1 hour', hours: 1 },
-    { value: '3h', label: '3 hours', hours: 3 },
-    { value: '6h', label: '6 hours', hours: 6 },
-    { value: '12h', label: '12 hours', hours: 12 },
-    { value: '24h', label: '24 hours', hours: 24 },
-    { value: '48h', label: '48 hours', hours: 48 },
-    { value: '7d', label: '7 days', hours: 168 },
+    { value: '15min', label: t('form.duration.15min'), minutes: 15 },
+    { value: '30min', label: t('form.duration.30min'), minutes: 30 },
+    { value: '1h', label: t('form.duration.1h'), hours: 1 },
+    { value: '3h', label: t('form.duration.3h'), hours: 3 },
+    { value: '6h', label: t('form.duration.6h'), hours: 6 },
+    { value: '12h', label: t('form.duration.12h'), hours: 12 },
+    { value: '24h', label: t('form.duration.24h'), hours: 24 },
+    { value: '48h', label: t('form.duration.48h'), hours: 48 },
+    { value: '7d', label: t('form.duration.7d'), hours: 168 },
   ];
 
   const addItem = () => {
@@ -77,12 +80,14 @@ export default function CreateRatingPage() {
 
   const removeItemImage = (itemId: string) => {
     updateItem(itemId, { imageUrl: '' });
+    setItemFileNames(prev => ({ ...prev, [itemId]: '' }));
   };
 
   const handleFileUpload = async (itemId: string, file: File) => {
     if (!file) return;
 
     setUploadingItem(itemId);
+    setItemFileNames(prev => ({ ...prev, [itemId]: file.name }));
 
     try {
       // Convert file to base64
@@ -114,14 +119,14 @@ export default function CreateRatingPage() {
     const newErrors: Record<string, string> = {};
 
     if (!title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = t('ratings.titleRequired');
     } else if (title.trim().length < 3) {
-      newErrors.title = 'Title must be at least 3 characters';
+      newErrors.title = t('ratings.titleMinLength');
     }
 
     const validItems = items.filter(item => item.label.trim() !== '');
     if (validItems.length < 2) {
-      newErrors.items = 'At least 2 items are required';
+      newErrors.items = t('ratings.atLeast2ItemsRequired');
     }
 
     setErrors(newErrors);
@@ -165,7 +170,7 @@ export default function CreateRatingPage() {
     );
 
     if (!token) {
-      toast.error('Error al crear la valoración');
+      toast.error(t('ratings.failedToCreate'));
       return;
     }
 
@@ -186,13 +191,13 @@ export default function CreateRatingPage() {
               </button>
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Create Rating</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">{t('ratings.createRating')}</h1>
 
             <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Title *
+              {t('ratings.titleLabel')}
             </label>
             <input
               type="text"
@@ -201,7 +206,7 @@ export default function CreateRatingPage() {
               className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
                 errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
-              placeholder="e.g., Best pizza in NYC?"
+              placeholder={t('ratings.titlePlaceholder')}
               maxLength={100}
             />
             {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
@@ -210,13 +215,13 @@ export default function CreateRatingPage() {
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Description (Optional)
+              {t('ratings.descriptionLabel')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 min-h-[100px]"
-              placeholder="Add more details about this rating..."
+              placeholder={t('ratings.descriptionPlaceholder')}
               maxLength={500}
             />
           </div>
@@ -224,7 +229,7 @@ export default function CreateRatingPage() {
           {/* Duration */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Duration *
+              {t('ratings.durationLabel')}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {durationOptions.map((option) => (
@@ -247,7 +252,7 @@ export default function CreateRatingPage() {
           {/* Items */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-3">
-              Items to Rate * (minimum 2)
+              {t('ratings.itemsToRateLabel')}
             </label>
             <div className="space-y-3">
               {items.map((item, index) => (
@@ -258,14 +263,14 @@ export default function CreateRatingPage() {
                       value={item.label}
                       onChange={(e) => updateItem(item.id, { label: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                      placeholder={`Item ${index + 1}`}
+                      placeholder={t('ratings.itemPlaceholder').replace('{n}', String(index + 1))}
                       maxLength={50}
                     />
                     <textarea
                       value={item.comment || ''}
                       onChange={(e) => updateItem(item.id, { comment: e.target.value })}
                       className="w-full mt-2 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500 min-h-[60px]"
-                      placeholder="Add a comment (optional)"
+                      placeholder={t('ratings.commentPlaceholder')}
                       maxLength={200}
                     />
                     <input
@@ -273,7 +278,7 @@ export default function CreateRatingPage() {
                       value={item.locationUrl || ''}
                       onChange={(e) => updateItem(item.id, { locationUrl: e.target.value })}
                       className="w-full mt-2 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
-                      placeholder="URL de la web (opcional)"
+                      placeholder={t('ratings.locationUrlPlaceholder')}
                     />
                     {/* Image section */}
                     <div className="mt-2 space-y-2">
@@ -300,7 +305,7 @@ export default function CreateRatingPage() {
                           className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
                         >
                           <PhotoIcon className="w-4 h-4" />
-                          Gallery
+                          {t('ratings.gallery')}
                         </button>
                         <button
                           type="button"
@@ -309,15 +314,18 @@ export default function CreateRatingPage() {
                           className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                           <CloudArrowUpIcon className="w-4 h-4" />
-                          {uploadingItem === item.id ? 'Uploading...' : 'Upload'}
+                          {uploadingItem === item.id ? t('ratings.uploading') : t('ratings.upload')}
                         </button>
                       </div>
+                      <span className="text-sm text-[var(--text-muted)]">
+                        {itemFileNames[item.id] || t('form.noFileChosen')}
+                      </span>
                       <input
                         type="text"
                         value={item.imageUrl}
                         onChange={(e) => updateItem(item.id, { imageUrl: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
-                        placeholder="O pega URL de imagen (opcional)"
+                        placeholder={t('ratings.imageUrlPlaceholder')}
                       />
                     </div>
                   </div>
@@ -326,7 +334,7 @@ export default function CreateRatingPage() {
                     onClick={() => removeItem(item.id)}
                     disabled={items.length <= 2}
                     className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={items.length <= 2 ? "You need at least 2 items" : "Remove item"}
+                    title={items.length <= 2 ? t('ratings.needAtLeast2Items') : t('ratings.removeItem')}
                   >
                     <Trash2 size={20} />
                   </button>
@@ -339,7 +347,7 @@ export default function CreateRatingPage() {
               className="mt-3 px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface)] transition-colors font-medium flex items-center gap-2"
             >
               <PlusIcon className="w-4 h-4" />
-              Add Item
+              {t('ratings.addItem')}
             </button>
             {errors.items && <p className="mt-1 text-sm text-red-600">{errors.items}</p>}
           </div>
@@ -349,7 +357,7 @@ export default function CreateRatingPage() {
             type="submit"
             className="w-full px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-lg font-medium hover:shadow-lg transition-all"
           >
-            Create Rating
+            {t('ratings.createRating')}
           </button>
         </form>
 
@@ -358,7 +366,7 @@ export default function CreateRatingPage() {
           isOpen={imagePickerOpen}
           onClose={() => setImagePickerOpen(false)}
           onSelectImage={handleImageSelect}
-          title="Choose Item Image"
+          title={t('ratings.chooseItemImage')}
         />
 
         {/* Hidden file input */}

@@ -48,6 +48,10 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
   } | null>(null);
   const [openEmojiPicker, setOpenEmojiPicker] = useState<string | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const titleFileInputRef = useRef<HTMLInputElement>(null);
+  const [titleFileName, setTitleFileName] = useState<string>('');
+  const optionFileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [optionFileNames, setOptionFileNames] = useState<Record<string, string>>({});
 
   // Duration options
   const durationOptions = [
@@ -180,10 +184,12 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
 
   const removeImage = (optionId: string) => {
     updateOption(optionId, { image: '' });
+    setOptionFileNames(prev => ({ ...prev, [optionId]: '' }));
   };
 
   const removeTitleImage = () => {
     setTitleImage('');
+    setTitleFileName('');
   };
 
   const openImagePicker = (type: 'title' | 'option', optionId?: string) => {
@@ -213,26 +219,26 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
 
     // Title validation
     if (!title.trim()) {
-      newErrors.title = pollType === 'rank' ? 'Ranking title is required' : 'Poll title is required';
+      newErrors.title = pollType === 'rank' ? t('create.titleRequired') : t('create.pollTitleRequired');
     } else if (title.trim().length < 3) {
-      newErrors.title = 'Title must be at least 3 characters long';
+      newErrors.title = t('create.titleMinLength');
     } else if (title.trim().length > 100) {
-      newErrors.title = 'Title must be less than 100 characters';
+      newErrors.title = t('create.titleMaxLength');
     }
 
     // Options validation
     const validOptions = options.filter(option => option.text.trim() !== '');
     if (validOptions.length < 2) {
-      newErrors.options = 'At least 2 options are required';
+      newErrors.options = t('create.minOptions');
     } else if (validOptions.length > 10) {
-      newErrors.options = 'Maximum 10 options allowed';
+      newErrors.options = t('create.maxOptions');
     }
 
     // Check for duplicate options
     const optionTexts = validOptions.map(opt => opt.text.trim().toLowerCase());
     const duplicates = optionTexts.filter((text, index) => optionTexts.indexOf(text) !== index);
     if (duplicates.length > 0) {
-      newErrors.options = 'Duplicate options are not allowed';
+      newErrors.options = t('create.duplicateOptions');
     }
 
     setErrors(newErrors);
@@ -285,7 +291,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       );
 
       if (!token) {
-        toast.error(pollType === 'rank' ? 'Failed to create ranking. Please try again.' : 'Failed to create poll. Please try again.');
+        toast.error(pollType === 'rank' ? t('create.failedRanking') : t('create.failed'));
         setLoading(false);
         return;
       }
@@ -296,7 +302,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       router.push(`/${pollTypeForUrl}/${token}?created=true`);
     } catch (error) {
       console.error('[CreatePoll] Failed to create poll:', error);
-      const errorMessage = pollType === 'rank' ? 'Failed to create ranking. Please try again.' : 'Failed to create poll. Please try again.';
+      const errorMessage = pollType === 'rank' ? t('create.failedRanking') : t('create.failed');
       setSubmitError(errorMessage);
       setErrors({ submit: errorMessage });
       toast.error(errorMessage);
@@ -378,16 +384,28 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                 {/* Title Image Upload */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <input
+                    ref={titleFileInputRef}
                     type="file"
                     accept="image/jpeg,image/jpg,image/png"
+                    className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        setTitleFileName(file.name);
                         handleTitleImageUpload(file);
                       }
                     }}
-                    className="text-sm text-[var(--text-muted)] file:mr-2 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-[var(--primary-light)] file:text-[var(--primary)] hover:file:bg-[var(--primary)] file:cursor-pointer"
                   />
+                  <button
+                    type="button"
+                    onClick={() => titleFileInputRef.current?.click()}
+                    className="text-sm px-4 py-2 bg-[var(--primary-light)] text-[var(--primary)] rounded-full hover:bg-[var(--primary)] hover:text-white transition-colors font-medium border border-[var(--primary)]"
+                  >
+                    📎 {t('form.chooseFile')}
+                  </button>
+                  <span className="text-sm text-[var(--text-muted)]">
+                    {titleFileName || t('form.noFileChosen')}
+                  </span>
                   <button
                     type="button"
                     onClick={() => openImagePicker('title')}
@@ -436,7 +454,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                 placeholder={pollType === 'rank' ? t('form.addDetailsRanking') : t('form.addDetailsPoll')}
                 maxLength={500}
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{description.length}/500 characters</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{t('create.charactersCounter').replace('{count}', String(description.length))}</p>
             </div>
 
             <div>
@@ -455,7 +473,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{getContextLabel('Poll will automatically close after the selected duration')}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{getContextLabel(t('create.autoCloseDuration'))}</p>
             </div>
           </div>
           
@@ -468,9 +486,9 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
 
         {/* Poll Options Section */}
         <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-4">{getContextLabel('Poll Options')}</h2>
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-4">{t('create.pollOptions')}</h2>
           <p className="font-body text-sm text-[var(--text-muted)] mb-6">
-            {pollType === 'rank' ? 'Add at least 2 options to rank. You can include text, emoji, or upload an image for each option.' : 'Add at least 2 options. You can include text, emoji, or upload an image for each option.'}
+            {pollType === 'rank' ? t('create.addRankingOptionsDesc') : t('create.addOptionsDesc')}
           </p>
 
           <div className="space-y-4">
@@ -483,12 +501,12 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                       value={option.text}
                       onChange={(e) => updateOption(option.id, { text: e.target.value })}
                       className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                      placeholder={`Option ${index + 1}`}
+                      placeholder={t('create.optionPlaceholder').replace('{n}', String(index + 1))}
                       maxLength={50}
                     />
                     <div className="relative" ref={openEmojiPicker === option.id ? emojiPickerRef : null}>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">Emoji (optional)</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('create.emojiOptional')}</span>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
@@ -539,29 +557,43 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <input
+                      ref={(el) => {
+                        if (el) optionFileInputRefs.current[option.id] = el;
+                      }}
                       type="file"
                       accept="image/jpeg,image/jpg,image/png"
+                      className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          setOptionFileNames(prev => ({ ...prev, [option.id]: file.name }));
                           handleImageUpload(option.id, file);
                         }
                       }}
-                      className="text-sm text-gray-500 dark:text-gray-400 file:mr-2 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-medium file:bg-[var(--primary-light)] file:text-[var(--primary)] hover:file:bg-[var(--primary)] file:cursor-pointer"
                     />
+                    <button
+                      type="button"
+                      onClick={() => optionFileInputRefs.current[option.id]?.click()}
+                      className="text-sm px-4 py-2 bg-[var(--primary-light)] text-[var(--primary)] rounded-full hover:bg-[var(--primary)] hover:text-white transition-colors font-medium border border-[var(--primary)]"
+                    >
+                      📎 {t('form.chooseFile')}
+                    </button>
+                    <span className="text-sm text-[var(--text-muted)]">
+                      {optionFileNames[option.id] || t('form.noFileChosen')}
+                    </span>
                     <button
                       type="button"
                       onClick={() => openImagePicker('option', option.id)}
                       className="text-sm px-4 py-2 bg-gray-100 dark:bg-gray-800 text-[var(--primary)] rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium border border-[var(--primary)]"
                     >
-                      📷 Stock Images
+                      📷 {t('create.stockImages')}
                     </button>
                     {option.image && (
                       <div className="relative group">
                         <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
                           <img 
                             src={option.image} 
-                            alt="Option preview" 
+                            alt={t('create.optionPreview')} 
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -585,7 +617,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                   onClick={() => removeOption(option.id)}
                   className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                   disabled={options.length <= 2}
-                  title={options.length <= 2 ? "You need at least 2 options" : "Remove option"}
+                  title={options.length <= 2 ? t('create.needAtLeast2Options') : t('create.removeOption')}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -598,16 +630,16 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
             onClick={addOption}
             className="mt-6 px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors font-medium"
           >
-            + Add Option
+            {t('create.addOption')}
           </button>
         </div>
 
         {/* Submit Button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            <p>• Title is required (min. 3 characters)</p>
-            <p>• At least 2 options required</p>
-            <p>• Images must be JPG or PNG (max 5MB)</p>
+            <p>• {t('create.titleRequiredMin')}</p>
+            <p>• {t('create.atLeast2OptionsRequired')}</p>
+            <p>• {t('create.imagesJpgPngMax5mb')}</p>
           </div>
           <button
             type="submit"
@@ -618,7 +650,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50'
             }`}
           >
-            {loading ? 'Creating...' : getContextLabel('Create Poll')}
+            {loading ? t('create.creating') : (pollType === 'rank' ? t('create.createRanking') : t('create.createPoll'))}
           </button>
         </div>
         
@@ -631,7 +663,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-800 dark:text-red-400 mb-1">Failed to create poll</p>
+                <p className="text-sm font-medium text-red-800 dark:text-red-400 mb-1">{pollType === 'rank' ? t('create.failedToCreateRanking') : t('create.failedToCreate')}</p>
                 <p className="text-sm text-red-600 dark:text-red-400">{submitError || errors.submit}</p>
                 <button
                   onClick={() => {
@@ -640,7 +672,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                   }}
                   className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline"
                 >
-                  Dismiss
+                  {t('create.dismiss')}
                 </button>
               </div>
             </div>
@@ -652,7 +684,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
           isOpen={imagePickerOpen}
           onClose={() => setImagePickerOpen(false)}
           onSelectImage={handleImageSelect}
-          title={imagePickerContext?.type === 'title' ? 'Choose Title Image' : 'Choose Option Image'}
+          title={imagePickerContext?.type === 'title' ? t('create.chooseTitleImage') : t('create.chooseOptionImage')}
         />
       </form>
     </div>

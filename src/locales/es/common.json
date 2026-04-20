@@ -10,5 +10,9 @@
   "pollNotFound": "Encuesta no encontrada",
   "pollNotFoundDesc": "Encuesta no encontrada. Puede haber sido eliminada o nunca existió.",
   "loadingImages": "Cargando imágenes...",
-  "emptyState": "Compartí un link para que tus amigos puedan votar ✨"
+  "emptyState": "Compartí un link para que tus amigos puedan votar ✨",
+  "chooseImage": "Elegir una imagen",
+  "loadMoreImages": "Cargar más imágenes",
+  "photoBy": "Foto por {author}",
+  "imageAttribution": "Imágenes proporcionadas por servicios de stock photo gratuitos. Siempre verificá los términos de licencia para uso comercial."
 }

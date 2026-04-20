@@ -6,6 +6,7 @@ import { PlusIcon, Trash2, ArrowLeft } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
 import toast from 'react-hot-toast';
 import { useUsername } from '@/context/UsernameContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { generateShareLink } from '@/lib/token';
 import { createTournament } from '@/lib/db';
 import { generateBracket } from '@/lib/bracket';
@@ -21,6 +22,7 @@ type BracketSize = 4 | 8 | 16;
 export default function CreateVersusPage() {
   const router = useRouter();
   const { username } = useUsername();
+  const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [options, setOptions] = useState<OptionForm[]>([
     { id: crypto.randomUUID(), title: '' },
@@ -32,17 +34,17 @@ export default function CreateVersusPage() {
 
   // Duration options (days)
   const durationOptions = [
-    { value: '1', label: '1 día', days: 1 },
-    { value: '3', label: '3 días', days: 3 },
-    { value: '7', label: '7 días', days: 7 },
-    { value: '14', label: '14 días', days: 14 },
+    { value: '1', label: t('versus.1day'), days: 1 },
+    { value: '3', label: t('versus.3days'), days: 3 },
+    { value: '7', label: t('versus.7days'), days: 7 },
+    { value: '14', label: t('versus.14days'), days: 14 },
   ];
 
   // Bracket size options with preview icons
   const bracketSizeOptions: { value: BracketSize; label: string; icon: string }[] = [
-    { value: 4, label: '4 opciones', icon: '🥊' },
-    { value: 8, label: '8 opciones', icon: '⚔️' },
-    { value: 16, label: '16 opciones', icon: '🏆' },
+    { value: 4, label: t('versus.4options'), icon: '🥊' },
+    { value: 8, label: t('versus.8options'), icon: '⚔️' },
+    { value: 16, label: t('versus.16options'), icon: '🏆' },
   ];
 
   const addOptionPair = () => {
@@ -69,18 +71,18 @@ export default function CreateVersusPage() {
     const newErrors: Record<string, string> = {};
 
     if (!title.trim()) {
-      newErrors.title = 'El título es requerido';
+      newErrors.title = t('versus.titleRequired');
     } else if (title.trim().length < 3) {
-      newErrors.title = 'El título debe tener al menos 3 caracteres';
+      newErrors.title = t('versus.titleMinLength');
     }
 
     const validOptions = options.filter(option => option.title.trim() !== '');
     if (validOptions.length % 2 !== 0) {
-      newErrors.options = 'El número de opciones debe ser par ⚔️';
+      newErrors.options = t('versus.optionsMustBeEven');
     } else if (validOptions.length < 4) {
-      newErrors.options = 'Mínimo 4 opciones requeridas';
+      newErrors.options = t('versus.min4OptionsRequired');
     } else if (validOptions.length > bracketSize) {
-      newErrors.options = `Máximo ${bracketSize} opciones para el tamaño seleccionado`;
+      newErrors.options = t('versus.maxOptionsForBracket').replace('{max}', String(bracketSize));
     }
 
     setErrors(newErrors);
@@ -126,7 +128,7 @@ export default function CreateVersusPage() {
     );
 
     if (!token) {
-      toast.error('Error al crear el torneo');
+      toast.error(t('versus.failedToCreate'));
       return;
     }
 
@@ -159,13 +161,13 @@ export default function CreateVersusPage() {
           </button>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Crear Torneo ⚔️</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">{t('versus.createTournament')}</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Título del torneo *
+              {t('versus.tournamentTitleLabel')}
             </label>
             <input
               type="text"
@@ -174,7 +176,7 @@ export default function CreateVersusPage() {
               className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
                 errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
-              placeholder="ej. Mejor canción de los 90s"
+              placeholder={t('versus.tournamentTitlePlaceholder')}
               maxLength={100}
             />
             {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
@@ -183,7 +185,7 @@ export default function CreateVersusPage() {
           {/* Bracket Size */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Tamaño del bracket *
+              {t('versus.bracketSizeLabel')}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {bracketSizeOptions.map((option) => (
@@ -214,7 +216,7 @@ export default function CreateVersusPage() {
           {/* Options */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-3">
-              Opciones * (se agregan en pares)
+              {t('versus.optionsLabel')}
             </label>
             <div className="space-y-4">
               {Array.from({ length: Math.ceil(options.length / 2) }).map((_, pairIndex) => {
@@ -230,11 +232,11 @@ export default function CreateVersusPage() {
                         value={optionA.title}
                         onChange={(e) => updateOption(optionA.id, e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                        placeholder={`Opción ${pairIndex * 2 + 1}`}
+                        placeholder={t('versus.optionPlaceholder').replace('{n}', String(pairIndex * 2 + 1))}
                         maxLength={50}
                       />
                     </div>
-                    <div className="text-[var(--text-muted)] font-bold px-2">VS</div>
+                    <div className="text-[var(--text-muted)] font-bold px-2">{t('versus.vs')}</div>
                     {optionB ? (
                       <>
                         <div className="flex-1">
@@ -243,7 +245,7 @@ export default function CreateVersusPage() {
                             value={optionB.title}
                             onChange={(e) => updateOption(optionB.id, e.target.value)}
                             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                            placeholder={`Opción ${pairIndex * 2 + 2}`}
+                            placeholder={t('versus.optionPlaceholder').replace('{n}', String(pairIndex * 2 + 2))}
                             maxLength={50}
                           />
                         </div>
@@ -252,7 +254,7 @@ export default function CreateVersusPage() {
                             type="button"
                             onClick={() => removeOptionPair(pairIndex)}
                             className="p-2 text-red-500 hover:text-red-700"
-                            title="Eliminar par"
+                            title={t('versus.removePair')}
                           >
                             <Trash2 size={18} />
                           </button>
@@ -261,7 +263,7 @@ export default function CreateVersusPage() {
                     ) : (
                       <div className="flex-1 opacity-30">
                         <div className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400">
-                          Opción {pairIndex * 2 + 2}
+                          {t('versus.optionPlaceholder').replace('{n}', String(pairIndex * 2 + 2))}
                         </div>
                       </div>
                     )}
@@ -276,18 +278,18 @@ export default function CreateVersusPage() {
               className="mt-3 px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface)] transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <PlusIcon className="w-4 h-4" />
-              Agregar par de opciones
+              {t('versus.addPair')}
             </button>
             {errors.options && <p className="mt-1 text-sm text-red-600">{errors.options}</p>}
             <p className="mt-2 text-xs text-[var(--text-muted)]">
-              Actuales: {validOptions.length} opciones (mínimo 4, máximo {bracketSize})
+              {t('versus.currentOptions').replace('{count}', String(validOptions.length)).replace('{max}', String(bracketSize))}
             </p>
           </div>
 
           {/* Duration */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Duración *
+              {t('versus.durationLabel')}
             </label>
             <div className="grid grid-cols-4 gap-2">
               {durationOptions.map((option) => (
@@ -306,7 +308,7 @@ export default function CreateVersusPage() {
               ))}
             </div>
             <p className="mt-2 text-xs text-[var(--text-muted)]">
-              El torneo expira en {durationOptions.find(d => d.value === selectedDuration)?.label} si no se completa
+              {t('versus.tournamentExpires').replace('{duration}', durationOptions.find(d => d.value === selectedDuration)?.label || '')}
             </p>
           </div>
 
@@ -316,7 +318,7 @@ export default function CreateVersusPage() {
             disabled={!canSubmit}
             className="w-full px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Crear torneo
+            {t('versus.createTournament')}
           </button>
         </form>
       </div>
