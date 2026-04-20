@@ -2,12 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
 import Navbar from '@/components/Navbar';
-import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { LanguageProvider } from '@/context/LanguageContext';
+import { UsernameProvider } from '@/context/UsernameContext';
 import StoreProvider from '@/providers/StoreProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Footer from '@/components/Footer';
+import OnboardingScreen from '@/components/OnboardingScreen';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -48,10 +49,11 @@ const RootLayout = ({
     <html lang="en" className="h-full">
       <body className={`${inter.className} flex flex-col min-h-screen`}>
         <ErrorBoundary>
-          <ThemeProvider>
-            <LanguageProvider>
-              <AuthProvider>
+          <UsernameProvider>
+            <ThemeProvider>
+              <LanguageProvider>
                 <StoreProvider>
+                  <OnboardingScreen />
                   <Navbar />
                   <main className="flex-grow flex flex-col">
                     <ErrorBoundary>
@@ -60,9 +62,9 @@ const RootLayout = ({
                   </main>
                   <Footer />
                 </StoreProvider>
-              </AuthProvider>
-            </LanguageProvider>
-          </ThemeProvider>
+              </LanguageProvider>
+            </ThemeProvider>
+          </UsernameProvider>
         </ErrorBoundary>
       </body>
     </html>

@@ -4,7 +4,94 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createEmptyReactions } from '@/types/poll';
 import { useCreatePoll } from '@/hooks/useApi';
+import { useUsername } from '@/context/UsernameContext';
 import ImagePickerModal from './ImagePickerModal';
+import { generateToken, generateShareLink, storePollData, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+
+interface ShareResultScreenProps {
+  data: { token: string; shareLink: string; expiresAt: Date };
+  onBack: () => void;
+  pollType: 'vote' | 'rank';
+  username: string;
+}
+
+const ShareResultScreen = ({ data, onBack, pollType, username }: ShareResultScreenProps) => {
+  const [copied, setCopied] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining(data.expiresAt));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeRemaining(getTimeRemaining(data.expiresAt));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [data.expiresAt]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(data.shareLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8 text-center">
+        {/* Success Icon */}
+        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+
+        {/* Heading */}
+        <h2 className="text-2xl font-bold text-[var(--text)] mb-2">
+          ¡Listo {username}! Comparte el link 🎉
+        </h2>
+        <p className="text-[var(--text-muted)] mb-6">
+          Share the link below to start collecting votes
+        </p>
+
+        {/* Share Link */}
+        <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={data.shareLink}
+              readOnly
+              className="flex-1 bg-transparent border-none text-[var(--text)] text-sm focus:outline-none"
+            />
+            <button
+              onClick={handleCopy}
+              className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm"
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+          </div>
+        </div>
+
+        {/* Countdown */}
+        <div className="bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] rounded-lg p-4 mb-6">
+          <p className="text-sm text-[var(--text-muted)] mb-1">Time remaining</p>
+          <p className="text-2xl font-bold text-[var(--primary)]">
+            {formatTimeRemaining(timeRemaining)}
+          </p>
+        </div>
+
+        {/* Back Button */}
+        <button
+          onClick={onBack}
+          className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors font-medium"
+        >
+          ← Back to home
+        </button>
+      </div>
+    </div>
+  );
+};
 
 type FormPollOption = {
   id: string;
@@ -23,6 +110,7 @@ interface CreatePollFormProps {
 }
 
 export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
+  const { username } = useUsername();
   const [pollType, setPollType] = useState<'vote' | 'rank'>(defaultType || 'vote');
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState('');
@@ -43,15 +131,21 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     optionId?: string;
   } | null>(null);
   const [openEmojiPicker, setOpenEmojiPicker] = useState<string | null>(null);
+  const [showShareScreen, setShowShareScreen] = useState(false);
+  const [createdPollData, setCreatedPollData] = useState<{ token: string; shareLink: string; expiresAt: Date } | null>(null);
   const router = useRouter();
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   // Duration options
   const durationOptions = [
+    { value: '15min', label: '15 minutes', minutes: 15 },
+    { value: '30min', label: '30 minutes', minutes: 30 },
     { value: '1h', label: '1 hour', hours: 1 },
+    { value: '3h', label: '3 hours', hours: 3 },
     { value: '6h', label: '6 hours', hours: 6 },
+    { value: '12h', label: '12 hours', hours: 12 },
     { value: '24h', label: '24 hours', hours: 24 },
-    { value: '3d', label: '3 days', hours: 72 },
+    { value: '48h', label: '48 hours', hours: 48 },
     { value: '7d', label: '7 days', hours: 168 },
   ];
 
@@ -255,11 +349,11 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     // Log submission data for debugging
     console.log('[CreatePoll] Submitting poll data:', {
       title: title.trim(),
@@ -268,39 +362,56 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
       isPrivate: isPrivate,
       invitedUsers: participants.map(p => p.emailOrUsername)
     });
-    
+
     try {
       // Calculate expiration date from selected duration
       const selectedOption = durationOptions.find(opt => opt.value === selectedDuration);
-      const expiresAt = new Date(Date.now() + (selectedOption?.hours || 24) * 60 * 60 * 1000);
+      let durationMs: number;
+      if (selectedOption?.minutes) {
+        durationMs = selectedOption.minutes * 60 * 1000;
+      } else {
+        durationMs = (selectedOption?.hours || 24) * 60 * 60 * 1000;
+      }
+      const expiresAt = new Date(Date.now() + durationMs);
 
-      // Create the new poll
-      const newPoll = await createPoll({
+      // Generate token
+      const token = generateToken();
+      const pollTypeForUrl = pollType === 'rank' ? 'ranking' : pollType === 'vote' ? 'vote' : 'vote';
+      const shareLink = generateShareLink(token, pollTypeForUrl as 'vote' | 'ranking' | 'rating');
+
+      // Create poll data object
+      const pollData = {
+        token,
         title: title.trim(),
         description: description.trim() || undefined,
         titleImage: titleImage || undefined,
-        expiresAt: expiresAt,
-        visibility: (!isPrivate ? 'public' : 'private') as 'public' | 'private',
-        createdBy: 'current-user',
+        expiresAt: expiresAt.toISOString(),
         type: pollType,
+        createdBy: username || 'Anonymous',
         isPrivate: isPrivate,
         invitedUsers: participants.map(p => p.emailOrUsername),
         options: options
           .filter(option => option.text.trim() !== '')
           .map(option => ({
             id: crypto.randomUUID(),
-            pollId: '',
             title: option.text.trim(),
             imageUrl: option.image || undefined,
+            emoji: option.emoji,
             votes: 0,
             reactions: createEmptyReactions(),
           })),
-      });
-      
-      console.log('[CreatePoll] Poll created successfully:', newPoll);
-      
-      // Redirect to the new poll
-      router.push('/');
+        votes: [],
+        createdAt: new Date().toISOString(),
+      };
+
+      // Store in localStorage
+      storePollData(token, pollData, pollTypeForUrl as 'vote' | 'ranking' | 'rating');
+
+      console.log('[CreatePoll] Poll created successfully with token:', token);
+
+      // Show share screen
+      setCreatedPollData({ token, shareLink, expiresAt });
+      setShowShareScreen(true);
     } catch (error) {
       console.error('[CreatePoll] Failed to create poll:', error);
       setErrors({ submit: pollType === 'rank' ? 'Failed to create ranking. Please try again.' : 'Failed to create poll. Please try again.' });
@@ -309,7 +420,18 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <form onSubmit={handleSubmit} className="space-y-8">
+      {showShareScreen && createdPollData ? (
+        <ShareResultScreen
+          data={createdPollData}
+          pollType={pollType}
+          username={username || 'Anonymous'}
+          onBack={() => {
+            setShowShareScreen(false);
+            router.push('/');
+          }}
+        />
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8">
         {/* Poll Basics Section */}
         <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
           <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">{getContextLabel('Poll Basics')}</h2>
@@ -767,6 +889,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
           title={imagePickerContext?.type === 'title' ? 'Choose Title Image' : 'Choose Option Image'}
         />
       </form>
+      )}
     </div>
   );
 }

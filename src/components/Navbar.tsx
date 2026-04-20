@@ -1,47 +1,58 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useUsername } from '@/context/UsernameContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
   ChartBarIcon,
   TrophyIcon,
-  CogIcon,
   StarIcon,
-  UserCircleIcon,
   ArrowLeftIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe } from 'lucide-react';
-import { IconLayoutList, IconUser, IconLock, IconLogout } from '@tabler/icons-react';
-import { UserAvatar } from '@/components/UserAvatar';
+import { Menu as MenuIcon, X, Moon, Sun, Globe } from 'lucide-react';
 import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
+  const { username, setUsername } = useUsername();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showUsernameMenu, setShowUsernameMenu] = useState(false);
+  const [showChangeUsernameModal, setShowChangeUsernameModal] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
 
   // Handle scroll effect for desktop navbar
   useEffect(() => {
     const handleScroll = () => {
       if (!isMobile) {
-        setScrolled(window.scrollY > 10);
+        setScrolled(window.scrollY > 20);
       }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobile]);
+
+  const handleChangeUsername = () => {
+    if (newUsername.trim().length >= 2 && newUsername.trim().length <= 20) {
+      setUsername(newUsername.trim());
+      setNewUsername('');
+      setShowChangeUsernameModal(false);
+      setShowUsernameMenu(false);
+    }
+  };
+
+  const handleDeleteUsername = () => {
+    localStorage.removeItem('pickly_username');
+    window.location.reload();
+  };
 
   // Handle mobile detection
   useEffect(() => {
@@ -53,15 +64,6 @@ const Navbar = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
-  // Don't show navbar on auth pages
-  if (pathname?.startsWith('/auth')) {
-    return null;
-  }
 
   // Mobile bottom tab bar
   if (isMobile) {
@@ -114,6 +116,31 @@ const Navbar = () => {
         {showMobileMenu && (
           <div className="fixed top-14 left-0 right-0 z-50 bg-[var(--surface)] border-b border-[var(--border)] shadow-lg">
             <div className="py-2">
+              {/* Username section */}
+              {username && (
+                <>
+                  <div className="px-4 py-2 border-b border-[var(--border)] mb-2">
+                    <p className="text-sm text-[var(--text-muted)]">Hola, {username} ✨</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowChangeUsernameModal(true);
+                      setShowMobileMenu(false);
+                    }}
+                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <span>Cambiar nombre</span>
+                  </button>
+                  <button
+                    onClick={handleDeleteUsername}
+                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <span>Salir</span>
+                  </button>
+                  <div className="border-t border-[var(--border)] my-2"></div>
+                </>
+              )}
+
               {/* Theme toggle */}
               <button
                 onClick={() => toggleTheme()}
@@ -131,52 +158,6 @@ const Navbar = () => {
                 <Globe className="w-5 h-5" />
                 <span>{language === 'en' ? t('lang.es') : t('lang.en')}</span>
               </button>
-
-              {isAuthenticated ? (
-                <>
-                  <Link
-                    href="/settings"
-                    onClick={() => setShowMobileMenu(false)}
-                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                  >
-                    <CogIcon className="w-5 h-5" />
-                    <span>{t('nav.settings')}</span>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/auth/login"
-                    onClick={() => setShowMobileMenu(false)}
-                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                  >
-                    <UserCircleIcon className="w-5 h-5" />
-                    <span>{t('nav.login')}</span>
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    onClick={() => setShowMobileMenu(false)}
-                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                  >
-                    <UserCircleIcon className="w-5 h-5" />
-                    <span>{t('nav.signup')}</span>
-                  </Link>
-                </>
-              )}
-
-              {/* Logout at the end for authenticated users */}
-              {isAuthenticated && (
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setShowMobileMenu(false);
-                  }}
-                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors border-t border-[var(--border)] mt-2"
-                >
-                  <UserCircleIcon className="w-5 h-5" />
-                  <span>{t('nav.logout')}</span>
-                </button>
-              )}
             </div>
           </div>
         )}
@@ -237,205 +218,184 @@ const Navbar = () => {
         {/* Add padding to account for fixed elements */}
         <div className="h-14 sm:h-16"></div>
         <div className="h-16 sm:h-20"></div>
+
+        {/* Change Username Modal - outside nav to cover full screen */}
+        {showChangeUsernameModal && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 p-4 bg-black/50">
+            <div className="bg-[var(--surface)] rounded-xl shadow-2xl border border-[var(--border)] p-6 w-full max-w-md mt-8">
+              <h3 className="text-xl font-bold text-[var(--text)] mb-4">Cambiar tu nombre ✨</h3>
+              <input
+                type="text"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                placeholder="Tu nuevo nombre..."
+                maxLength={20}
+                className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-all mb-4"
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowChangeUsernameModal(false);
+                    setNewUsername('');
+                  }}
+                  className="flex-1 px-4 py-3 border border-[var(--border)] rounded-xl text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleChangeUsername}
+                  disabled={newUsername.trim().length < 2 || newUsername.trim().length > 20}
+                  className="flex-1 px-4 py-3 bg-[var(--primary)] text-white rounded-xl font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   }
 
   // Desktop navbar
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-40 bg-[var(--bg)]/95 backdrop-blur-xl border-b border-[var(--border)] transition-all ${
-      scrolled ? 'shadow-lg' : ''
-    }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-xl sm:text-2xl font-bold text-[var(--primary)] font-display">✨ Pickly</span>
-          </Link>
-
-          {/* Center nav links */}
-          <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
-            <Link
-              href="/votes"
-              className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                pathname === '/votes'
-                  ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
-              }`}
-            >
-              <ChartBarIcon className="w-5 h-5 transition-transform duration-300" />
-              <span>Votes</span>
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-40 bg-[var(--bg)]/95 backdrop-blur-xl border-b border-[var(--border)] transition-all ${
+        scrolled ? 'shadow-lg' : ''
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-2">
+              <span className="text-xl sm:text-2xl font-bold text-[var(--primary)] font-display">✨ Pickly</span>
             </Link>
 
-            <Link
-              href="/ranking"
-              className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                pathname === '/ranking'
-                  ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
-              }`}
-            >
-              <TrophyIcon className="w-5 h-5 transition-transform duration-300" />
-              <span>Ranking</span>
-            </Link>
+            {/* Center nav links */}
+            <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
+              <Link
+                href="/votes"
+                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                  pathname === '/votes'
+                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                }`}
+              >
+                <ChartBarIcon className="w-5 h-5 transition-transform duration-300" />
+                <span>Votes</span>
+              </Link>
 
-            <Link
-              href="/ratings"
-              className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                pathname === '/ratings'
-                  ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
-              }`}
-            >
-              <StarIcon className="w-5 h-5 transition-transform duration-300" />
-              <span>Ratings</span>
-            </Link>
+              <Link
+                href="/ranking"
+                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                  pathname === '/ranking'
+                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                }`}
+              >
+                <TrophyIcon className="w-5 h-5 transition-transform duration-300" />
+                <span>Ranking</span>
+              </Link>
 
-            <Link
-              href="/spin"
-              className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
-                pathname === '/spin'
-                  ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
-              }`}
-            >
-              <ArrowPathIcon className="w-5 h-5 transition-transform duration-300" />
-              <span>Spin</span>
-            </Link>
-          </div>
+              <Link
+                href="/ratings"
+                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                  pathname === '/ratings'
+                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                }`}
+              >
+                <StarIcon className="w-5 h-5 transition-transform duration-300" />
+                <span>Ratings</span>
+              </Link>
 
-          {/* Right side */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            {isAuthenticated ? (
-              <>
+              <Link
+                href="/spin"
+                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                  pathname === '/spin'
+                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                }`}
+              >
+                <ArrowPathIcon className="w-5 h-5 transition-transform duration-300" />
+                <span>Spin</span>
+              </Link>
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              {username && (
                 <div className="relative">
                   <button
-                    onClick={() => setShowCreateMenu(!showCreateMenu)}
-                    className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base flex items-center gap-2"
+                    onClick={() => setShowUsernameMenu(!showUsernameMenu)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full hover:bg-[var(--surface)] transition-colors"
                   >
-                    <Plus size={16} />
-                    <span>Create</span>
+                    <span className="text-sm font-medium text-[var(--text)]">{username}</span>
+                    <span className="text-lg">✨</span>
                   </button>
-
-                  {showCreateMenu && (
-                    <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[180px] overflow-hidden">
-                      <div className="py-1">
-                        <Link
-                          href="/create?type=vote"
-                          onClick={() => setShowCreateMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                        >
-                          <ChartBarIcon className="w-4 h-4" />
-                          <span>Vote</span>
-                        </Link>
-                        <Link
-                          href="/create?type=rank"
-                          onClick={() => setShowCreateMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                        >
-                          <TrophyIcon className="w-4 h-4" />
-                          <span>Ranking</span>
-                        </Link>
-                        <Link
-                          href="/spin"
-                          onClick={() => setShowCreateMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                        >
-                          <ArrowPathIcon className="w-4 h-4" />
-                          <span>Spin Wheel</span>
-                        </Link>
-                        <Link
-                          href="/ratings/create"
-                          onClick={() => setShowCreateMenu(false)}
-                          className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                        >
-                          <StarIcon className="w-4 h-4" />
-                          <span>Ratings</span>
-                        </Link>
-                      </div>
+                  {showUsernameMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg py-2 z-50">
+                      <button
+                        onClick={() => {
+                          setShowChangeUsernameModal(true);
+                          setShowUsernameMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                      >
+                        Cambiar nombre
+                      </button>
+                      <button
+                        onClick={handleDeleteUsername}
+                        className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        Salir
+                      </button>
                     </div>
                   )}
                 </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth/login"
-                  className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium transition-colors text-sm sm:text-base"
-                >
-                  {t('nav.login')}
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base"
-                >
-                  {t('nav.signup')}
-                </Link>
-              </>
-            )}
-            <ThemeLanguageSwitcher />
-
-            {/* User avatar at the end */}
-            {isAuthenticated && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="hover:opacity-80 transition-opacity"
-                >
-                  <UserAvatar
-                    name={user?.name || 'User'}
-                    avatarUrl={user?.avatar}
-                    size="md"
-                    className="sm:w-10 sm:h-10"
-                  />
-                </button>
-
-                {showUserMenu && (
-                  <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[160px] overflow-hidden">
-                    <div className="py-1">
-                      <Link
-                        href="/settings"
-                        onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                      >
-                        <CogIcon className="w-4 h-4" />
-                        <span>{t('nav.settings')}</span>
-                      </Link>
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setShowUserMenu(false);
-                        }}
-                        className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                      >
-                        <UserCircleIcon className="w-4 h-4" />
-                        <span>{t('nav.logout')}</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+              <ThemeLanguageSwitcher />
+            </div>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Click outside to close user menu */}
-      {showUserMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowUserMenu(false)}
-        />
+      {/* Change Username Modal - outside nav to cover full screen */}
+      {showChangeUsernameModal && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 p-4 bg-black/50">
+          <div className="bg-[var(--surface)] rounded-xl shadow-2xl border border-[var(--border)] p-6 w-full max-w-md mt-8">
+            <h3 className="text-xl font-bold text-[var(--text)] mb-4">Cambiar tu nombre ✨</h3>
+            <input
+              type="text"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              placeholder="Tu nuevo nombre..."
+              maxLength={20}
+              className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-all mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowChangeUsernameModal(false);
+                  setNewUsername('');
+                }}
+                className="flex-1 px-4 py-3 border border-[var(--border)] rounded-xl text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleChangeUsername}
+                disabled={newUsername.trim().length < 2 || newUsername.trim().length > 20}
+                className="flex-1 px-4 py-3 bg-[var(--primary)] text-white rounded-xl font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-
-      {/* Click outside to close create menu */}
-      {showCreateMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowCreateMenu(false)}
-        />
-      )}
-    </nav>
+    </>
   );
 };
 

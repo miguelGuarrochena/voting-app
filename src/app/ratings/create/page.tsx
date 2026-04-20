@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PlusIcon, XMarkIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/PageLayout';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
+import { useUsername } from '@/context/UsernameContext';
+import { generateToken, generateShareLink, storePollData, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 
 type RatingItemForm = {
   id: string;
@@ -15,9 +17,11 @@ type RatingItemForm = {
 
 export default function CreateRatingPage() {
   const router = useRouter();
+  const { username } = useUsername();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState('24h');
   const [items, setItems] = useState<RatingItemForm[]>([
     { id: crypto.randomUUID(), label: '', imageUrl: '' },
     { id: crypto.randomUUID(), label: '', imageUrl: '' },
@@ -26,7 +30,101 @@ export default function CreateRatingPage() {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [imagePickerContext, setImagePickerContext] = useState<{ itemId: string } | null>(null);
   const [uploadingItem, setUploadingItem] = useState<string | null>(null);
+  const [showShareScreen, setShowShareScreen] = useState(false);
+  const [createdPollData, setCreatedPollData] = useState<{ token: string; shareLink: string; expiresAt: Date } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Duration options
+  const durationOptions = [
+    { value: '15min', label: '15 minutes', minutes: 15 },
+    { value: '30min', label: '30 minutes', minutes: 30 },
+    { value: '1h', label: '1 hour', hours: 1 },
+    { value: '3h', label: '3 hours', hours: 3 },
+    { value: '6h', label: '6 hours', hours: 6 },
+    { value: '12h', label: '12 hours', hours: 12 },
+    { value: '24h', label: '24 hours', hours: 24 },
+    { value: '48h', label: '48 hours', hours: 48 },
+    { value: '7d', label: '7 days', hours: 168 },
+  ];
+
+  // ShareResultScreen component
+  const ShareResultScreen = ({ data, onBack, username }: { data: { token: string; shareLink: string; expiresAt: Date }; onBack: () => void; username: string }) => {
+    const [copied, setCopied] = useState(false);
+    const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining(data.expiresAt));
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setTimeRemaining(getTimeRemaining(data.expiresAt));
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }, [data.expiresAt]);
+
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(data.shareLink);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    };
+
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8 text-center">
+          {/* Success Icon */}
+          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+
+          {/* Heading */}
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-2">
+            ¡Listo {username}! Comparte el link 🎉
+          </h2>
+          <p className="text-[var(--text-muted)] mb-6">
+            Share the link below to start collecting ratings
+          </p>
+
+          {/* Share Link */}
+          <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={data.shareLink}
+                readOnly
+                className="flex-1 bg-transparent border-none text-[var(--text)] text-sm focus:outline-none"
+              />
+              <button
+                onClick={handleCopy}
+                className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm"
+              >
+                {copied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+          </div>
+
+          {/* Countdown */}
+          <div className="bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] rounded-lg p-4 mb-6">
+            <p className="text-sm text-[var(--text-muted)] mb-1">Time remaining</p>
+            <p className="text-2xl font-bold text-[var(--primary)]">
+              {formatTimeRemaining(timeRemaining)}
+            </p>
+          </div>
+
+          {/* Back Button */}
+          <button
+            onClick={onBack}
+            className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors font-medium"
+          >
+            ← Back to home
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const addItem = () => {
     setItems([...items, { id: crypto.randomUUID(), label: '', imageUrl: '' }]);
@@ -111,49 +209,76 @@ export default function CreateRatingPage() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // Create rating object
-    const newRating = {
-      id: crypto.randomUUID(),
+    // Calculate expiration date from selected duration
+    const selectedOption = durationOptions.find(opt => opt.value === selectedDuration);
+    let durationMs: number;
+    if (selectedOption?.minutes) {
+      durationMs = selectedOption.minutes * 60 * 1000;
+    } else {
+      durationMs = (selectedOption?.hours || 24) * 60 * 60 * 1000;
+    }
+    const expiresAt = new Date(Date.now() + durationMs);
+
+    // Generate token
+    const token = generateToken();
+    const shareLink = generateShareLink(token, 'rating');
+
+    // Create rating data object
+    const ratingData = {
+      token,
       title,
       description,
       isPrivate,
-      visibility: isPrivate ? 'private' : 'public',
-      createdAt: new Date().toISOString(),
-      createdBy: 'current-user', // In a real app, this would come from auth
-      items: items
+      expiresAt: expiresAt.toISOString(),
+      type: 'rating',
+      createdBy: username || 'Anonymous',
+      options: items
         .filter(item => item.label.trim() !== '')
         .map(item => ({
           id: crypto.randomUUID(),
-          ratingId: crypto.randomUUID(),
-          label: item.label,
+          title: item.label,
           imageUrl: item.imageUrl,
-          votes: []
-        }))
+          totalRating: 0,
+          ratingCount: 0,
+        })),
+      ratings: [],
+      createdAt: new Date().toISOString(),
     };
 
-    // Save to localStorage (in a real app, this would be an API call)
-    const existingRatings = JSON.parse(localStorage.getItem('ratings') || '[]');
-    localStorage.setItem('ratings', JSON.stringify([...existingRatings, newRating]));
+    // Store in localStorage
+    storePollData(token, ratingData, 'rating');
 
-    // Redirect to ratings page
-    router.push('/ratings');
+    // Show share screen
+    setCreatedPollData({ token, shareLink, expiresAt });
+    setShowShareScreen(true);
   };
 
   return (
     <PageLayout className="pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto pb-8">
-        <div className="py-0 sm:py-6">
-          <Link
-            href="/ratings"
-            className="hidden sm:block text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-          >
-            ← Back
-          </Link>
-        </div>
+        {showShareScreen && createdPollData ? (
+          <ShareResultScreen
+            data={createdPollData}
+            username={username || 'Anonymous'}
+            onBack={() => {
+              setShowShareScreen(false);
+              router.push('/');
+            }}
+          />
+        ) : (
+          <>
+            <div className="py-0 sm:py-6">
+              <Link
+                href="/ratings"
+                className="hidden sm:block text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+              >
+                ← Back
+              </Link>
+            </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Create Rating</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Create Rating</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
@@ -184,6 +309,29 @@ export default function CreateRatingPage() {
               placeholder="Add more details about this rating..."
               maxLength={500}
             />
+          </div>
+
+          {/* Duration */}
+          <div>
+            <label className="block text-sm font-medium text-[var(--text)] mb-2">
+              Duration *
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {durationOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setSelectedDuration(option.value)}
+                  className={`px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                    selectedDuration === option.value
+                      ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                      : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Privacy */}
@@ -319,6 +467,8 @@ export default function CreateRatingPage() {
             }
           }}
         />
+          </>
+        )}
       </div>
     </PageLayout>
   );

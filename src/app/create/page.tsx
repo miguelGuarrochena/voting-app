@@ -4,7 +4,6 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CreatePollForm } from '@/components/create/create-poll-form';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageLayout } from '@/components/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -43,11 +42,9 @@ const CreatePollPage = () => {
   const { t } = useLanguage();
 
   return (
-    <ProtectedRoute>
-      <Suspense fallback={<PageLayout className="flex items-center justify-center"><div>{t('common.loading')}</div></PageLayout>}>
-        <CreatePollContent />
-      </Suspense>
-    </ProtectedRoute>
+    <Suspense fallback={<PageLayout className="flex items-center justify-center"><div>{t('common.loading')}</div></PageLayout>}>
+      <CreatePollContent />
+    </Suspense>
   );
 };
 

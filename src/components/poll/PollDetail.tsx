@@ -8,7 +8,6 @@ import confetti from 'canvas-confetti';
 import usePollStore from '@/store/pollStore';
 import { Poll, PollOption, getPositiveVotes } from '@/types/poll';
 import { useLanguage } from '@/context/LanguageContext';
-import { UserAvatar } from '@/components/UserAvatar';
 import { RankPollVote } from './RankPollVote';
 import { RankPollResults } from './RankPollResults';
 import { ImageModal } from '@/components/ImageModal';
@@ -309,10 +308,9 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
 
         {/* Creator Info */}
         <div className="flex flex-col gap-1">
-          {/* Line 1: avatar + username + Active badge */}
+          {/* Line 1: username + Active badge */}
           <div className="flex items-center gap-2 flex-wrap">
-            <UserAvatar name={poll.createdBy} size="md" />
-            <span className="text-sm text-[var(--text-muted)]">{poll.createdBy}</span>
+            <span className="text-sm font-medium text-[var(--text)]">{poll.createdBy || 'Anonymous'}</span>
             <div className={`px-2 py-1 rounded-full text-xs font-medium ${
               hasEnded
                 ? 'bg-[var(--badge-neutral-bg)] text-[var(--badge-neutral-text)]'

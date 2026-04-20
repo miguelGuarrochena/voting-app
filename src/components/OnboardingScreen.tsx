@@ -1,0 +1,92 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useUsername } from '@/context/UsernameContext';
+
+export default function OnboardingScreen() {
+  const { username, setUsername, hasOnboarded } = useUsername();
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't show if user already has a username or not mounted yet
+  if (!mounted || username) {
+    return null;
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = name.trim();
+    
+    if (trimmedName.length < 2) {
+      setError('Por favor, ingresa al menos 2 caracteres');
+      return;
+    }
+    
+    if (trimmedName.length > 20) {
+      setError('El nombre es muy largo (máximo 20 caracteres)');
+      return;
+    }
+    
+    setUsername(trimmedName);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-[var(--bg)] flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] p-8 text-center">
+          {/* Logo */}
+          <div className="mb-8">
+            <h1 className="text-4xl sm:text-5xl font-bold font-display text-[var(--primary)] mb-2">
+              ✨ Pickly
+            </h1>
+            <p className="text-[var(--text-muted)]">Decisiones rápidas, divertidas y en grupo</p>
+          </div>
+
+          {/* Question */}
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-6">
+            ¿Cómo te llamas? ✨
+          </h2>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setError('');
+                }}
+                placeholder="Tu nombre o alias..."
+                maxLength={20}
+                className="w-full px-6 py-4 text-lg border-2 border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-all text-center"
+                autoFocus
+              />
+              {error && (
+                <p className="mt-2 text-sm text-red-500">{error}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={!name.trim()}
+              className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              Entrar a Pickly →
+            </button>
+          </form>
+
+          {/* Footer note */}
+          <p className="mt-6 text-sm text-[var(--text-muted)]">
+            Solo tu nombre, sin email ni contraseña 🎉
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

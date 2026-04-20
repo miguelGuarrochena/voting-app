@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
 import usePollStore from '@/store/pollStore';
 import { motion } from 'framer-motion';
 import { BarChart2, Trophy, RefreshCw, Star } from 'lucide-react';
@@ -41,7 +40,6 @@ const features = [
 ];
 
 export default function Home() {
-  const { isAuthenticated, loading } = useAuth();
   const { polls, loadPolls } = usePollStore();
   const [mounted, setMounted] = useState(false);
 
@@ -84,26 +82,6 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Auth-aware Heading */}
-        {!loading && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-center mb-8"
-          >
-            {isAuthenticated ? (
-              <h2 className="text-2xl sm:text-3xl font-bold font-display text-[var(--text)]">
-                What do you want to create today?
-              </h2>
-            ) : (
-              <h2 className="text-2xl sm:text-3xl font-bold font-display text-[var(--text)]">
-                Get started — it's free
-              </h2>
-            )}
-          </motion.div>
-        )}
-
         {/* Feature Cards */}
         <div className="grid grid-cols-2 gap-6 mb-12">
           {features.map((feature, index) => {
@@ -142,23 +120,6 @@ export default function Home() {
             );
           })}
         </div>
-
-        {/* CTA for non-logged-in users */}
-        {!loading && !isAuthenticated && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="text-center mb-12"
-          >
-            <Link
-              href="/auth/signup"
-              className="inline-flex items-center gap-2 bg-[var(--primary)] text-white px-8 py-4 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-lg shadow-lg hover:shadow-xl"
-            >
-              Create your first poll
-            </Link>
-          </motion.div>
-        )}
 
         {/* Recent Activity Section */}
         <motion.div

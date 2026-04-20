@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { UserAvatar } from '@/components/UserAvatar';
 import { ImageGallery } from './ImageGallery';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -52,7 +51,7 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
   const mainImage = poll.options[0]?.imageUrl;
   
   // Memoize calculations
-  const { isExpired, timeRemaining, totalVotes, hasVotes, urgencyBadge } = useMemo(() => {
+  const { isExpired, timeRemaining, totalVotes, hasVotes, statusChip } = useMemo(() => {
     const now = new Date();
     const expiryDate = new Date(poll.expiresAt);
     const votes = poll.options.reduce((sum: number, option: any) => sum + (option.votes || 0), 0);
@@ -61,13 +60,46 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-    let urgencyBadge = null;
-    if (!isExpired && hours < 24) {
-      if (hours < 1) {
-        urgencyBadge = { text: `Closes in ${minutes}m`, color: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' };
-      } else {
-        urgencyBadge = { text: `Closes in ${hours}h`, color: 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' };
-      }
+    // Calculate status chip state
+    let statusChip = {
+      state: 'active' as 'active' | 'closing_soon' | 'ended',
+      text: '',
+      bgColor: '',
+      textColor: '',
+      dotColor: '',
+      showDot: false
+    };
+
+    if (isExpired) {
+      statusChip = {
+        state: 'ended',
+        text: 'Terminada',
+        bgColor: '#2a2a2a',
+        textColor: '#a0a0a0',
+        dotColor: '#666666',
+        showDot: true
+      };
+    } else if (hours < 2) {
+      // Closing soon (less than 2 hours)
+      const timeText = hours > 0 ? `Cierra en ${hours}h ${minutes}m` : `Cierra en ${minutes}m`;
+      statusChip = {
+        state: 'closing_soon',
+        text: timeText,
+        bgColor: '#7a3200',
+        textColor: '#ffffff',
+        dotColor: '#ff9500',
+        showDot: false
+      };
+    } else {
+      // Active (more than 2 hours)
+      statusChip = {
+        state: 'active',
+        text: 'Activa',
+        bgColor: '#1a5c3a',
+        textColor: '#ffffff',
+        dotColor: '#4ade80',
+        showDot: true
+      };
     }
 
     return {
@@ -75,7 +107,7 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
       timeRemaining: formatDistanceToNow(expiryDate, { addSuffix: true }),
       totalVotes: votes,
       hasVotes: votes > 0,
-      urgencyBadge
+      statusChip
     };
   }, [poll.expiresAt, poll.options]);
 
@@ -199,14 +231,9 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
                 </div>
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                
-                {/* Status Badge */}
+
+                {/* Single Status Chip */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-                  {urgencyBadge && (
-                    <div className="px-2 py-1 rounded-full text-xs font-medium border border-[var(--warning)] bg-[var(--badge-warning-bg)] text-[var(--badge-warning-text)]">
-                      {urgencyBadge.text}
-                    </div>
-                  )}
                   {poll.isPrivate && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-purple-200 dark:border-purple-800 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 backdrop-blur-sm">
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -215,13 +242,23 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
                       {t('poll.private')}
                     </div>
                   )}
-                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
-                    isExpired
-                      ? 'bg-[var(--badge-neutral-bg)]/80 text-[var(--badge-neutral-text)]'
-                      : 'bg-[var(--badge-success-bg)]/80 text-[var(--badge-success-text)]'
-                  }`}>
-                    {!isExpired && <div className="w-2 h-2 bg-[var(--badge-success-text)] rounded-full animate-pulse" />}
-                    {isExpired ? t('poll.ended') : t('poll.active')}
+                  <div
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm"
+                    style={{
+                      backgroundColor: statusChip.bgColor,
+                      color: statusChip.textColor
+                    }}
+                  >
+                    {statusChip.showDot && (
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{
+                          backgroundColor: statusChip.dotColor,
+                          animation: statusChip.state === 'active' ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none'
+                        }}
+                      />
+                    )}
+                    {statusChip.text}
                   </div>
                 </div>
               </>
@@ -238,14 +275,9 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
                 </div>
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                
-                {/* Status Badge */}
+
+                {/* Single Status Chip */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-                  {urgencyBadge && (
-                    <div className="px-2 py-1 rounded-full text-xs font-medium border border-[var(--warning)] bg-[var(--badge-warning-bg)] text-[var(--badge-warning-text)]">
-                      {urgencyBadge.text}
-                    </div>
-                  )}
                   {poll.isPrivate && (
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-purple-200 dark:border-purple-800 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 backdrop-blur-sm">
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -254,13 +286,23 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
                       {t('poll.private')}
                     </div>
                   )}
-                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm ${
-                    isExpired
-                      ? 'bg-[var(--badge-neutral-bg)]/80 text-[var(--badge-neutral-text)]'
-                      : 'bg-[var(--badge-success-bg)]/80 text-[var(--badge-success-text)]'
-                  }`}>
-                    {!isExpired && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
-                    {isExpired ? t('poll.ended') : t('poll.active')}
+                  <div
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm"
+                    style={{
+                      backgroundColor: statusChip.bgColor,
+                      color: statusChip.textColor
+                    }}
+                  >
+                    {statusChip.showDot && (
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{
+                          backgroundColor: statusChip.dotColor,
+                          animation: statusChip.state === 'active' ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none'
+                        }}
+                      />
+                    )}
+                    {statusChip.text}
                   </div>
                 </div>
               </div>
@@ -272,23 +314,12 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
             <h3 className="font-display font-bold text-[var(--text)] text-lg sm:text-xl mb-2 line-clamp-2 group-hover:text-primary transition-colors">
               {poll.title}
             </h3>
-            
+
             {/* Meta info */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-                <UserAvatar name={poll.createdBy} size="sm" />
-                <span>{totalVotes} votes</span>
-              </div>
-              
-              {/* Status indicator */}
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                isExpired 
-                  ? 'bg-[var(--badge-neutral-bg)] text-[var(--badge-neutral-text)]' 
-                  : 'bg-[var(--badge-success-bg)] text-[var(--badge-success-text)]'
-              }`}>
-                {!isExpired && <div className="w-1.5 h-1.5 bg-[var(--success)] rounded-full" />}
-                {isExpired ? t('poll.ended') : t('poll.active')}
-              </div>
+            <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
+              <span className="font-medium">{poll.createdBy || 'Anonymous'}</span>
+              <span>•</span>
+              <span>{totalVotes} votes</span>
             </div>
           </div>
         </div>
@@ -418,7 +449,7 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
                 </button>
               )}
             </div>
-            
+
             <span className="text-xs font-medium text-primary hover:text-primary-dark flex items-center gap-1 transition-colors cursor-pointer">
               {t('poll.viewPoll')}
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
