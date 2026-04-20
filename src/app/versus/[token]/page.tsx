@@ -302,7 +302,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <Link
                 href="/versus"
-                className="flex sm:hidden p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+                className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
               </Link>
