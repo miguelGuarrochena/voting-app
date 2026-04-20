@@ -94,7 +94,7 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          Create Your First Poll!
+          {t('empty.createFirstPoll')}
         </motion.h1>
 
         {/* Description */}
@@ -104,8 +104,7 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          Share your opinion and discover what your community thinks. 
-          It's easy, fast, and fun.
+          {t('empty.description')}
         </motion.p>
 
         {/* Main Action Button */}
@@ -122,7 +121,7 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
             <div className="absolute inset-0 bg-gradient-to-r from-[var(--primary-dark)] to-[var(--primary)] opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative flex items-center gap-3">
               <PlusCircleIcon className="w-6 h-6" />
-              <span>Create Poll Now</span>
+              <span>{t('empty.createPollNow')}</span>
               <motion.div
                 animate={{ x: [0, 4, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -156,7 +155,7 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
             className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[var(--warning)] to-[var(--warning)]/80 text-white rounded-full font-medium hover:shadow-lg transition-all transform hover:scale-105"
           >
             <ArrowPathIcon className="w-5 h-5" />
-            <span>Try the Wheel</span>
+            <span>{t('empty.tryWheel')}</span>
           </Link>
         </motion.div>
 
@@ -177,8 +176,8 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
               <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
                 <ChatBubbleSolid className="w-8 h-8 text-white" />
               </div>
-              <h3 className="font-display text-xl font-bold text-[var(--text)] mb-3">Easy Voting</h3>
-              <p className="text-[var(--text-muted)]">Create polls in seconds with multiple options</p>
+              <h3 className="font-display text-xl font-bold text-[var(--text)] mb-3">{t('empty.easyVoting')}</h3>
+              <p className="text-[var(--text-muted)]">{t('empty.easyVotingDesc')}</p>
             </div>
           </motion.div>
           
@@ -192,8 +191,8 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
               <div className="w-16 h-16 bg-gradient-to-br from-[var(--warning)] to-[var(--warning)]/80 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
                 <ArrowPathIcon className="w-8 h-8 text-white" />
               </div>
-              <h3 className="font-display text-xl font-bold text-[var(--text)] mb-3">Decision Wheel</h3>
-              <p className="text-[var(--text-muted)]">Let fate decide for you</p>
+              <h3 className="font-display text-xl font-bold text-[var(--text)] mb-3">{t('empty.decisionWheel')}</h3>
+              <p className="text-[var(--text-muted)]">{t('empty.decisionWheelDesc')}</p>
             </div>
           </motion.div>
           
@@ -207,8 +206,8 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
               <div className="w-16 h-16 bg-gradient-to-br from-[var(--success)] to-[var(--success)]/80 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
                 <FireSolid className="w-8 h-8 text-white" />
               </div>
-              <h3 className="font-display text-xl font-bold text-[var(--text)] mb-3">Trending</h3>
-              <p className="text-[var(--text-muted)]">Discover the most popular polls</p>
+              <h3 className="font-display text-xl font-bold text-[var(--text)] mb-3">{t('empty.trending')}</h3>
+              <p className="text-[var(--text-muted)]">{t('empty.trendingDesc')}</p>
             </div>
           </motion.div>
         </motion.div>
@@ -222,7 +221,7 @@ const EmptyPollsState = ({ onRefresh, loading = false }: EmptyPollsStateProps) =
         >
           <span className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] rounded-full">
             <span className="text-lg">💡</span>
-            <span className="text-sm font-medium">The best decisions are made together</span>
+            <span className="text-sm font-medium">{t('empty.bestDecisions')}</span>
             <span className="text-lg">💡</span>
           </span>
         </motion.p>

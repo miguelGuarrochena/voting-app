@@ -5,6 +5,7 @@ import { PollCard } from '@/components/poll/PollCard';
 import usePollStore from '@/store/pollStore';
 import { motion } from 'framer-motion';
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/context/LanguageContext';
 
 // Skeleton loader component
 const PollCardSkeleton = () => (
@@ -35,6 +36,7 @@ type SortOption = 'recent' | 'popular' | 'trending' | 'expiring';
 
 const ExplorePage = () => {
   const { polls, loadPolls, isLoading } = usePollStore();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [mounted, setMounted] = useState(false);
@@ -101,10 +103,10 @@ const ExplorePage = () => {
   }, [polls, searchQuery, sortBy]);
 
   const sortOptions: { value: SortOption; label: string; description: string }[] = [
-    { value: 'recent', label: 'Most Recent', description: 'Newly created polls' },
-    { value: 'popular', label: 'Most Popular', description: 'Highest vote count' },
-    { value: 'trending', label: 'Trending', description: 'Popular recent polls' },
-    { value: 'expiring', label: 'Ending Soon', description: 'Polls closing soon' },
+    { value: 'recent', label: t('explore.mostRecent'), description: t('explore.newlyCreated') },
+    { value: 'popular', label: t('explore.mostPopular'), description: t('explore.highestVoteCount') },
+    { value: 'trending', label: t('explore.trending'), description: t('explore.popularRecent') },
+    { value: 'expiring', label: t('explore.endingSoon'), description: t('explore.pollsClosingSoon') },
   ];
 
   if (!mounted) {
@@ -136,10 +138,10 @@ const ExplorePage = () => {
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-3xl md:text-4xl font-bold text-[var(--text)] font-display mb-4">
-            Explore Polls
+            {t('explore.title')}
           </h1>
           <p className="text-lg text-[var(--text-muted)] max-w-2xl mx-auto">
-            Discover and participate in polls from the community
+            {t('explore.subtitle')}
           </p>
         </motion.div>
 
@@ -159,7 +161,7 @@ const ExplorePage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search polls by title or options..."
+              placeholder={t('explore.searchPlaceholder')}
               className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm transition-colors"
             />
           </div>
@@ -168,7 +170,7 @@ const ExplorePage = () => {
           <div className="flex flex-wrap justify-center gap-2">
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <FunnelIcon className="h-4 w-4" />
-              <span>Sort by:</span>
+              <span>{t('explore.sortBy')}</span>
             </div>
             {sortOptions.map((option) => (
               <button
@@ -196,10 +198,10 @@ const ExplorePage = () => {
         >
           <p className="text-[var(--text-muted)]">
             {searchQuery && (
-              <>Found {filteredPolls.length} poll{filteredPolls.length !== 1 ? 's' : ''} matching "{searchQuery}"</>
+              <>{t('explore.found')} {filteredPolls.length} {t('explore.polls')} {filteredPolls.length !== 1 ? 's' : ''} {t('explore.pollsMatching')} "{searchQuery}"</>
             )}
             {!searchQuery && (
-              <>Showing {filteredPolls.length} poll{filteredPolls.length !== 1 ? 's' : ''}</>
+              <>{t('explore.showing')} {filteredPolls.length} {t('explore.polls')}{filteredPolls.length !== 1 ? 's' : ''}</>
             )}
           </p>
         </motion.div>
@@ -223,12 +225,12 @@ const ExplorePage = () => {
           >
             <div className="text-4xl md:text-5xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-[var(--text)] mb-2">
-              {searchQuery ? 'No polls found' : 'No polls available'}
+              {searchQuery ? t('explore.noPollsFound') : t('explore.noPollsAvailable')}
             </h3>
             <p className="text-[var(--text-muted)] mb-6">
               {searchQuery 
-                ? 'Try adjusting your search terms or browse all polls'
-                : 'Be the first to create a poll and get started!'
+                ? t('explore.tryAdjusting')
+                : t('explore.beFirst')
               }
             </p>
             {searchQuery && (
@@ -236,7 +238,7 @@ const ExplorePage = () => {
                 onClick={() => setSearchQuery('')}
                 className="inline-block bg-[var(--primary)] text-white px-6 py-3 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
               >
-                Clear Search
+                {t('explore.clearSearch')}
               </button>
             )}
             {!searchQuery && (
@@ -244,7 +246,7 @@ const ExplorePage = () => {
                 href="/create"
                 className="inline-block bg-[var(--primary)] text-white px-6 py-3 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
               >
-                Create a Poll
+                {t('explore.createPoll')}
               </a>
             )}
           </motion.div>

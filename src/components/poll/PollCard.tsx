@@ -73,7 +73,7 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
     if (isExpired) {
       statusChip = {
         state: 'ended',
-        text: 'Terminada',
+        text: t('poll.ended'),
         bgColor: '#2a2a2a',
         textColor: '#a0a0a0',
         dotColor: '#666666',
@@ -81,7 +81,7 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
       };
     } else if (hours < 2) {
       // Closing soon (less than 2 hours)
-      const timeText = hours > 0 ? `Cierra en ${hours}h ${minutes}m` : `Cierra en ${minutes}m`;
+      const timeText = hours > 0 ? `${t('poll.closingIn')} ${hours}h ${minutes}m` : `${t('poll.closingIn')} ${minutes}m`;
       statusChip = {
         state: 'closing_soon',
         text: timeText,
@@ -94,7 +94,7 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
       // Active (more than 2 hours)
       statusChip = {
         state: 'active',
-        text: 'Activa',
+        text: t('poll.active'),
         bgColor: '#1a5c3a',
         textColor: '#ffffff',
         dotColor: '#4ade80',
@@ -319,7 +319,7 @@ export const PollCard = memo(({ poll: initialPoll, compact = false, className = 
             <div className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
               <span className="font-medium">{poll.createdBy || 'Anonymous'}</span>
               <span>•</span>
-              <span>{totalVotes} votes</span>
+              <span>{totalVotes} {t('poll.votes')}</span>
             </div>
           </div>
         </div>

@@ -7,9 +7,11 @@ import usePollStore from '@/store/pollStore';
 import { PollCard } from '@/components/poll/PollCard';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/PageLayout';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function VotesPage() {
   const { polls, loadPolls, isLoading } = usePollStore();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState<'recent' | 'trending'>('recent');
 
@@ -41,7 +43,7 @@ export default function VotesPage() {
       <PageLayout>
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-          <p className="text-[var(--text-muted)] mt-4">Loading...</p>
+          <p className="text-[var(--text-muted)] mt-4">{t('common.loading')}...</p>
         </div>
       </PageLayout>
     );
@@ -52,15 +54,15 @@ export default function VotesPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)]">Votes</h1>
-            <p className="text-[var(--text-muted)] mt-1">Vote on your favorite options</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)]">{t('votes.title')}</h1>
+            <p className="text-[var(--text-muted)] mt-1">{t('votes.subtitle')}</p>
           </div>
           <Link
             href="/create?type=vote"
             className="hidden sm:flex items-center gap-2 bg-[var(--primary)] text-white px-4 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
           >
             <PlusIcon className="w-5 h-5" />
-            <span>Create Vote</span>
+            <span>{t('votes.createVote')}</span>
           </Link>
         </div>
 
@@ -74,7 +76,7 @@ export default function VotesPage() {
                 : 'bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
-            Recent
+            {t('votes.recent')}
           </button>
           <button
             onClick={() => setFilter('trending')}
@@ -84,7 +86,7 @@ export default function VotesPage() {
                 : 'bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
-            Trending
+            {t('nav.trending')}
           </button>
         </div>
 
@@ -92,19 +94,19 @@ export default function VotesPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-[50vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-            <p className="text-[var(--text-muted)] mt-4">Loading votes...</p>
+            <p className="text-[var(--text-muted)] mt-4">{t('votes.loadingVotes')}</p>
           </div>
         ) : sortedPolls.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🗳️</div>
-            <h3 className="text-xl font-semibold text-[var(--text)] mb-2">No votes yet</h3>
-            <p className="text-[var(--text-muted)] mb-6">Be the first to create a vote!</p>
+            <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('votes.noVotesYet')}</h3>
+            <p className="text-[var(--text-muted)] mb-6">{t('votes.beFirst')}</p>
             <Link
               href="/create?type=vote"
               className="inline-flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-3 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
             >
               <PlusIcon className="w-5 h-5" />
-              Create Vote
+              {t('votes.createVote')}
             </Link>
           </div>
         ) : (

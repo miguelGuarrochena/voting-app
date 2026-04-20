@@ -99,7 +99,7 @@ const ThemeLanguageSwitcher = () => {
       {/* Click outside to close language menu */}
       {showLanguageMenu && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-60"
           onClick={() => setShowLanguageMenu(false)}
         />
       )}

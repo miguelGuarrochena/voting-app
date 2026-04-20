@@ -60,13 +60,13 @@ export default function MyPollsPage() {
         {publicPolls.length === 0 ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
-            <h3 className="font-semibold text-[var(--text)] text-lg mb-2">No public polls yet</h3>
-            <p className="text-[var(--text-muted)] mb-6">Create your first public poll to share with everyone!</p>
+            <h3 className="font-semibold text-[var(--text)] text-lg mb-2">{t('myPolls.noPublicPolls')}</h3>
+            <p className="text-[var(--text-muted)] mb-6">{t('myPolls.createFirstPublic')}</p>
             <a
               href="/create"
               className="inline-block px-6 py-3 bg-[var(--primary)] text-white rounded-[var(--radius-md)] font-medium hover:bg-[var(--primary-dark)] transition-colors"
             >
-              Create Poll
+              {t('myPolls.createPoll')}
             </a>
           </div>
         ) : (
@@ -99,13 +99,13 @@ export default function MyPollsPage() {
         {privatePolls.length === 0 ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-12 text-center">
             <div className="text-6xl mb-4">🔒</div>
-            <h3 className="font-semibold text-[var(--text)] text-lg mb-2">No private polls yet</h3>
-            <p className="text-[var(--text-muted)] mb-6">Create a private poll to share only with specific participants.</p>
+            <h3 className="font-semibold text-[var(--text)] text-lg mb-2">{t('myPolls.noPrivatePolls')}</h3>
+            <p className="text-[var(--text-muted)] mb-6">{t('myPolls.createPrivateDesc')}</p>
             <a
               href="/create"
               className="inline-block px-6 py-3 bg-[var(--primary)] text-white rounded-[var(--radius-md)] font-medium hover:bg-[var(--primary-dark)] transition-colors"
             >
-              Create Private Poll
+              {t('myPolls.createPrivatePoll')}
             </a>
           </div>
         ) : (
@@ -131,15 +131,15 @@ export default function MyPollsPage() {
       <div>
         <h2 className="font-display text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
           <span>📨</span>
-          <span>Polls I'm Invited To</span>
+          <span>{t('myPolls.invitedTo')}</span>
           <span className="text-sm font-normal text-[var(--text-muted)]">({invitedPolls.length})</span>
         </h2>
 
         {invitedPolls.length === 0 ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
-            <h3 className="font-semibold text-[var(--text)] text-lg mb-2">No pending invites</h3>
-            <p className="text-[var(--text-muted)]">When someone invites you to a private poll, it will appear here.</p>
+            <h3 className="font-semibold text-[var(--text)] text-lg mb-2">{t('myPolls.noPendingInvites')}</h3>
+            <p className="text-[var(--text-muted)]">{t('myPolls.invitesDesc')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">

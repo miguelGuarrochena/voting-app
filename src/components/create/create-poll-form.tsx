@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createEmptyReactions } from '@/types/poll';
 import { useCreatePoll } from '@/hooks/useApi';
 import { useUsername } from '@/context/UsernameContext';
+import { useLanguage } from '@/context/LanguageContext';
 import ImagePickerModal from './ImagePickerModal';
 import { generateToken, generateShareLink, storePollData } from '@/lib/token';
 import { Trash2 } from 'lucide-react';
@@ -26,8 +27,12 @@ interface CreatePollFormProps {
   defaultType?: 'vote' | 'rank';
 }
 
-export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
+export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
+  const router = useRouter();
   const { username } = useUsername();
+  const { t } = useLanguage();
+  const { createPoll, loading, error: submitError } = useCreatePoll();
+
   const [pollType, setPollType] = useState<'vote' | 'rank'>(defaultType || 'vote');
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState('');
@@ -48,20 +53,19 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     optionId?: string;
   } | null>(null);
   const [openEmojiPicker, setOpenEmojiPicker] = useState<string | null>(null);
-  const router = useRouter();
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   // Duration options
   const durationOptions = [
-    { value: '15min', label: '15 minutes', minutes: 15 },
-    { value: '30min', label: '30 minutes', minutes: 30 },
-    { value: '1h', label: '1 hour', hours: 1 },
-    { value: '3h', label: '3 hours', hours: 3 },
-    { value: '6h', label: '6 hours', hours: 6 },
-    { value: '12h', label: '12 hours', hours: 12 },
-    { value: '24h', label: '24 hours', hours: 24 },
-    { value: '48h', label: '48 hours', hours: 48 },
-    { value: '7d', label: '7 days', hours: 168 },
+    { value: '15min', label: t('form.duration.15min'), minutes: 15 },
+    { value: '30min', label: t('form.duration.30min'), minutes: 30 },
+    { value: '1h', label: t('form.duration.1h'), hours: 1 },
+    { value: '3h', label: t('form.duration.3h'), hours: 3 },
+    { value: '6h', label: t('form.duration.6h'), hours: 6 },
+    { value: '12h', label: t('form.duration.12h'), hours: 12 },
+    { value: '24h', label: t('form.duration.24h'), hours: 24 },
+    { value: '48h', label: t('form.duration.48h'), hours: 48 },
+    { value: '7d', label: t('form.duration.7d'), hours: 168 },
   ];
 
   // Emoji categories
@@ -86,8 +90,6 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [openEmojiPicker]);
-
-  const { createPoll, loading, error: submitError } = useCreatePoll();
 
   // Helper function to get context-specific labels
   const getContextLabel = (label: string) => {
@@ -130,7 +132,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     if (!allowedTypes.includes(file.type)) {
       setErrors(prev => ({
         ...prev,
-        [optionId]: 'Only JPG and PNG images are allowed'
+        [optionId]: t('form.onlyJpgPng')
       }));
       return;
     }
@@ -139,7 +141,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     if (file.size > 5 * 1024 * 1024) {
       setErrors(prev => ({
         ...prev,
-        [optionId]: 'Image size must be less than 5MB'
+        [optionId]: t('form.imageSize')
       }));
       return;
     }
@@ -164,7 +166,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     if (!allowedTypes.includes(file.type)) {
       setErrors(prev => ({
         ...prev,
-        titleImage: 'Only JPG and PNG images are allowed'
+        titleImage: t('form.onlyJpgPng')
       }));
       return;
     }
@@ -173,7 +175,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
     if (file.size > 5 * 1024 * 1024) {
       setErrors(prev => ({
         ...prev,
-        titleImage: 'Image size must be less than 5MB'
+        titleImage: t('form.imageSize')
       }));
       return;
     }
@@ -338,14 +340,14 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Poll Basics Section */}
         <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">{getContextLabel('Poll Basics')}</h2>
+          <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">{t('form.pollBasics')}</h2>
 
           <div className="space-y-6">
             {/* Poll Type Selector - Only show if defaultType is not provided */}
             {!defaultType && (
               <div>
                 <label className="block text-sm font-medium text-[var(--text)] mb-3">
-                  Poll Type *
+                  {t('form.pollType')} *
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
@@ -359,8 +361,8 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                   >
                     <div className="text-center">
                       <div className="text-2xl mb-2">🗳️</div>
-                      <div className="font-medium text-gray-900 dark:text-gray-100">Vote Poll</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Each person picks one option</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{t('form.votePoll')}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('form.votePollDesc')}</div>
                     </div>
                   </button>
                   <button
@@ -374,8 +376,8 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                   >
                     <div className="text-center">
                       <div className="text-2xl mb-2">🏆</div>
-                      <div className="font-medium text-gray-900 dark:text-gray-100">Rank Poll</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Order all options by preference</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{t('form.rankPoll')}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('form.rankPollDesc')}</div>
                     </div>
                   </button>
                 </div>
@@ -384,7 +386,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="title">
-                {getContextLabel('Poll Title')} *
+                {t('form.pollTitle')} *
               </label>
               <div className="space-y-3">
                 <input
@@ -400,7 +402,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                   className={`w-full px-4 py-3 border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
                     errors.title ? 'border-red-500 focus:ring-red-200 focus:border-red-500' : 'border-gray-300 dark:border-gray-700'
                   }`}
-                  placeholder={pollType === 'rank' ? "What's your ranking about?" : "What's your poll about?"}
+                  placeholder={pollType === 'rank' ? t('form.whatsRankingAbout') : t('form.whatsPollAbout')}
                   maxLength={100}
                 />
                 
@@ -422,24 +424,23 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                     onClick={() => openImagePicker('title')}
                     className="text-sm px-4 py-2 bg-gray-100 dark:bg-gray-800 text-[var(--primary)] rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium border border-[var(--primary)]"
                   >
-                    📷 Search Stock Images
+                    {t('form.searchStockImages')}
                   </button>
                   {titleImage && (
                     <div className="relative group">
                       <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
                         <img 
                           src={titleImage} 
-                          alt="Title image preview" 
+                          alt={t('form.titleImagePreview')} 
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <button
                         type="button"
                         onClick={removeTitleImage}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                        title="Remove title image"
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <Trash2 size={12} />
+                        ×
                       </button>
                     </div>
                   )}
@@ -451,19 +452,19 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
               {errors.title && (
                 <p className="mt-2 text-sm text-red-600">{errors.title}</p>
               )}
-              <p className="text-xs text-gray-500 dark:text-gray-400">{title.length}/100 characters</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{title.length}/100 {t('form.characters')}</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="description">
-                Description (Optional)
+                {t('form.description')}
               </label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 min-h-[100px]"
-                placeholder={pollType === 'rank' ? "Add more details about your ranking..." : "Add more details about your poll..."}
+                placeholder={pollType === 'rank' ? t('form.addDetailsRanking') : t('form.addDetailsPoll')}
                 maxLength={500}
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{description.length}/500 characters</p>
@@ -471,7 +472,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="duration">
-                Expiration *
+                {t('form.expiration')} *
               </label>
               <select
                 id="duration"

@@ -121,7 +121,7 @@ const Navbar = () => {
               {username && (
                 <>
                   <div className="px-4 py-2 border-b border-[var(--border)] mb-2">
-                    <p className="text-sm text-[var(--text-muted)]">Hola, {username} ✨</p>
+                    <p className="text-sm text-[var(--text-muted)]">{t('nav.hello')}, {username} ✨</p>
                   </div>
                   <button
                     onClick={() => {
@@ -130,15 +130,8 @@ const Navbar = () => {
                     }}
                     className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                   >
-                    <span>Cambiar nombre</span>
+                    <span>{t('nav.changeName')}</span>
                   </button>
-                  <button
-                    onClick={handleDeleteUsername}
-                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  >
-                    <span>Salir</span>
-                  </button>
-                  <div className="border-t border-[var(--border)] my-2"></div>
                 </>
               )}
 
@@ -169,7 +162,7 @@ const Navbar = () => {
                 className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
               >
                 <ChartBarIcon className="w-5 h-5" />
-                <span>Create Vote</span>
+                <span>{t('nav.createVote')}</span>
               </Link>
               <Link
                 href="/create?type=rank"
@@ -177,7 +170,7 @@ const Navbar = () => {
                 className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
               >
                 <TrophyIcon className="w-5 h-5" />
-                <span>Create Ranking</span>
+                <span>{t('nav.createRanking')}</span>
               </Link>
               <Link
                 href="/ratings/create"
@@ -185,7 +178,7 @@ const Navbar = () => {
                 className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
               >
                 <StarIcon className="w-5 h-5" />
-                <span>Create Rating</span>
+                <span>{t('nav.createRating')}</span>
               </Link>
               <Link
                 href="/spin"
@@ -193,7 +186,7 @@ const Navbar = () => {
                 className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
               >
                 <ArrowPathIcon className="w-5 h-5" />
-                <span>Spin Wheel</span>
+                <span>{t('nav.spinWheel')}</span>
               </Link>
               <Link
                 href="/versus/create"
@@ -201,8 +194,20 @@ const Navbar = () => {
                 className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
               >
                 <Swords className="w-5 h-5" />
-                <span>Create Versus</span>
+                <span>{t('nav.createVersus')}</span>
               </Link>
+
+              {username && (
+                <>
+                  <div className="border-t border-[var(--border)] my-2"></div>
+                  <button
+                    onClick={handleDeleteUsername}
+                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <span>{t('nav.logout')}</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -217,55 +222,50 @@ const Navbar = () => {
 
         {/* Bottom tab bar */}
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg)] border-t border-[var(--border)]">
-          <div className="flex items-center justify-between px-2 py-1 sm:py-2 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-center justify-between px-2 py-3 pb-[env(safe-area-inset-bottom)]">
             <Link
               href="/votes"
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
-                pathname === '/votes' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
+              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/votes' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
-              <span className="text-xs mt-1">Votes</span>
+              <ChartBarIcon className="w-6 h-6" />
             </Link>
 
             <Link
               href="/ranking"
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
-                pathname === '/ranking' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
+              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/ranking' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <TrophyIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
-              <span className="text-xs mt-1">Ranking</span>
+              <TrophyIcon className="w-6 h-6" />
             </Link>
 
             <Link
               href="/ratings"
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
-                pathname === '/ratings' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
+              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/ratings' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <StarIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
-              <span className="text-xs mt-1">Ratings</span>
+              <StarIcon className="w-6 h-6" />
             </Link>
 
             <Link
               href="/spin"
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
-                pathname === '/spin' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
+              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/spin' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <ArrowPathIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
-              <span className="text-xs mt-1">Spin</span>
+              <ArrowPathIcon className="w-6 h-6" />
             </Link>
 
             <Link
               href="/versus"
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
-                pathname === '/versus' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
+              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/versus' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
               }`}
             >
-              <Swords className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
-              <span className="text-xs mt-1">Versus</span>
+              <Swords className="w-6 h-6" />
             </Link>
           </div>
         </div>
@@ -278,12 +278,12 @@ const Navbar = () => {
         {showChangeUsernameModal && (
           <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 p-4 bg-black/50">
             <div className="bg-[var(--surface)] rounded-xl shadow-2xl border border-[var(--border)] p-6 w-full max-w-md mt-8">
-              <h3 className="text-xl font-bold text-[var(--text)] mb-4">Cambiar tu nombre ✨</h3>
+              <h3 className="text-xl font-bold text-[var(--text)] mb-4">{t('nav.changeName')}</h3>
               <input
                 type="text"
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
-                placeholder="Tu nuevo nombre..."
+                placeholder={t('nav.yourNewName')}
                 maxLength={20}
                 className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-all mb-4"
                 autoFocus
@@ -296,14 +296,14 @@ const Navbar = () => {
                   }}
                   className="flex-1 px-4 py-3 border border-[var(--border)] rounded-xl text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                 >
-                  Cancelar
+                  {t('poll.cancel')}
                 </button>
                 <button
                   onClick={handleChangeUsername}
                   disabled={newUsername.trim().length < 2 || newUsername.trim().length > 20}
                   className="flex-1 px-4 py-3 bg-[var(--primary)] text-white rounded-xl font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Guardar
+                  {t('nav.save')}
                 </button>
               </div>
             </div>
@@ -316,134 +316,134 @@ const Navbar = () => {
   // Desktop navbar
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-40 bg-[var(--bg)]/95 backdrop-blur-xl border-b border-[var(--border)] transition-all ${
-        scrolled ? 'shadow-lg' : ''
+      <nav className={`fixed top-0 left-0 right-0 z-40 bg-[var(--bg)]/95 backdrop-blur-xl border-b border-[var(--border)] transition-all duration-300 ${
+        scrolled ? 'shadow-lg shadow-[var(--primary)]/10' : ''
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
+          <div className="flex items-center justify-between h-16 sm:h-18">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-xl sm:text-2xl font-bold text-[var(--primary)] font-display">✨ Pickly</span>
+            <Link href="/" className="flex items-center space-x-2 group">
+              <span className="text-2xl sm:text-3xl font-bold text-[var(--primary)] font-display transition-transform group-hover:scale-105">✨ Pickly</span>
             </Link>
 
             {/* Center nav links */}
-            <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
+            <div className="hidden md:flex items-center space-x-1">
               <Link
                 href="/votes"
-                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/votes'
-                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                    ? 'text-[var(--primary)] bg-[var(--primary-light)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <ChartBarIcon className="w-5 h-5 transition-transform duration-300" />
-                <span>Votes</span>
+                <ChartBarIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/votes' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className="font-medium">{t('nav.votes')}</span>
               </Link>
 
               <Link
                 href="/ranking"
-                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/ranking'
-                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                    ? 'text-[var(--primary)] bg-[var(--primary-light)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <TrophyIcon className="w-5 h-5 transition-transform duration-300" />
-                <span>Ranking</span>
+                <TrophyIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/ranking' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className="font-medium">{t('nav.ranking')}</span>
               </Link>
 
               <Link
                 href="/ratings"
-                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/ratings'
-                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                    ? 'text-[var(--primary)] bg-[var(--primary-light)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <StarIcon className="w-5 h-5 transition-transform duration-300" />
-                <span>Ratings</span>
+                <StarIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/ratings' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className="font-medium">{t('nav.ratings')}</span>
               </Link>
 
               <Link
                 href="/spin"
-                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/spin'
-                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                    ? 'text-[var(--primary)] bg-[var(--primary-light)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <ArrowPathIcon className="w-5 h-5 transition-transform duration-300" />
-                <span>Spin</span>
+                <ArrowPathIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/spin' ? 'scale-110' : 'group-hover:rotate-180'}`} />
+                <span className="font-medium">{t('nav.spin')}</span>
               </Link>
 
               <Link
                 href="/versus"
-                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                className={`relative group flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/versus'
-                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                    ? 'text-[var(--primary)] bg-[var(--primary-light)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <Swords className="w-5 h-5 transition-transform duration-300" />
-                <span>Versus</span>
+                <Swords className={`w-5 h-5 transition-all duration-300 ${pathname === '/versus' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className="font-medium">{t('nav.versus')}</span>
               </Link>
             </div>
 
             {/* Right side */}
-            <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="flex items-center space-x-3">
               {username && (
                 <>
                   <div className="relative">
                     <button
                       onClick={() => setShowCreateMenu(!showCreateMenu)}
-                      className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base flex items-center gap-2"
+                      className="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white px-5 py-2.5 rounded-full font-medium hover:shadow-lg hover:shadow-[var(--primary)]/30 hover:scale-105 transition-all duration-300 text-sm flex items-center gap-2"
                     >
-                      <Plus size={16} />
-                      <span>Create</span>
+                      <Plus size={16} className="transition-transform group-hover:rotate-90" />
+                      <span>{t('nav.create')}</span>
                     </button>
 
                     {showCreateMenu && (
-                      <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[180px] overflow-hidden">
+                      <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl shadow-[var(--primary)]/10 z-50 min-w-[200px] overflow-hidden animate-in fade-in slide-in-from-top-2">
                         <div className="py-1">
                           <Link
                             href="/create?type=vote"
                             onClick={() => setShowCreateMenu(false)}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
                           >
-                            <ChartBarIcon className="w-4 h-4" />
-                            <span>Vote</span>
+                            <ChartBarIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                            <span>{t('nav.vote')}</span>
                           </Link>
                           <Link
                             href="/create?type=rank"
                             onClick={() => setShowCreateMenu(false)}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
                           >
-                            <TrophyIcon className="w-4 h-4" />
-                            <span>Ranking</span>
+                            <TrophyIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                            <span>{t('nav.ranking')}</span>
                           </Link>
                           <Link
                             href="/ratings/create"
                             onClick={() => setShowCreateMenu(false)}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
                           >
-                            <StarIcon className="w-4 h-4" />
-                            <span>Ratings</span>
+                            <StarIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                            <span>{t('nav.ratings')}</span>
                           </Link>
                           <Link
                             href="/spin"
                             onClick={() => setShowCreateMenu(false)}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
                           >
-                            <ArrowPathIcon className="w-4 h-4" />
-                            <span>Spin Wheel</span>
+                            <ArrowPathIcon className="w-4 h-4 transition-transform group-hover:rotate-180" />
+                            <span>{t('nav.spinWheel')}</span>
                           </Link>
                           <Link
                             href="/versus/create"
                             onClick={() => setShowCreateMenu(false)}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
                           >
-                            <Swords className="w-4 h-4" />
-                            <span>Versus</span>
+                            <Swords className="w-4 h-4 transition-transform group-hover:scale-110" />
+                            <span>{t('nav.versus')}</span>
                           </Link>
                         </div>
                       </div>
@@ -453,27 +453,30 @@ const Navbar = () => {
                   <div className="relative">
                     <button
                       onClick={() => setShowUsernameMenu(!showUsernameMenu)}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full hover:bg-[var(--surface)] transition-colors"
+                      className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full hover:bg-[var(--surface)] hover:shadow-md transition-all duration-300 border border-[var(--border)] hover:border-[var(--primary)]"
                     >
-                      <span className="text-sm font-medium text-[var(--text)]">{username}</span>
-                      <span className="text-lg">✨</span>
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        {username.charAt(0).toUpperCase()}
+                      </div>
                     </button>
                     {showUsernameMenu && (
-                      <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg py-2 z-50">
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl shadow-[var(--primary)]/10 py-2 z-50 animate-in fade-in slide-in-from-top-2">
                         <button
                           onClick={() => {
                             setShowChangeUsernameModal(true);
                             setShowUsernameMenu(false);
                           }}
-                          className="w-full px-4 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-sm text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors flex items-center gap-2"
                         >
-                          Cambiar nombre
+                          <span>✏️</span>
+                          <span>{t('nav.changeName')}</span>
                         </button>
                         <button
                           onClick={handleDeleteUsername}
-                          className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
                         >
-                          Salir
+                          <span>🚪</span>
+                          <span>{t('nav.logout')}</span>
                         </button>
                       </div>
                     )}
@@ -494,16 +497,27 @@ const Navbar = () => {
         />
       )}
 
+      {/* Click outside to close username menu */}
+      {showUsernameMenu && (
+        <div
+          className="fixed inset-0 z-30"
+          onClick={() => setShowUsernameMenu(false)}
+        />
+      )}
+
+      {/* Add padding to account for fixed navbar */}
+      <div className="h-16 sm:h-18"></div>
+
       {/* Change Username Modal - outside nav to cover full screen */}
       {showChangeUsernameModal && (
         <div className="fixed inset-0 z-[100] flex items-start justify-center pt-32 p-4 bg-black/50">
           <div className="bg-[var(--surface)] rounded-xl shadow-2xl border border-[var(--border)] p-6 w-full max-w-md mt-8">
-            <h3 className="text-xl font-bold text-[var(--text)] mb-4">Cambiar tu nombre ✨</h3>
+            <h3 className="text-xl font-bold text-[var(--text)] mb-4">{t('nav.changeName')} ✨</h3>
             <input
               type="text"
               value={newUsername}
               onChange={(e) => setNewUsername(e.target.value)}
-              placeholder="Tu nuevo nombre..."
+              placeholder={t('nav.yourNewName')}
               maxLength={20}
               className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-all mb-4"
               autoFocus
@@ -516,14 +530,14 @@ const Navbar = () => {
                 }}
                 className="flex-1 px-4 py-3 border border-[var(--border)] rounded-xl text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
               >
-                Cancelar
+                {t('poll.cancel')}
               </button>
               <button
                 onClick={handleChangeUsername}
                 disabled={newUsername.trim().length < 2 || newUsername.trim().length > 20}
                 className="flex-1 px-4 py-3 bg-[var(--primary)] text-white rounded-xl font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Guardar
+                {t('nav.save')}
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { BarChart2, Trophy, RefreshCw, Star } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { PageLayout } from '@/components/PageLayout';
+import { useLanguage } from '@/context/LanguageContext';
 
 const features = [
   {
@@ -41,6 +42,7 @@ const features = [
 
 export default function Home() {
   const { polls, loadPolls } = usePollStore();
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -77,7 +79,7 @@ export default function Home() {
               ✨ Pickly
             </h1>
             <p className="text-xl sm:text-2xl text-[var(--text-muted)] max-w-2xl mx-auto leading-relaxed">
-              Create polls, rankings, ratings and spin wheels — share them with anyone.
+              {t('home.subtitle')}
             </p>
           </motion.div>
         </div>
@@ -108,12 +110,12 @@ export default function Home() {
 
                     {/* Title */}
                     <h3 className="text-lg font-bold text-[var(--text)] mb-2 text-center">
-                      {feature.title}
+                      {feature.id === 'votes' ? t('nav.votes') : feature.id === 'ranking' ? t('nav.ranking') : feature.id === 'ratings' ? t('nav.ratings') : t('nav.spinWheel')}
                     </h3>
 
                     {/* Description */}
                     <p className="text-[var(--text-muted)] text-sm text-center leading-relaxed line-clamp-2">
-                      {feature.description}
+                      {feature.id === 'votes' ? t('home.votesDesc') : feature.id === 'ranking' ? t('home.rankingDesc') : feature.id === 'ratings' ? t('home.ratingsDesc') : t('home.spinDesc')}
                     </p>
                   </div>
                 </Link>
@@ -130,15 +132,15 @@ export default function Home() {
           className="mt-12"
         >
           <h3 className="text-xl sm:text-2xl font-bold font-display text-[var(--text)] mb-6">
-            Recent activity
+            {t('home.recentActivity')}
           </h3>
           {recentPolls.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {recentPolls.map((poll, index) => {
                 // Determine type badge
                 const getTypeBadge = () => {
-                  if (poll.type === 'rank') return { label: 'Ranking', color: 'bg-[var(--badge-warning-bg)] text-[var(--badge-warning-text)]' };
-                  return { label: 'Vote', color: 'bg-[var(--badge-info-bg)] text-[var(--badge-info-text)]' };
+                  if (poll.type === 'rank') return { label: t('home.rankingBadge'), color: 'bg-[var(--badge-warning-bg)] text-[var(--badge-warning-text)]' };
+                  return { label: t('home.voteBadge'), color: 'bg-[var(--badge-info-bg)] text-[var(--badge-info-text)]' };
                 };
                 const typeBadge = getTypeBadge();
 
@@ -174,7 +176,7 @@ export default function Home() {
           ) : (
             <div className="text-center py-12 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
               <div className="text-4xl mb-3">📭</div>
-              <p className="text-[var(--text-muted)]">No activity yet — be the first to create something!</p>
+              <p className="text-[var(--text-muted)]">{t('home.noActivityYet')}</p>
             </div>
           )}
         </motion.div>

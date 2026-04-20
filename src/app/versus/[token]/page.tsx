@@ -3,6 +3,7 @@
 import { useState, useEffect, use, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { useUsername } from '@/context/UsernameContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { getPollData, storePollData, hasVotedInDuel, markDuelVote, getDuelVote, deleteTournamentData, isExpired } from '@/lib/token';
 import { VersusTournament } from '@/types/versus';
 import { BracketView } from '@/components/versus/BracketView';
@@ -24,13 +25,14 @@ interface PageProps {
 export default function VersusTournamentPage({ params }: PageProps) {
   const { token } = use(params);
   const { username } = useUsername();
+  const { t } = useLanguage();
   const [tournament, setTournament] = useState<VersusTournament | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [userBracket, setUserBracket] = useState<any>(null); // User's current selections
-  const [shareResultText, setShareResultText] = useState('Compartir Resultado');
+  const [shareResultText, setShareResultText] = useState(t('versus.shareResult'));
   const bracketRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const justCreated = searchParams.get('created') === 'true';
@@ -39,7 +41,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
   useEffect(() => {
     // Show toast if just created
     if (justCreated) {
-      toast('Torneo creado');
+      toast(t('versus.tournamentCreated'));
       window.history.replaceState({}, '', `/versus/${token}`);
     }
 
@@ -121,7 +123,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
     if (!tournament || !username || !userBracket) return;
 
     if (!isBracketComplete(userBracket)) {
-      toast('Completa todos los duelos antes de enviar');
+      toast(t('versus.completeAllDuels'));
       return;
     }
 
@@ -164,7 +166,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
-      toast('Link copiado');
+      toast(t('versus.copied'));
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -174,7 +176,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
     if (!displayBracket.champion || !tournament || !bracketRef.current) return;
 
     try {
-      setShareResultText('Generando...');
+      setShareResultText(t('versus.generating'));
 
       // Capture bracket as image
       const canvas = await html2canvas(bracketRef.current, {
@@ -194,8 +196,8 @@ export default function VersusTournamentPage({ params }: PageProps) {
           await navigator.clipboard.write([
             new ClipboardItem({ 'image/png': blob })
           ]);
-          setShareResultText('¡Copiado!');
-          setTimeout(() => setShareResultText('Compartir Resultado'), 2000);
+          setShareResultText(t('versus.copied'));
+          setTimeout(() => setShareResultText(t('versus.shareResult')), 2000);
         } catch (err) {
           console.error('Failed to copy image:', err);
           // Fallback: download the image
@@ -204,14 +206,14 @@ export default function VersusTournamentPage({ params }: PageProps) {
           link.download = `bracket-${tournament.title}.png`;
           link.href = url;
           link.click();
-          setShareResultText('¡Descargado!');
-          setTimeout(() => setShareResultText('Compartir Resultado'), 2000);
+          setShareResultText(t('versus.downloaded'));
+          setTimeout(() => setShareResultText(t('versus.shareResult')), 2000);
         }
       });
     } catch (err) {
       console.error('Failed to capture bracket:', err);
-      setShareResultText('Error');
-      setTimeout(() => setShareResultText('Compartir Resultado'), 2000);
+      setShareResultText(t('versus.error'));
+      setTimeout(() => setShareResultText(t('versus.shareResult')), 2000);
     }
   };
 
@@ -239,7 +241,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
 
     if (isCompleted) {
       return {
-        text: 'Completado',
+        text: t('versus.completed'),
         bgColor: '#1a5c3a',
         textColor: '#ffffff',
         showIcon: false,
@@ -248,7 +250,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
 
     if (isTournamentExpired) {
       return {
-        text: 'Expirado',
+        text: t('versus.expired'),
         bgColor: '#2a2a2a',
         textColor: '#a0a0a0',
         showIcon: false,
@@ -271,7 +273,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
       <div className="min-h-screen bg-[var(--bg)] pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-bounce">⚔️</div>
-          <p className="text-[var(--text-muted)]">Cargando torneo...</p>
+          <p className="text-[var(--text-muted)]">{t('versus.loadingTournament')}</p>
         </div>
       </div>
     );
@@ -304,7 +306,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
               <div className="min-w-0 flex-1">
                 <h1 className="text-base sm:text-lg font-bold text-[var(--text)] truncate">{tournament.title}</h1>
                 <p className="text-xs text-[var(--text-muted)]">
-                  por {tournament.createdBy} • {tournament.options.length} opciones
+                  {t('versus.by')} {tournament.createdBy} • {tournament.options.length} {t('versus.options')}
                 </p>
               </div>
             </div>
@@ -346,8 +348,8 @@ export default function VersusTournamentPage({ params }: PageProps) {
                   className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
                 >
                   <Share2 size={14} />
-                  <span className="hidden sm:inline">Compartir</span>
-                  <span className="sm:hidden">Comp</span>
+                  <span className="hidden sm:inline">{t('versus.share')}</span>
+                  <span className="sm:hidden">{t('versus.comp')}</span>
                 </button>
               )}
 
@@ -357,8 +359,8 @@ export default function VersusTournamentPage({ params }: PageProps) {
                   onClick={handleSubmitBracket}
                   className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
                 >
-                  <span className="hidden sm:inline">Enviar Bracket</span>
-                  <span className="sm:hidden">Enviar</span>
+                  <span className="hidden sm:inline">{t('versus.submitBracket')}</span>
+                  <span className="sm:hidden">{t('versus.submit')}</span>
                 </button>
               )}
             </div>
@@ -373,7 +375,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
               <div className="hidden md:block text-center mb-6 pb-4 border-b border-gray-300">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{tournament.title}</h2>
                 <p className="text-sm text-gray-600">
-                  Bracket de {username || 'Anónimo'} • {new Date().toLocaleDateString()}
+                  {t('versus.bracketOf')} {username || t('versus.anonymous')} • {new Date().toLocaleDateString()}
                 </p>
               </div>
               <BracketView
