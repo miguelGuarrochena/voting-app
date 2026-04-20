@@ -294,64 +294,32 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const displayBracket = userBracket || tournament.bracket;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-[var(--bg)] md:pt-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8">
         {/* Header */}
-        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <Link
                 href="/versus"
-                className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+                className="flex sm:hidden p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
               </Link>
-              <Swords className="w-6 h-6 text-[var(--primary)]" />
-              <div>
-                <h1 className="text-lg font-bold text-[var(--text)]">{tournament.title}</h1>
+              <Swords className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--primary)] flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-lg font-bold text-[var(--text)] truncate">{tournament.title}</h1>
                 <p className="text-xs text-[var(--text-muted)]">
                   por {tournament.createdBy} • {tournament.options.length} opciones
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Submit Button */}
-              {!userBracket && progress > 0 && progress === 100 && (
-                <button
-                  onClick={handleSubmitBracket}
-                  className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
-                >
-                  <span>Enviar Bracket</span>
-                </button>
-              )}
-
-              {/* Share Result Button (when bracket is completed) */}
-              {userBracket && displayBracket.champion && (
-                <button
-                  onClick={handleShareResult}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors font-medium"
-                >
-                  <Share2 size={18} />
-                  {shareResultText}
-                </button>
-              )}
-
-              {/* Share Button */}
-              {!displayBracket.champion && (
-                <button
-                  onClick={handleShare}
-                  className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
-                >
-                  <Share2 size={18} />
-                  Compartir
-                </button>
-              )}
-
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               {/* Status Chip */}
               {statusInfo && (
                 <div
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
                     statusInfo.showIcon ? 'animate-pulse' : ''
                   }`}
                   style={{
@@ -359,9 +327,45 @@ export default function VersusTournamentPage({ params }: PageProps) {
                     color: statusInfo.textColor,
                   }}
                 >
-                  {statusInfo.showIcon ? <AlertTriangle size={16} /> : <Clock size={16} />}
-                  {statusInfo.text}
+                  {statusInfo.showIcon ? <AlertTriangle size={14} /> : <Clock size={14} />}
+                  <span className="hidden sm:inline">{statusInfo.text}</span>
+                  <span className="sm:hidden">{statusInfo.text.split(' ')[0]}</span>
                 </div>
+              )}
+
+              {/* Share Result Button (when bracket is completed) */}
+              {userBracket && displayBracket.champion && (
+                <button
+                  onClick={handleShareResult}
+                  className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+                >
+                  <Share2 size={14} />
+                  <span className="hidden sm:inline">{shareResultText}</span>
+                  <span className="sm:hidden">Resultado</span>
+                </button>
+              )}
+
+              {/* Share Button */}
+              {!displayBracket.champion && (
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+                >
+                  <Share2 size={14} />
+                  <span className="hidden sm:inline">Compartir</span>
+                  <span className="sm:hidden">Comp</span>
+                </button>
+              )}
+
+              {/* Submit Button */}
+              {!userBracket && progress > 0 && progress === 100 && (
+                <button
+                  onClick={handleSubmitBracket}
+                  className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+                >
+                  <span className="hidden sm:inline">Enviar Bracket</span>
+                  <span className="sm:hidden">Enviar</span>
+                </button>
               )}
             </div>
           </div>
@@ -369,10 +373,10 @@ export default function VersusTournamentPage({ params }: PageProps) {
 
         {/* Bracket */}
         <div className="flex items-center justify-center">
-          <div className="w-full overflow-x-auto">
-            <div ref={bracketRef} className="bg-white p-8 rounded-2xl border-2 border-gray-300 overflow-visible">
-              {/* Header for image */}
-              <div className="text-center mb-6 pb-4 border-b border-gray-300">
+          <div className="w-full">
+            <div ref={bracketRef} className="bg-white p-2 sm:p-4 md:p-8 rounded-2xl border-2 border-gray-300 overflow-visible">
+              {/* Header for image (hidden on mobile) */}
+              <div className="hidden md:block text-center mb-6 pb-4 border-b border-gray-300">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{tournament.title}</h2>
                 <p className="text-sm text-gray-600">
                   Bracket de {username || 'Anónimo'} • {new Date().toLocaleDateString()}
