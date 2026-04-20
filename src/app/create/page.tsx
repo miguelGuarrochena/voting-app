@@ -1,30 +1,27 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import CreatePollForm from '@/components/create/create-poll-form';
 import { PageLayout } from '@/components/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
 
 function CreatePollContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
   const type = searchParams.get('type') as 'vote' | 'rank' | null;
-
-  // Determine back link based on type
-  const backLink = type === 'rank' ? '/ranking' : '/votes';
 
   return (
     <PageLayout>
       <div className="max-w-3xl mx-auto">
         <div className="mb-4">
-          <Link
-            href={backLink}
-            className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+          <button
+            onClick={() => router.back()}
+            className="hidden md:flex text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
           >
             ← {t('create.back')}
-          </Link>
+          </button>
         </div>
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-2">

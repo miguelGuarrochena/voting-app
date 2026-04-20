@@ -13,6 +13,7 @@ import { BracketView } from '@/components/versus/BracketView';
 import { CelebrationScreen } from '@/components/versus/CelebrationScreen';
 import { ExpiredTournament } from '@/components/versus/ExpiredTournament';
 import { selectWinner, calculateCompletedBracket, isBracketComplete, getBracketProgress, createUserBracket } from '@/lib/bracket';
+import { useRouter } from 'next/navigation';
 import { Swords, Clock, AlertTriangle, Share2, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -26,6 +27,7 @@ interface PageProps {
 }
 
 export default function VersusTournamentPage({ params }: PageProps) {
+  const router = useRouter();
   const { token } = use(params);
   const { username } = useUsername();
   const { t } = useLanguage();
@@ -341,12 +343,12 @@ export default function VersusTournamentPage({ params }: PageProps) {
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3 md:p-4 mb-4 md:mb-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <Link
-                href="/versus"
+              <button
+                onClick={() => router.back()}
                 className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-              </Link>
+              </button>
               <Swords className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--primary)] flex-shrink-0" />
               <div className="min-w-0 flex-1">
                 <h1 className="text-base sm:text-lg font-bold text-[var(--text)] truncate">{tournament.title}</h1>

@@ -6,12 +6,14 @@ import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Star, Share2, ArrowLeft, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 
 export default function RatingTokenPage() {
+  const router = useRouter();
   const params = useParams();
   const { username } = useUsername();
   const token = params.token as string;
@@ -191,12 +193,12 @@ export default function RatingTokenPage() {
       <PageLayout>
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <Link
-              href="/ratings"
+            <button
+              onClick={() => router.back()}
               className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-            </Link>
+            </button>
           </div>
           <div className="flex flex-col items-center justify-center h-[50vh] text-center">
             <div className="text-6xl mb-4">😕</div>
@@ -216,12 +218,12 @@ export default function RatingTokenPage() {
       <PageLayout>
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <Link
-              href="/ratings"
+            <button
+              onClick={() => router.back()}
               className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-            </Link>
+            </button>
           </div>
           <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8 text-center">
             <div className="text-6xl mb-4">🎉</div>
@@ -315,12 +317,12 @@ export default function RatingTokenPage() {
         {/* Header with Share button */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Link
-              href="/ratings"
+            <button
+              onClick={() => router.back()}
               className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-            </Link>
+            </button>
             <h1 className="text-2xl font-bold text-[var(--text)]">{pollData.title}</h1>
           </div>
           <button

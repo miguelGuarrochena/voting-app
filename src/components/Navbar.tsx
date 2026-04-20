@@ -78,7 +78,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between px-4 py-3">
             {/* Left side - Back button or spacer */}
             <div className="flex-1">
-              {pathname !== '/' ? (
+              {pathname !== '/' && !['/votes', '/ranking', '/ratings', '/spin', '/versus'].includes(pathname) ? (
                 <button
                   onClick={() => {
                     if (pathname === '/spin') {

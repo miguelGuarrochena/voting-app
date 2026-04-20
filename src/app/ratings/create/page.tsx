@@ -178,12 +178,12 @@ export default function CreateRatingPage() {
       <div className="max-w-2xl mx-auto pb-8">
         <>
             <div className="mb-6">
-              <Link
-                href="/ratings"
-                className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors inline-flex"
+              <button
+                onClick={() => router.back()}
+                className="hidden md:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors inline-flex"
               >
                 <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-              </Link>
+              </button>
             </div>
 
             <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Create Rating</h1>

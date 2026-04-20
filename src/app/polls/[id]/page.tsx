@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import usePollStore from '@/store/pollStore';
 import PollDetail from '@/components/poll/PollDetail';
@@ -68,12 +67,12 @@ export default function PollPage() {
                 {error || t('common.pollNotFoundDesc')}
               </p>
               <div className="mt-4">
-                <Link
-                  href="/"
-                  className="text-sm font-medium text-red-700 hover:text-red-600 underline"
+                <button
+                  onClick={() => router.push('/')}
+                  className="hidden md:flex text-sm font-medium text-red-700 hover:text-red-600 underline"
                 >
                   ← Back to home
-                </Link>
+                </button>
               </div>
             </div>
           </div>

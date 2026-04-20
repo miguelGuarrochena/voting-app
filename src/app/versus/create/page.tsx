@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { PlusIcon, Trash2, ArrowLeft } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
 import toast from 'react-hot-toast';
@@ -152,12 +151,12 @@ export default function CreateVersusPage() {
     <PageLayout className="pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto py-8">
         <div className="mb-6">
-          <Link
-            href="/versus"
-            className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors inline-flex"
+          <button
+            onClick={() => router.back()}
+            className="hidden md:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors inline-flex"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-          </Link>
+          </button>
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Crear Torneo Versus ⚔️</h1>
