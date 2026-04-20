@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CreatePollForm } from '@/components/create/create-poll-form';
+import CreatePollForm from '@/components/create/create-poll-form';
 import { PageLayout } from '@/components/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
 
