@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PlusIcon, XMarkIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
+import { Trash2 } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
 import { useUsername } from '@/context/UsernameContext';
@@ -379,7 +380,7 @@ export default function CreateRatingPage() {
                             onClick={() => removeItemImage(item.id)}
                             className="absolute top-2 right-2 w-8 h-8 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-colors"
                           >
-                            <XMarkIcon className="w-4 h-4" />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       ) : (
@@ -421,7 +422,7 @@ export default function CreateRatingPage() {
                     className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     title={items.length <= 2 ? "You need at least 2 items" : "Remove item"}
                   >
-                    <XMarkIcon className="w-5 h-5" />
+                    <Trash2 size={20} />
                   </button>
                 </div>
               ))}

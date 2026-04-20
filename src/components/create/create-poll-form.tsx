@@ -7,6 +7,7 @@ import { useCreatePoll } from '@/hooks/useApi';
 import { useUsername } from '@/context/UsernameContext';
 import ImagePickerModal from './ImagePickerModal';
 import { generateToken, generateShareLink, storePollData, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { Trash2 } from 'lucide-react';
 
 interface ShareResultScreenProps {
   data: { token: string; shareLink: string; expiresAt: Date };
@@ -532,10 +533,10 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                       <button
                         type="button"
                         onClick={removeTitleImage}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs cursor-pointer"
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                         title="Remove title image"
                       >
-                        ×
+                        <Trash2 size={12} />
                       </button>
                     </div>
                   )}
@@ -694,10 +695,10 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                         <button
                           type="button"
                           onClick={() => removeImage(option.id)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs cursor-pointer"
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                           title="Remove image"
                         >
-                          ×
+                          <Trash2 size={12} />
                         </button>
                       </div>
                     )}
@@ -713,7 +714,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                   disabled={options.length <= 2}
                   title={options.length <= 2 ? "You need at least 2 options" : "Remove option"}
                 >
-                  ×
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
@@ -822,7 +823,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
                                   className="text-red-500 hover:text-red-700 cursor-pointer"
                                   title="Remove participant"
                                 >
-                                  ×
+                                  <Trash2 size={14} />
                                 </button>
                               </li>
                             ))}

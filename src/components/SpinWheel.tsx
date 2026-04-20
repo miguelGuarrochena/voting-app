@@ -521,6 +521,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Link from 'next/link';
 import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { Trash2 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface WheelOption {
@@ -989,9 +990,7 @@ export const SpinWheel = () => {
                           {/* Botón Delete */}
                           {options.length > 2 && (
                             <button onClick={() => removeOption(option.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title={t('spin.removeOption')}>
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
+                              <Trash2 size={16} />
                             </button>
                           )}
                         </div>
@@ -1111,9 +1110,7 @@ export const SpinWheel = () => {
 
                             {options.length > 2 && (
                               <button onClick={() => removeOption(option.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title={t('spin.removeOption')}>
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <Trash2 size={16} />
                               </button>
                             )}
                           </div>
