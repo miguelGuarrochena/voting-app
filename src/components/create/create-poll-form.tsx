@@ -304,6 +304,7 @@ export const CreatePollForm = ({ defaultType }: CreatePollFormProps) => {
         type: pollType,
         createdBy: username || 'Anonymous',
         isPrivate: isPrivate,
+        visibility: isPrivate ? 'private' : 'public',
         invitedUsers: participants.map(p => p.emailOrUsername),
         options: options
           .filter(option => option.text.trim() !== '')

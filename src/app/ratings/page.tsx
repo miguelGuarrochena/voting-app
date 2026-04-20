@@ -14,15 +14,22 @@ export default function RatingsPage() {
   useEffect(() => {
     setMounted(true);
     // Load ratings from localStorage
-    const storedRatings = JSON.parse(localStorage.getItem('ratings') || '[]');
-    setRatings(storedRatings);
+    const allRatings: any[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('pickly_rating_')) {
+        const data = JSON.parse(localStorage.getItem(key) || '{}');
+        allRatings.push(data);
+      }
+    }
+    setRatings(allRatings);
   }, []);
 
   // Apply filter logic
   const sortedRatings = [...ratings].sort((a, b) => {
     if (filter === 'trending') {
-      const aVotes = a.items.reduce((sum: number, item: any) => sum + item.votes.length, 0);
-      const bVotes = b.items.reduce((sum: number, item: any) => sum + item.votes.length, 0);
+      const aVotes = (a.options || []).reduce((sum: number, item: any) => sum + (item.ratingCount || 0), 0);
+      const bVotes = (b.options || []).reduce((sum: number, item: any) => sum + (item.ratingCount || 0), 0);
       return bVotes - aVotes;
     } else {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -42,10 +49,12 @@ export default function RatingsPage() {
 
   // Calculate average rating for a rating
   const getAverageRating = (rating: any) => {
-    const allVotes = rating.items.flatMap((item: any) => item.votes);
-    if (allVotes.length === 0) return 0;
-    const sum = allVotes.reduce((acc: number, vote: any) => acc + vote.stars, 0);
-    return (sum / allVotes.length).toFixed(1);
+    const options = rating.options || [];
+    if (options.length === 0) return 0;
+    const totalRating = options.reduce((sum: number, item: any) => sum + (item.totalRating || 0), 0);
+    const totalVotes = options.reduce((sum: number, item: any) => sum + (item.ratingCount || 0), 0);
+    if (totalVotes === 0) return 0;
+    return (totalRating / totalVotes).toFixed(1);
   };
 
   return (
@@ -113,8 +122,8 @@ export default function RatingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sortedRatings.filter(r => r.visibility === 'public' && !r.isPrivate).map((rating) => (
               <Link
-                key={rating.id}
-                href={`/ratings/${rating.id}`}
+                key={rating.token}
+                href={`/ratings/${rating.token}`}
                 className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:shadow-lg transition-shadow"
               >
                 <h3 className="font-bold text-lg text-[var(--text)] mb-2">{rating.title}</h3>
@@ -122,7 +131,7 @@ export default function RatingsPage() {
                   <p className="text-sm text-[var(--text-muted)] mb-3">{rating.description}</p>
                 )}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--text-muted)]">{rating.items.length} items</span>
+                  <span className="text-sm text-[var(--text-muted)]">{(rating.options || []).length} items</span>
                   <div className="flex items-center gap-1">
                     <span className="text-yellow-500">⭐</span>
                     <span className="font-semibold text-[var(--text)]">{getAverageRating(rating)}</span>

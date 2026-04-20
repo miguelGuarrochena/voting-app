@@ -18,9 +18,9 @@ export default function RankingPage() {
   }, [loadPolls]);
 
   // Get ranking-type polls only
-  const rankingPolls = polls.filter(poll => 
-    poll.type === 'rank' && 
-    poll.visibility === 'public' && 
+  const rankingPolls = polls.filter(poll =>
+    poll.type === 'rank' &&
+    poll.visibility === 'public' &&
     !poll.isPrivate
   );
 

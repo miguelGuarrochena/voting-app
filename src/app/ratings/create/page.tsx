@@ -149,6 +149,7 @@ export default function CreateRatingPage() {
       title,
       description,
       isPrivate,
+      visibility: isPrivate ? 'private' : 'public',
       expiresAt: expiresAt.toISOString(),
       type: 'rating',
       createdBy: username || 'Anonymous',
