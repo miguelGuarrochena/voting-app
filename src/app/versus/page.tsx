@@ -56,11 +56,10 @@ export default function VersusPage() {
     const now = new Date();
     const expiresAt = new Date(tournament.expiresAt);
     const isTournamentExpired = isExpired(expiresAt);
-    const isFinished = tournament.bracket.status === 'finished';
     
-    if (isFinished || isTournamentExpired) {
+    if (isTournamentExpired) {
       return {
-        text: 'Terminada',
+        text: 'Expirado',
         bgColor: '#2a2a2a',
         textColor: '#a0a0a0',
       };
@@ -152,11 +151,9 @@ export default function VersusPage() {
                           {tournament.title}
                         </h3>
                         <div className="flex items-center gap-3 text-sm text-[var(--text-muted)]">
-                          <span>{tournament.options.length} options</span>
+                          <span>{tournament.options.length} opciones</span>
                           <span>•</span>
-                          <span>{tournament.votesToWin} votes to win</span>
-                          <span>•</span>
-                          <span>by {tournament.createdBy}</span>
+                          <span>por {tournament.createdBy}</span>
                         </div>
                       </div>
                       

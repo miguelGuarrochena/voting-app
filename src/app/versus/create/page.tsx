@@ -7,7 +7,7 @@ import { PlusIcon, Trash2, ArrowLeft } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { generateToken, generateShareLink, storePollData } from '@/lib/token';
-import { generateBracket, getVoteSuggestion } from '@/lib/bracket';
+import { generateBracket } from '@/lib/bracket';
 import { VersusTournament, VersusOption } from '@/types/versus';
 
 type OptionForm = {
@@ -25,9 +25,7 @@ export default function CreateVersusPage() {
     { id: crypto.randomUUID(), title: '' },
     { id: crypto.randomUUID(), title: '' },
   ]);
-  const [votesToWin, setVotesToWin] = useState(4);
   const [selectedDuration, setSelectedDuration] = useState('3');
-  const [groupSize, setGroupSize] = useState(6);
   const [bracketSize, setBracketSize] = useState<BracketSize>(8);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -118,7 +116,7 @@ export default function CreateVersusPage() {
     }
 
     // Generate bracket
-    const bracket = generateBracket(validOptions, votesToWin);
+    const bracket = generateBracket(validOptions);
 
     // Create tournament data
     const tournamentData: VersusTournament = {
@@ -126,9 +124,9 @@ export default function CreateVersusPage() {
       title: title.trim(),
       createdBy: username || 'Anónimo',
       options: validOptions,
-      votesToWin,
       expiresAt: expiresAt.toISOString(),
       bracket,
+      userBrackets: {},
       createdAt: new Date().toISOString(),
     };
 
@@ -138,8 +136,6 @@ export default function CreateVersusPage() {
     // Redirect directly to detail page with success flag
     router.push(`/versus/${token}?created=true`);
   };
-
-  const suggestedVotes = getVoteSuggestion(groupSize);
 
   // Check if form can be submitted
   const validOptions = options.filter(option => option.title.trim() !== '');
@@ -289,40 +285,6 @@ export default function CreateVersusPage() {
             <p className="mt-2 text-xs text-[var(--text-muted)]">
               Actuales: {validOptions.length} opciones (mínimo 4, máximo {bracketSize})
             </p>
-          </div>
-
-          {/* Votes to Win */}
-          <div>
-            <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Votos para ganar un duelo *
-            </label>
-            <div className="flex items-center gap-4 mb-3">
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={votesToWin}
-                onChange={(e) => setVotesToWin(Number(e.target.value))}
-                className="flex-1 accent-[var(--primary)]"
-              />
-              <span className="text-2xl font-bold text-[var(--primary)] w-12 text-center">{votesToWin}</span>
-            </div>
-            <div className="bg-[var(--surface-2)] rounded-lg p-3">
-              <label className="block text-xs text-[var(--text-muted)] mb-1">
-                Tamaño del grupo (para sugerencia)
-              </label>
-              <input
-                type="number"
-                min="2"
-                max="50"
-                value={groupSize}
-                onChange={(e) => setGroupSize(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm"
-              />
-              <p className="mt-2 text-sm text-[var(--primary)]">
-                💡 Para un grupo de ~{groupSize} personas sugerimos {suggestedVotes} votos
-              </p>
-            </div>
           </div>
 
           {/* Duration */}

@@ -1,4 +1,4 @@
-import { VersusOption, Duel, Round, Bracket } from '@/types/versus';
+import { VersusOption, Duel, Round, Bracket, UserBracket } from '@/types/versus';
 
 /**
  * Shuffles array using Fisher-Yates algorithm
@@ -13,9 +13,9 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 /**
- * Generates a tournament bracket with random seeding
+ * Generates a tournament bracket template with random seeding
  */
-export function generateBracket(options: VersusOption[], votesToWin: number): Bracket {
+export function generateBracket(options: VersusOption[]): Bracket {
   const shuffledOptions = shuffleArray(options);
   const rounds: Round[] = [];
   
@@ -27,7 +27,7 @@ export function generateBracket(options: VersusOption[], votesToWin: number): Br
     throw new Error('Invalid number of options. Must be 4, 8, or 16.');
   }
   
-  // Generate first round (quarterfinals for 8 options, semifinals for 4)
+  // Generate first round
   let currentOptions = [...shuffledOptions];
   
   for (let roundNumber = 1; roundNumber <= totalRounds; roundNumber++) {
@@ -42,12 +42,8 @@ export function generateBracket(options: VersusOption[], votesToWin: number): Br
         id: `round-${roundNumber}-duel-${i}`,
         optionA,
         optionB,
-        votesA: 0,
-        votesB: 0,
-        winner: null,
-        isRandomWinner: false,
+        selectedWinner: null,
         round: roundNumber,
-        voters: {},
       };
       
       duels.push(duel);
@@ -59,7 +55,6 @@ export function generateBracket(options: VersusOption[], votesToWin: number): Br
     });
     
     // Prepare options for next round (placeholders)
-    // Each duel produces 1 winner, so we need duels.length winners for next round
     const nextRoundOptionsCount = duels.length;
     currentOptions = Array(nextRoundOptionsCount).fill(null).map(() => ({
       id: '',
@@ -69,45 +64,24 @@ export function generateBracket(options: VersusOption[], votesToWin: number): Br
   
   return {
     rounds,
-    currentRound: 0,
-    status: 'active',
     champion: null,
   };
 }
 
 /**
- * Records a vote for a duel
+ * Updates a user's selection for a duel
  */
-export function voteInDuel(
+export function selectWinner(
   bracket: Bracket,
   duelId: string,
-  username: string,
-  optionId: string
+  winner: VersusOption
 ): Bracket {
   const newBracket = JSON.parse(JSON.stringify(bracket)) as Bracket;
   
   for (const round of newBracket.rounds) {
     for (const duel of round.duels) {
       if (duel.id === duelId) {
-        // Check if user already voted in this duel
-        if (duel.voters[username]) {
-          // Remove previous vote
-          const previousVote = duel.voters[username];
-          if (previousVote === duel.optionA.id) {
-            duel.votesA = Math.max(0, duel.votesA - 1);
-          } else if (previousVote === duel.optionB.id) {
-            duel.votesB = Math.max(0, duel.votesB - 1);
-          }
-        }
-        
-        // Add new vote
-        duel.voters[username] = optionId;
-        if (optionId === duel.optionA.id) {
-          duel.votesA++;
-        } else if (optionId === duel.optionB.id) {
-          duel.votesB++;
-        }
-        
+        duel.selectedWinner = winner;
         return newBracket;
       }
     }
@@ -117,131 +91,91 @@ export function voteInDuel(
 }
 
 /**
- * Checks if a duel is won
+ * Calculates the completed bracket based on user selections
+ * Advances winners to next rounds automatically
  */
-export function isDuelWon(duel: Duel, votesToWin: number): boolean {
-  return duel.votesA >= votesToWin || duel.votesB >= votesToWin;
-}
-
-/**
- * Gets the winner of a duel
- */
-export function getDuelWinner(duel: Duel): VersusOption | null {
-  if (duel.votesA > duel.votesB) {
-    return duel.optionA;
-  } else if (duel.votesB > duel.votesA) {
-    return duel.optionB;
-  }
-  return null;
-}
-
-/**
- * Checks if all duels in current round are resolved
- */
-export function isRoundComplete(bracket: Bracket, votesToWin: number): boolean {
-  const currentRound = bracket.rounds[bracket.currentRound];
-  if (!currentRound) return false;
-  
-  return currentRound.duels.every(duel => isDuelWon(duel, votesToWin));
-}
-
-/**
- * Advances to the next round with winners from current round
- */
-export function advanceToNextRound(bracket: Bracket, votesToWin: number): Bracket {
+export function calculateCompletedBracket(bracket: Bracket): Bracket {
   const newBracket = JSON.parse(JSON.stringify(bracket)) as Bracket;
   
-  if (newBracket.currentRound >= newBracket.rounds.length - 1) {
-    // Tournament is complete, determine champion
-    const finalRound = newBracket.rounds[newBracket.currentRound];
-    const finalDuel = finalRound.duels[0];
-    const winner = getDuelWinner(finalDuel);
+  // Process each round from first to last
+  for (let roundIndex = 0; roundIndex < newBracket.rounds.length - 1; roundIndex++) {
+    const currentRound = newBracket.rounds[roundIndex];
+    const nextRound = newBracket.rounds[roundIndex + 1];
+    const winners: VersusOption[] = [];
     
-    newBracket.status = 'finished';
-    newBracket.champion = winner || (finalDuel.votesA >= finalDuel.votesB ? finalDuel.optionA : finalDuel.optionB);
-    return newBracket;
-  }
-  
-  // Get winners from current round
-  const currentRound = newBracket.rounds[newBracket.currentRound];
-  const winners: VersusOption[] = [];
-  
-  for (const duel of currentRound.duels) {
-    const winner = getDuelWinner(duel);
-    if (winner) {
-      winners.push(winner);
-      duel.winner = winner;
-    } else {
-      // Should not happen if round is complete
-      const fallbackWinner = duel.votesA >= duel.votesB ? duel.optionA : duel.optionB;
-      winners.push(fallbackWinner);
-      duel.winner = fallbackWinner;
-    }
-  }
-  
-  // Set up next round with winners
-  const nextRoundIndex = newBracket.currentRound + 1;
-  const nextRound = newBracket.rounds[nextRoundIndex];
-  
-  // Each duel in next round needs 2 winners (optionA and optionB)
-  for (let i = 0; i < nextRound.duels.length; i++) {
-    const duel = nextRound.duels[i];
-    duel.optionA = winners[i * 2];
-    duel.optionB = winners[i * 2 + 1];
-  }
-  
-  newBracket.currentRound = nextRoundIndex;
-  
-  return newBracket;
-}
-
-/**
- * Handles expiration - resolves all remaining duels with random winners if tied
- */
-export function handleExpiration(bracket: Bracket, votesToWin: number): Bracket {
-  const newBracket = JSON.parse(JSON.stringify(bracket)) as Bracket;
-  newBracket.status = 'expired';
-  
-  // Resolve all incomplete duels
-  for (const round of newBracket.rounds) {
-    for (const duel of round.duels) {
-      if (!duel.winner) {
-        if (duel.votesA === duel.votesB || duel.votesA === 0 && duel.votesB === 0) {
-          // Random winner
-          duel.isRandomWinner = true;
-          duel.winner = Math.random() < 0.5 ? duel.optionA : duel.optionB;
-        } else {
-          // Winner with more votes
-          duel.winner = getDuelWinner(duel) || (duel.votesA >= duel.votesB ? duel.optionA : duel.optionB);
-        }
+    // Get winners from current round
+    for (const duel of currentRound.duels) {
+      if (duel.selectedWinner) {
+        winners.push(duel.selectedWinner);
+      } else {
+        // If no selection, use placeholder
+        winners.push({ id: '', title: '???' });
       }
+    }
+    
+    // Update next round with winners
+    for (let i = 0; i < nextRound.duels.length; i++) {
+      const duel = nextRound.duels[i];
+      if (winners[i * 2]) duel.optionA = winners[i * 2];
+      if (winners[i * 2 + 1]) duel.optionB = winners[i * 2 + 1];
     }
   }
   
   // Determine champion from final round
   const finalRound = newBracket.rounds[newBracket.rounds.length - 1];
-  const finalDuel = finalRound.duels[0];
-  newBracket.champion = finalDuel.winner;
+  if (finalRound.duels[0]?.selectedWinner) {
+    newBracket.champion = finalRound.duels[0].selectedWinner;
+  }
   
   return newBracket;
 }
 
 /**
- * Gets suggested votes to win based on group size
+ * Checks if all duels in the bracket have selections
  */
-export function getVoteSuggestion(groupSize: number): number {
-  if (groupSize <= 2) return 2;
-  if (groupSize <= 4) return 3;
-  if (groupSize <= 6) return 4;
-  if (groupSize <= 10) return 5;
-  return 6;
+export function isBracketComplete(bracket: Bracket): boolean {
+  for (const round of bracket.rounds) {
+    for (const duel of round.duels) {
+      if (!duel.selectedWinner) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 /**
- * Gets all active duels in current round
+ * Gets the completion percentage of a bracket
  */
-export function getActiveDuels(bracket: Bracket): Duel[] {
-  if (bracket.status !== 'active') return [];
-  const currentRound = bracket.rounds[bracket.currentRound];
-  return currentRound?.duels || [];
+export function getBracketProgress(bracket: Bracket): number {
+  let totalDuels = 0;
+  let completedDuels = 0;
+  
+  for (const round of bracket.rounds) {
+    for (const duel of round.duels) {
+      totalDuels++;
+      if (duel.selectedWinner) {
+        completedDuels++;
+      }
+    }
+  }
+  
+  return totalDuels > 0 ? Math.round((completedDuels / totalDuels) * 100) : 0;
+}
+
+/**
+ * Creates a user bracket from selections
+ */
+export function createUserBracket(
+  username: string,
+  bracket: Bracket
+): UserBracket {
+  const completedBracket = calculateCompletedBracket(bracket);
+  
+  return {
+    username,
+    bracket: completedBracket,
+    champion: completedBracket.champion,
+    completedAt: new Date().toISOString(),
+  };
 }

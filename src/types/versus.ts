@@ -7,12 +7,8 @@ export interface Duel {
   id: string;
   optionA: VersusOption;
   optionB: VersusOption;
-  votesA: number;
-  votesB: number;
-  winner: VersusOption | null;
-  isRandomWinner: boolean; // true if winner was chosen randomly on expiration
+  selectedWinner: VersusOption | null; // User's selection for this duel
   round: number;
-  voters: Record<string, string>; // username -> optionId
 }
 
 export interface Round {
@@ -22,9 +18,15 @@ export interface Round {
 
 export interface Bracket {
   rounds: Round[];
-  currentRound: number;
-  status: 'active' | 'finished' | 'expired';
   champion: VersusOption | null;
+}
+
+// User's completed bracket
+export interface UserBracket {
+  username: string;
+  bracket: Bracket;
+  champion: VersusOption | null;
+  completedAt: string;
 }
 
 export interface VersusTournament {
@@ -32,13 +34,8 @@ export interface VersusTournament {
   title: string;
   createdBy: string;
   options: VersusOption[];
-  votesToWin: number;
   expiresAt: string; // ISO string
-  bracket: Bracket;
+  bracket: Bracket; // Template bracket (no selections)
+  userBrackets: Record<string, UserBracket>; // username -> completed bracket
   createdAt: string;
-}
-
-export interface VoteToWinSuggestion {
-  groupSize: number;
-  suggestedVotes: number;
 }

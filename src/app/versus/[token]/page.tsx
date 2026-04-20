@@ -7,7 +7,7 @@ import { VersusTournament } from '@/types/versus';
 import { BracketView } from '@/components/versus/BracketView';
 import { CelebrationScreen } from '@/components/versus/CelebrationScreen';
 import { ExpiredTournament } from '@/components/versus/ExpiredTournament';
-import { voteInDuel, isDuelWon, isRoundComplete, advanceToNextRound, handleExpiration } from '@/lib/bracket';
+import { selectWinner, calculateCompletedBracket, isBracketComplete, getBracketProgress, createUserBracket } from '@/lib/bracket';
 import { Swords, Clock, AlertTriangle, Share2, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Toast from '@/components/ui/Toast';
@@ -28,7 +28,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const [notFound, setNotFound] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [userVotes, setUserVotes] = useState<Record<string, string>>({});
+  const [userBracket, setUserBracket] = useState<any>(null); // User's current selections
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const searchParams = useSearchParams();
@@ -40,7 +40,6 @@ export default function VersusTournamentPage({ params }: PageProps) {
     if (justCreated) {
       setToastMessage('Torneo creado');
       setShowToast(true);
-      // Remove the query param from URL without triggering a reload
       window.history.replaceState({}, '', `/versus/${token}`);
     }
 
@@ -59,150 +58,87 @@ export default function VersusTournamentPage({ params }: PageProps) {
       const now = new Date();
       setTimeRemaining(Math.max(0, expiresAt.getTime() - now.getTime()));
 
-      // Load user votes
-      const votes: Record<string, string> = {};
-      if (username) {
-        data.bracket.rounds.forEach((round: any) => {
-          round.duels.forEach((duel: any) => {
-            const vote = getDuelVote(token, duel.id, username);
-            if (vote) {
-              votes[duel.id] = vote;
-            }
-          });
-        });
+      // Load user's bracket if exists
+      if (username && data.userBrackets && data.userBrackets[username]) {
+        setUserBracket(data.userBrackets[username]);
       }
-      setUserVotes(votes);
     };
 
     loadTournament();
   }, [token, username]);
 
-  // Real-time polling every 2 seconds
-  useEffect(() => {
-    if (!tournament || tournament.bracket.status !== 'active') return;
-
-    const interval = setInterval(() => {
-      const data = getPollData(token, 'versus');
-      if (data) {
-        setTournament(data);
-
-        // Update time remaining
-        const expiresAt = new Date(data.expiresAt);
-        const now = new Date();
-        setTimeRemaining(Math.max(0, expiresAt.getTime() - now.getTime()));
-
-        // Check if tournament finished
-        if (data.bracket.status === 'finished' || data.bracket.champion) {
-          setShowCelebration(true);
-        }
-
-        // Update user votes
-        if (username) {
-          const votes: Record<string, string> = {};
-          data.bracket.rounds.forEach((round: any) => {
-            round.duels.forEach((duel: any) => {
-              const vote = getDuelVote(token, duel.id, username);
-              if (vote) {
-                votes[duel.id] = vote;
-              }
-            });
-          });
-          setUserVotes(votes);
-        }
-      } else {
-        // Tournament was deleted
-        setNotFound(true);
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [tournament, token, username]);
-
   // Countdown timer
   useEffect(() => {
-    if (!tournament || tournament.bracket.status !== 'active') return;
+    if (!tournament) return;
 
     const interval = setInterval(() => {
       const expiresAt = new Date(tournament.expiresAt);
       const now = new Date();
       const remaining = Math.max(0, expiresAt.getTime() - now.getTime());
       setTimeRemaining(remaining);
-
-      // Check if expired
-      if (remaining === 0 && tournament.bracket.status === 'active') {
-        handleTournamentExpiration();
-      }
     }, 1000);
 
     return () => clearInterval(interval);
   }, [tournament]);
 
-  const handleTournamentExpiration = () => {
+  const handleSelectWinner = (duelId: string, winner: any) => {
     if (!tournament) return;
 
-    // Handle expiration logic
-    const updatedBracket = handleExpiration(tournament.bracket, tournament.votesToWin);
-    const updatedTournament = {
-      ...tournament,
-      bracket: updatedBracket,
-    };
+    // Update user bracket with selection
+    const updatedBracket = selectWinner(
+      userBracket || tournament.bracket,
+      duelId,
+      winner
+    );
 
-    // Store updated tournament
-    storePollData(token, updatedTournament, 'versus');
-    setTournament(updatedTournament);
+    // Calculate completed bracket to advance winners to next rounds
+    const calculatedBracket = calculateCompletedBracket(updatedBracket);
 
-    // Show celebration
-    if (updatedBracket.champion) {
-      setShowCelebration(true);
-
-      // Delete after 10 seconds
-      setTimeout(() => {
-        deleteTournamentData(token);
-        setNotFound(true);
-        setShowCelebration(false);
-      }, 10000);
-    }
+    setUserBracket(calculatedBracket);
   };
 
-  const handleVote = (duelId: string, optionId: string) => {
-    if (!tournament || !username) return;
+  const handleSubmitBracket = () => {
+    if (!tournament || !username || !userBracket) return;
 
-    // Check if user already voted in this duel
-    if (hasVotedInDuel(token, duelId, username)) return;
+    if (!isBracketComplete(userBracket)) {
+      setToastMessage('Completa todos los duelos antes de enviar');
+      setShowToast(true);
+      return;
+    }
 
-    // Record vote
-    markDuelVote(token, duelId, username, optionId);
+    // Create completed user bracket
+    const completedUserBracket = createUserBracket(username, userBracket);
 
-    // Update bracket with vote
-    let updatedBracket = voteInDuel(tournament.bracket, duelId, username, optionId);
-    let updatedTournament = { ...tournament, bracket: updatedBracket };
+    // Save to tournament
+    const updatedTournament = {
+      ...tournament,
+      userBrackets: {
+        ...tournament.userBrackets,
+        [username]: completedUserBracket,
+      },
+    };
 
-    // Check if duel is won
-    const duel = updatedBracket.rounds[updatedBracket.currentRound].duels.find(d => d.id === duelId);
-    if (duel && isDuelWon(duel, tournament.votesToWin)) {
-      // Check if round is complete
-      if (isRoundComplete(updatedBracket, tournament.votesToWin)) {
-        // Advance to next round
-        updatedBracket = advanceToNextRound(updatedBracket, tournament.votesToWin);
-        updatedTournament = { ...tournament, bracket: updatedBracket };
+    storePollData(token, updatedTournament, 'versus');
+    setTournament(updatedTournament);
+    setUserBracket(completedUserBracket.bracket);
+    setShowCelebration(true);
+  };
 
-        // Check if tournament is finished
-        if (updatedBracket.status === 'finished' && updatedBracket.champion) {
-          setShowCelebration(true);
+  const getProgress = () => {
+    if (!userBracket) return 0;
+    return getBracketProgress(userBracket);
+  };
+
+  const getUserSelection = (duelId: string): any => {
+    if (!userBracket) return null;
+    for (const round of userBracket.rounds) {
+      for (const duel of round.duels) {
+        if (duel.id === duelId) {
+          return duel.selectedWinner;
         }
       }
     }
-
-    // Store updated tournament
-    storePollData(token, updatedTournament, 'versus');
-    setTournament(updatedTournament);
-
-    // Update user votes
-    setUserVotes(prev => ({ ...prev, [duelId]: optionId }));
-  };
-
-  const getUserVote = (duelId: string): string | null => {
-    return userVotes[duelId] || null;
+    return null;
   };
 
   const handleShare = async () => {
@@ -236,11 +172,20 @@ export default function VersusTournamentPage({ params }: PageProps) {
     if (!tournament) return null;
 
     const isTournamentExpired = isExpired(new Date(tournament.expiresAt));
-    const isFinished = tournament.bracket.status === 'finished';
+    const isCompleted = userBracket && isBracketComplete(userBracket);
 
-    if (isFinished || isTournamentExpired) {
+    if (isCompleted) {
       return {
-        text: 'Terminada',
+        text: 'Completado',
+        bgColor: '#1a5c3a',
+        textColor: '#ffffff',
+        showIcon: false,
+      };
+    }
+
+    if (isTournamentExpired) {
+      return {
+        text: 'Expirado',
         bgColor: '#2a2a2a',
         textColor: '#a0a0a0',
         showIcon: false,
@@ -276,6 +221,8 @@ export default function VersusTournamentPage({ params }: PageProps) {
   if (!tournament) return null;
 
   const statusInfo = getStatusInfo();
+  const progress = getProgress();
+  const displayBracket = userBracket || tournament.bracket;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] pt-20">
@@ -294,12 +241,35 @@ export default function VersusTournamentPage({ params }: PageProps) {
               <div>
                 <h1 className="text-lg font-bold text-[var(--text)]">{tournament.title}</h1>
                 <p className="text-xs text-[var(--text-muted)]">
-                  por {tournament.createdBy} • {tournament.options.length} opciones • {tournament.votesToWin} votos para ganar
+                  por {tournament.createdBy} • {tournament.options.length} opciones
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Progress */}
+              {!userBracket && (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full">
+                  <div className="w-24 bg-[var(--bg)] rounded-full h-2">
+                    <div 
+                      className="bg-[var(--primary)] h-2 rounded-full transition-all" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-[var(--text-muted)]">{progress}%</span>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              {!userBracket && progress === 100 && (
+                <button
+                  onClick={handleSubmitBracket}
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
+                >
+                  <span>Enviar Bracket</span>
+                </button>
+              )}
+
               {/* Share Button */}
               <button
                 onClick={handleShare}
@@ -328,32 +298,25 @@ export default function VersusTournamentPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Round Indicator */}
-        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 inline-block mb-6">
-          <p className="text-sm font-medium text-[var(--text)]">
-            Ronda {tournament.bracket.currentRound + 1} de {tournament.bracket.rounds.length}
-          </p>
-        </div>
-
         {/* Bracket */}
         <div className="flex items-center justify-center">
           <div className="w-full overflow-x-auto">
             <BracketView
-              bracket={tournament.bracket}
-              votesToWin={tournament.votesToWin}
-              currentRound={tournament.bracket.currentRound}
+              bracket={displayBracket}
+              votesToWin={1}
+              currentRound={0}
               username={username}
-              onVote={handleVote}
-              getUserVote={getUserVote}
+              onVote={handleSelectWinner}
+              getUserVote={getUserSelection}
             />
           </div>
         </div>
       </div>
 
       {/* Celebration Screen */}
-      {showCelebration && tournament.bracket.champion && (
+      {showCelebration && displayBracket.champion && (
         <CelebrationScreen
-          champion={tournament.bracket.champion}
+          champion={displayBracket.champion}
           tournamentTitle={tournament.title}
           onShareResult={() => {}}
         />
