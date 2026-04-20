@@ -3,6 +3,8 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import usePollStore from '@/store/pollStore';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default function InvitePage() {
   const router = useRouter();
@@ -81,7 +83,16 @@ export default function InvitePage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--bg)]">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto bg-[var(--surface)] rounded-2xl shadow-lg border border-[var(--border)] p-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-4">
+            <Link
+              href="/"
+              className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors inline-flex"
+            >
+              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+            </Link>
+          </div>
+          <div className="bg-[var(--surface)] rounded-2xl shadow-lg border border-[var(--border)] p-8">
           <div className="text-center">
             <div className="text-6xl mb-4">📨</div>
             <h1 className="text-2xl font-bold text-[var(--text)] mb-2">You're Invited!</h1>
@@ -110,6 +121,7 @@ export default function InvitePage() {
             >
               Decline
             </button>
+          </div>
           </div>
         </div>
       </div>

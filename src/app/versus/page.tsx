@@ -20,25 +20,35 @@ export default function VersusPage() {
 
   const loadTournaments = () => {
     const allTournaments: VersusTournament[] = [];
-    
+
     // Scan localStorage for versus tournaments
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith('pickly_versus_')) {
+      // Only get tournament data, not duel votes (which have _duel_ in the key)
+      if (key?.startsWith('pickly_versus_') && !key.includes('_duel_')) {
         try {
-          const data = JSON.parse(localStorage.getItem(key) || '{}');
-          allTournaments.push(data);
+          const item = localStorage.getItem(key);
+          if (!item || item.trim() === '') {
+            console.warn('Empty or null data for key:', key);
+            continue;
+          }
+          const data = JSON.parse(item);
+          if (data && data.token) {
+            allTournaments.push(data);
+          }
         } catch (e) {
-          console.error('Error parsing tournament data:', e);
+          console.error('Error parsing tournament data for key', key, ':', e);
+          // Remove corrupted data
+          localStorage.removeItem(key);
         }
       }
     }
-    
+
     // Sort by creation date (newest first)
-    allTournaments.sort((a, b) => 
+    allTournaments.sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-    
+
     setTournaments(allTournaments);
   };
 

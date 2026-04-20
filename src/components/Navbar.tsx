@@ -489,7 +489,7 @@ const Navbar = () => {
       {/* Click outside to close create menu */}
       {showCreateMenu && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-30"
           onClick={() => setShowCreateMenu(false)}
         />
       )}

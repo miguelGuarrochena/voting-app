@@ -21,10 +21,10 @@ export function generateBracket(options: VersusOption[], votesToWin: number): Br
   
   // Determine number of rounds based on option count
   const totalOptions = options.length;
-  const totalRounds = totalOptions === 4 ? 2 : totalOptions === 8 ? 3 : 0;
-  
+  const totalRounds = totalOptions === 4 ? 2 : totalOptions === 8 ? 3 : totalOptions === 16 ? 4 : 0;
+
   if (totalRounds === 0) {
-    throw new Error('Invalid number of options. Must be 4 or 8.');
+    throw new Error('Invalid number of options. Must be 4, 8, or 16.');
   }
   
   // Generate first round (quarterfinals for 8 options, semifinals for 4)

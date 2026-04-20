@@ -4,11 +4,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PlusIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ArrowLeft } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
 import { useUsername } from '@/context/UsernameContext';
-import { generateToken, generateShareLink, storePollData, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { generateToken, generateShareLink, storePollData } from '@/lib/token';
 
 type RatingItemForm = {
   id: string;
@@ -31,8 +31,6 @@ export default function CreateRatingPage() {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [imagePickerContext, setImagePickerContext] = useState<{ itemId: string } | null>(null);
   const [uploadingItem, setUploadingItem] = useState<string | null>(null);
-  const [showShareScreen, setShowShareScreen] = useState(false);
-  const [createdPollData, setCreatedPollData] = useState<{ token: string; shareLink: string; expiresAt: Date } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Duration options
@@ -47,85 +45,6 @@ export default function CreateRatingPage() {
     { value: '48h', label: '48 hours', hours: 48 },
     { value: '7d', label: '7 days', hours: 168 },
   ];
-
-  // ShareResultScreen component
-  const ShareResultScreen = ({ data, onBack, username }: { data: { token: string; shareLink: string; expiresAt: Date }; onBack: () => void; username: string }) => {
-    const [copied, setCopied] = useState(false);
-    const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining(data.expiresAt));
-
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setTimeRemaining(getTimeRemaining(data.expiresAt));
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }, [data.expiresAt]);
-
-    const handleCopy = async () => {
-      try {
-        await navigator.clipboard.writeText(data.shareLink);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
-        console.error('Failed to copy:', err);
-      }
-    };
-
-    return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8 text-center">
-          {/* Success Icon */}
-          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-
-          {/* Heading */}
-          <h2 className="text-2xl font-bold text-[var(--text)] mb-2">
-            ¡Listo {username}! Comparte el link 🎉
-          </h2>
-          <p className="text-[var(--text-muted)] mb-6">
-            Share the link below to start collecting ratings
-          </p>
-
-          {/* Share Link */}
-          <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={data.shareLink}
-                readOnly
-                className="flex-1 bg-transparent border-none text-[var(--text)] text-sm focus:outline-none"
-              />
-              <button
-                onClick={handleCopy}
-                className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm"
-              >
-                {copied ? 'Copied!' : 'Copy Link'}
-              </button>
-            </div>
-          </div>
-
-          {/* Countdown */}
-          <div className="bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] rounded-lg p-4 mb-6">
-            <p className="text-sm text-[var(--text-muted)] mb-1">Time remaining</p>
-            <p className="text-2xl font-bold text-[var(--primary)]">
-              {formatTimeRemaining(timeRemaining)}
-            </p>
-          </div>
-
-          {/* Back Button */}
-          <button
-            onClick={onBack}
-            className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors font-medium"
-          >
-            ← Back to home
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   const addItem = () => {
     setItems([...items, { id: crypto.randomUUID(), label: '', imageUrl: '' }]);
@@ -249,31 +168,20 @@ export default function CreateRatingPage() {
     // Store in localStorage
     storePollData(token, ratingData, 'rating');
 
-    // Show share screen
-    setCreatedPollData({ token, shareLink, expiresAt });
-    setShowShareScreen(true);
+    // Redirect directly to detail page with success flag
+    router.push(`/ratings/${token}?created=true`);
   };
 
   return (
     <PageLayout className="pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto pb-8">
-        {showShareScreen && createdPollData ? (
-          <ShareResultScreen
-            data={createdPollData}
-            username={username || 'Anonymous'}
-            onBack={() => {
-              setShowShareScreen(false);
-              router.push('/');
-            }}
-          />
-        ) : (
-          <>
-            <div className="py-0 sm:py-6">
+        <>
+            <div className="mb-6">
               <Link
                 href="/ratings"
-                className="hidden sm:block text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors inline-flex"
               >
-                ← Back
+                <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
               </Link>
             </div>
 
@@ -469,7 +377,6 @@ export default function CreateRatingPage() {
           }}
         />
           </>
-        )}
       </div>
     </PageLayout>
   );

@@ -11,6 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { RankPollVote } from './RankPollVote';
 import { RankPollResults } from './RankPollResults';
 import { ImageModal } from '@/components/ImageModal';
+import { ArrowLeft } from 'lucide-react';
 
 
 interface PollDetailProps {
@@ -286,15 +287,23 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
       {/* Poll Header */}
       <div className="bg-[var(--surface)] rounded-[20px] md:rounded-[24px] shadow-[var(--shadow-sm)] border border-[var(--border)] p-4 md:p-6 mb-4 md:mb-6">
         <div className="flex flex-row items-start justify-between gap-3 mb-4">
-          <div className="flex-1">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-[var(--text)] mb-2">
-              {poll.title}
-            </h1>
-            {poll.description && (
-              <p className="font-body text-[var(--text-muted)] text-base mb-4">
-                {poll.description}
-              </p>
-            )}
+          <div className="flex items-center gap-3 flex-1">
+            <button
+              onClick={() => router.back()}
+              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors flex-shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+            </button>
+            <div className="flex-1">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-[var(--text)] mb-2">
+                {poll.title}
+              </h1>
+              {poll.description && (
+                <p className="font-body text-[var(--text-muted)] text-base mb-4">
+                  {poll.description}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Share Button - Icon only on mobile, full button on desktop */}

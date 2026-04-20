@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { getPollData, isExpired, hasVoted, markAsVoted, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import Link from 'next/link';
+import { Share2, ArrowLeft } from 'lucide-react';
+import Toast from '@/components/ui/Toast';
 
 export default function RankingTokenPage() {
   const params = useParams();
@@ -19,8 +21,20 @@ export default function RankingTokenPage() {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [expired, setExpired] = useState(false);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const searchParams = useSearchParams();
+  const justCreated = searchParams.get('created') === 'true';
 
   useEffect(() => {
+    // Show toast if just created
+    if (justCreated) {
+      setToastMessage('¡Ranking creado con éxito! 🎉');
+      setShowToast(true);
+      // Remove the query param from URL without triggering a reload
+      window.history.replaceState({}, '', `/ranking/${token}`);
+    }
+
     // Load poll data from localStorage
     const data = getPollData(token, 'ranking');
     if (!data) {
@@ -106,6 +120,17 @@ export default function RankingTokenPage() {
     localStorage.setItem(`pickly_ranking_${token}`, JSON.stringify(updatedPollData));
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setToastMessage('¡Link copiado! 🎉');
+      setShowToast(true);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   if (loading) {
     return (
       <PageLayout>
@@ -119,13 +144,23 @@ export default function RankingTokenPage() {
   if (error) {
     return (
       <PageLayout>
-        <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-          <div className="text-6xl mb-4">😕</div>
-          <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Ranking not found</h2>
-          <p className="text-[var(--text-muted)] mb-6">This ranking may have been deleted or the link is invalid.</p>
-          <Link href="/" className="text-[var(--primary)] hover:underline">
-            Go back home
-          </Link>
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <Link
+              href="/ranking"
+              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+            </Link>
+          </div>
+          <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+            <div className="text-6xl mb-4">😕</div>
+            <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Ranking not found</h2>
+            <p className="text-[var(--text-muted)] mb-6">This ranking may have been deleted or the link is invalid.</p>
+            <Link href="/" className="text-[var(--primary)] hover:underline">
+              Go back home
+            </Link>
+          </div>
         </div>
       </PageLayout>
     );
@@ -135,6 +170,14 @@ export default function RankingTokenPage() {
     return (
       <PageLayout>
         <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <Link
+              href="/ranking"
+              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+            </Link>
+          </div>
           <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8 text-center">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="text-2xl font-bold text-[var(--text)] mb-2">¡Se acabó el tiempo! 🎉</h2>
@@ -184,6 +227,26 @@ export default function RankingTokenPage() {
   return (
     <PageLayout>
       <div className="max-w-2xl mx-auto">
+        {/* Header with Share button */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/ranking"
+              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+            </Link>
+            <h1 className="text-2xl font-bold text-[var(--text)]">{pollData.title}</h1>
+          </div>
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
+          >
+            <Share2 size={18} />
+            Share
+          </button>
+        </div>
+
         {/* Countdown */}
         <div className="bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] rounded-lg p-4 mb-6 text-center">
           <p className="text-sm text-[var(--text-muted)] mb-1">Time remaining</p>
@@ -194,7 +257,6 @@ export default function RankingTokenPage() {
 
         {/* Ranking Card */}
         <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8">
-          <h1 className="text-2xl font-bold text-[var(--text)] mb-2">{pollData.title}</h1>
           {pollData.description && (
             <p className="text-[var(--text-muted)] mb-6">{pollData.description}</p>
           )}
@@ -280,6 +342,7 @@ export default function RankingTokenPage() {
           </Link>
         </div>
       </div>
+      <Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
     </PageLayout>
   );
 }

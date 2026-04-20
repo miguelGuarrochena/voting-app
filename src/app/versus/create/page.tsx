@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PlusIcon, Trash2, Copy, Check } from 'lucide-react';
+import { PlusIcon, Trash2, ArrowLeft } from 'lucide-react';
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { generateToken, generateShareLink, storePollData } from '@/lib/token';
@@ -14,6 +14,8 @@ type OptionForm = {
   id: string;
   title: string;
 };
+
+type BracketSize = 4 | 8 | 16;
 
 export default function CreateVersusPage() {
   const router = useRouter();
@@ -26,27 +28,38 @@ export default function CreateVersusPage() {
   const [votesToWin, setVotesToWin] = useState(4);
   const [selectedDuration, setSelectedDuration] = useState('3');
   const [groupSize, setGroupSize] = useState(6);
+  const [bracketSize, setBracketSize] = useState<BracketSize>(8);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showShareScreen, setShowShareScreen] = useState(false);
-  const [createdTournament, setCreatedTournament] = useState<{ token: string; shareLink: string } | null>(null);
-  const [copied, setCopied] = useState(false);
 
   // Duration options (days)
   const durationOptions = [
-    { value: '1', label: '1 day', days: 1 },
-    { value: '3', label: '3 days', days: 3 },
-    { value: '7', label: '7 days', days: 7 },
-    { value: '14', label: '14 days', days: 14 },
+    { value: '1', label: '1 día', days: 1 },
+    { value: '3', label: '3 días', days: 3 },
+    { value: '7', label: '7 días', days: 7 },
+    { value: '14', label: '14 días', days: 14 },
   ];
 
-  const addOption = () => {
-    if (options.length >= 8) return;
-    setOptions([...options, { id: crypto.randomUUID(), title: '' }]);
+  // Bracket size options with preview icons
+  const bracketSizeOptions: { value: BracketSize; label: string; icon: string }[] = [
+    { value: 4, label: '4 opciones', icon: '🥊' },
+    { value: 8, label: '8 opciones', icon: '⚔️' },
+    { value: 16, label: '16 opciones', icon: '🏆' },
+  ];
+
+  const addOptionPair = () => {
+    const maxOptions = bracketSize;
+    if (options.length >= maxOptions) return;
+    setOptions([
+      ...options,
+      { id: crypto.randomUUID(), title: '' },
+      { id: crypto.randomUUID(), title: '' },
+    ]);
   };
 
-  const removeOption = (id: string) => {
-    if (options.length <= 2) return;
-    setOptions(options.filter(option => option.id !== id));
+  const removeOptionPair = (index: number) => {
+    if (options.length <= 4) return;
+    const pairStartIndex = index * 2;
+    setOptions(options.filter((_, i) => i !== pairStartIndex && i !== pairStartIndex + 1));
   };
 
   const updateOption = (id: string, title: string) => {
@@ -57,14 +70,18 @@ export default function CreateVersusPage() {
     const newErrors: Record<string, string> = {};
 
     if (!title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = 'El título es requerido';
     } else if (title.trim().length < 3) {
-      newErrors.title = 'Title must be at least 3 characters';
+      newErrors.title = 'El título debe tener al menos 3 caracteres';
     }
 
     const validOptions = options.filter(option => option.title.trim() !== '');
-    if (validOptions.length !== 4 && validOptions.length !== 8) {
-      newErrors.options = 'You must have exactly 4 or 8 options';
+    if (validOptions.length % 2 !== 0) {
+      newErrors.options = 'El número de opciones debe ser par ⚔️';
+    } else if (validOptions.length < 4) {
+      newErrors.options = 'Mínimo 4 opciones requeridas';
+    } else if (validOptions.length > bracketSize) {
+      newErrors.options = `Máximo ${bracketSize} opciones para el tamaño seleccionado`;
     }
 
     setErrors(newErrors);
@@ -84,13 +101,21 @@ export default function CreateVersusPage() {
     const token = generateToken();
     const shareLink = generateShareLink(token, 'versus');
 
-    // Prepare options
+    // Prepare options - fill with TBD if needed to reach bracket size
     const validOptions = options
       .filter(option => option.title.trim() !== '')
       .map(option => ({
         id: crypto.randomUUID(),
         title: option.title.trim(),
       }));
+
+    // Fill remaining slots with TBD if needed
+    while (validOptions.length < bracketSize) {
+      validOptions.push({
+        id: crypto.randomUUID(),
+        title: 'TBD',
+      });
+    }
 
     // Generate bracket
     const bracket = generateBracket(validOptions, votesToWin);
@@ -99,7 +124,7 @@ export default function CreateVersusPage() {
     const tournamentData: VersusTournament = {
       token,
       title: title.trim(),
-      createdBy: username || 'Anonymous',
+      createdBy: username || 'Anónimo',
       options: validOptions,
       votesToWin,
       expiresAt: expiresAt.toISOString(),
@@ -110,78 +135,24 @@ export default function CreateVersusPage() {
     // Store in localStorage
     storePollData(token, tournamentData, 'versus');
 
-    // Show share screen
-    setCreatedTournament({ token, shareLink });
-    setShowShareScreen(true);
-  };
-
-  const handleCopy = async () => {
-    if (!createdTournament) return;
-    try {
-      await navigator.clipboard.writeText(createdTournament.shareLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
+    // Redirect directly to detail page with success flag
+    router.push(`/versus/${token}?created=true`);
   };
 
   const suggestedVotes = getVoteSuggestion(groupSize);
 
-  if (showShareScreen && createdTournament) {
-    return (
-      <PageLayout className="pb-24 md:pb-8">
-        <div className="max-w-2xl mx-auto py-8">
-          <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8 text-center">
-            {/* Success Icon */}
-            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+  // Check if form can be submitted
+  const validOptions = options.filter(option => option.title.trim() !== '');
+  const canSubmit = validOptions.length >= 4 && validOptions.length % 2 === 0 && validOptions.length <= bracketSize;
 
-            {/* Heading */}
-            <h2 className="text-2xl font-bold text-[var(--text)] mb-2">
-              ¡Torneo creado {username}! Comparte el link ⚔️
-            </h2>
-            <p className="text-[var(--text-muted)] mb-6">
-              Share the link below to start the tournament
-            </p>
-
-            {/* Share Link */}
-            <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-6">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={createdTournament.shareLink}
-                  readOnly
-                  className="flex-1 bg-transparent border-none text-[var(--text)] text-sm focus:outline-none"
-                />
-                <button
-                  onClick={handleCopy}
-                  className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm flex items-center gap-2"
-                >
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-            </div>
-
-            {/* Back Button */}
-            <button
-              onClick={() => {
-                setShowShareScreen(false);
-                router.push('/versus');
-              }}
-              className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors font-medium"
-            >
-              ← Back to Versus
-            </button>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
+  // Auto-adjust bracket size based on option count
+  useEffect(() => {
+    if (validOptions.length > 8 && bracketSize < 16) {
+      setBracketSize(16);
+    } else if (validOptions.length > 4 && validOptions.length <= 8 && bracketSize < 8) {
+      setBracketSize(8);
+    }
+  }, [validOptions.length, bracketSize]);
 
   return (
     <PageLayout className="pb-24 md:pb-8">
@@ -189,19 +160,19 @@ export default function CreateVersusPage() {
         <div className="mb-6">
           <Link
             href="/versus"
-            className="hidden sm:block text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+            className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors inline-flex"
           >
-            ← Back
+            <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
           </Link>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Create Versus Tournament ⚔️</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Crear Torneo Versus ⚔️</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Tournament Title *
+              Título del torneo *
             </label>
             <input
               type="text"
@@ -210,61 +181,120 @@ export default function CreateVersusPage() {
               className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
                 errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
-              placeholder="e.g., Best 90s song"
+              placeholder="ej. Mejor canción de los 90s"
               maxLength={100}
             />
             {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
           </div>
 
+          {/* Bracket Size */}
+          <div>
+            <label className="block text-sm font-medium text-[var(--text)] mb-2">
+              Tamaño del bracket *
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {bracketSizeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setBracketSize(option.value);
+                    // Adjust options to match new bracket size
+                    const currentValidOptions = options.filter(o => o.title.trim());
+                    if (currentValidOptions.length > option.value) {
+                      setOptions(options.slice(0, option.value));
+                    }
+                  }}
+                  className={`px-3 py-3 rounded-lg border-2 transition-all text-sm font-medium flex flex-col items-center gap-1 ${
+                    bracketSize === option.value
+                      ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                      : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                  }`}
+                >
+                  <span className="text-2xl">{option.icon}</span>
+                  <span>{option.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Options */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-3">
-              Options * (exactly 4 or 8)
+              Opciones * (se agregan en pares)
             </label>
-            <div className="space-y-3">
-              {options.map((option, index) => (
-                <div key={option.id} className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={option.title}
-                      onChange={(e) => updateOption(option.id, e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                      placeholder={`Option ${index + 1}`}
-                      maxLength={50}
-                    />
+            <div className="space-y-4">
+              {Array.from({ length: Math.ceil(options.length / 2) }).map((_, pairIndex) => {
+                const optionA = options[pairIndex * 2];
+                const optionB = options[pairIndex * 2 + 1];
+                if (!optionA) return null;
+
+                return (
+                  <div key={pairIndex} className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={optionA.title}
+                        onChange={(e) => updateOption(optionA.id, e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                        placeholder={`Opción ${pairIndex * 2 + 1}`}
+                        maxLength={50}
+                      />
+                    </div>
+                    <div className="text-[var(--text-muted)] font-bold px-2">VS</div>
+                    {optionB ? (
+                      <>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={optionB.title}
+                            onChange={(e) => updateOption(optionB.id, e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                            placeholder={`Opción ${pairIndex * 2 + 2}`}
+                            maxLength={50}
+                          />
+                        </div>
+                        {options.length > 4 && (
+                          <button
+                            type="button"
+                            onClick={() => removeOptionPair(pairIndex)}
+                            className="p-2 text-red-500 hover:text-red-700"
+                            title="Eliminar par"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex-1 opacity-30">
+                        <div className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400">
+                          Opción {pairIndex * 2 + 2}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeOption(option.id)}
-                    disabled={options.length <= 2}
-                    className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={options.length <= 2 ? "You need at least 2 options" : "Remove option"}
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <button
               type="button"
-              onClick={addOption}
-              disabled={options.length >= 8}
+              onClick={addOptionPair}
+              disabled={options.length >= bracketSize}
               className="mt-3 px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface)] transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <PlusIcon className="w-4 h-4" />
-              Add Option
+              Agregar par de opciones
             </button>
             {errors.options && <p className="mt-1 text-sm text-red-600">{errors.options}</p>}
             <p className="mt-2 text-xs text-[var(--text-muted)]">
-              Current: {options.filter(o => o.title.trim()).length} options (need exactly 4 or 8)
+              Actuales: {validOptions.length} opciones (mínimo 4, máximo {bracketSize})
             </p>
           </div>
 
           {/* Votes to Win */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Votes to Win a Duel *
+              Votos para ganar un duelo *
             </label>
             <div className="flex items-center gap-4 mb-3">
               <input
@@ -279,7 +309,7 @@ export default function CreateVersusPage() {
             </div>
             <div className="bg-[var(--surface-2)] rounded-lg p-3">
               <label className="block text-xs text-[var(--text-muted)] mb-1">
-                Group size (for suggestion)
+                Tamaño del grupo (para sugerencia)
               </label>
               <input
                 type="number"
@@ -290,7 +320,7 @@ export default function CreateVersusPage() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm"
               />
               <p className="mt-2 text-sm text-[var(--primary)]">
-                💡 For a group of ~{groupSize} people we suggest {suggestedVotes} votes
+                💡 Para un grupo de ~{groupSize} personas sugerimos {suggestedVotes} votos
               </p>
             </div>
           </div>
@@ -298,7 +328,7 @@ export default function CreateVersusPage() {
           {/* Duration */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              Time Limit *
+              Duración *
             </label>
             <div className="grid grid-cols-4 gap-2">
               {durationOptions.map((option) => (
@@ -317,16 +347,17 @@ export default function CreateVersusPage() {
               ))}
             </div>
             <p className="mt-2 text-xs text-[var(--text-muted)]">
-              Tournament expires in {durationOptions.find(d => d.value === selectedDuration)?.label} if not completed
+              El torneo expira en {durationOptions.find(d => d.value === selectedDuration)?.label} si no se completa
             </p>
           </div>
 
           {/* Submit */}
           <button
             type="submit"
-            className="w-full px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-lg font-medium hover:shadow-lg transition-all"
+            disabled={!canSubmit}
+            className="w-full px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Tournament
+            Crear torneo
           </button>
         </form>
       </div>

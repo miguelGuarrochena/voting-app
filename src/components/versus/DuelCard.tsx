@@ -19,37 +19,40 @@ export const DuelCard = ({ duel, votesToWin, isActive, username, onVote, userVot
   const winner = duel.winner;
   const isAWinner = winner?.id === duel.optionA.id;
   const isBWinner = winner?.id === duel.optionB.id;
+  const votedForA = userVote === duel.optionA.id;
+  const votedForB = userVote === duel.optionB.id;
 
   return (
     <div
-      className={`bg-[var(--surface)] rounded-xl border-2 transition-all ${
+      className={`bg-[var(--surface)] rounded-lg border-2 transition-all ${
         isActive
-          ? 'border-[var(--primary)] shadow-lg shadow-[var(--primary)]/20'
-          : 'border-[var(--border)] opacity-60'
-      } ${winner ? 'border-green-500/50' : ''}`}
+          ? 'border-pink-500 shadow-lg shadow-pink-500/20'
+          : winner
+          ? 'border-green-500/30'
+          : 'border-dashed border-[var(--border)] opacity-60'
+      }`}
     >
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-medium text-[var(--text-muted)]">
-            {isActive && '⚔️ Active Duel'}
-            {!isActive && !winner && 'Upcoming'}
-            {winner && '🏆 Completed'}
-          </span>
-          {duel.isRandomWinner && winner && (
-            <span className="text-xs">🎲</span>
-          )}
-        </div>
-
+      <div className="p-3">
         {/* Option A */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className={`font-medium ${isAWinner ? 'text-green-600 dark:text-green-400' : 'text-[var(--text)]'} ${winner && !isAWinner ? 'line-through opacity-50' : ''}`}>
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className={`font-bold text-sm ${isAWinner ? 'text-green-600 dark:text-green-400' : 'text-[var(--text)]'} ${winner && !isAWinner ? 'line-through opacity-50 text-gray-400' : ''}`}>
               {duel.optionA.title}
             </span>
-            <span className="text-sm font-bold text-[var(--primary)]">{duel.votesA}</span>
+            <div className="flex items-center gap-2">
+              {votedForA && <span className="text-green-500 font-bold text-xs">✓</span>}
+              <span className="text-xs font-bold text-[var(--primary)]">{duel.votesA}</span>
+              {isActive && !hasVoted && username && !winner && (
+                <button
+                  onClick={() => onVote(duel.optionA.id)}
+                  className="px-2 py-0.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors"
+                >
+                  Votar
+                </button>
+              )}
+            </div>
           </div>
-          <div className="w-full bg-[var(--surface-2)] rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-[var(--surface-2)] rounded-full h-1.5 overflow-hidden">
             <motion.div
               className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full"
               initial={{ width: 0 }}
@@ -60,17 +63,28 @@ export const DuelCard = ({ duel, votesToWin, isActive, username, onVote, userVot
         </div>
 
         {/* VS */}
-        <div className="text-center text-xs font-bold text-[var(--text-muted)] my-2">VS</div>
+        <div className="text-center text-xs font-bold text-[var(--text-muted)] my-1">VS</div>
 
         {/* Option B */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className={`font-medium ${isBWinner ? 'text-green-600 dark:text-green-400' : 'text-[var(--text)]'} ${winner && !isBWinner ? 'line-through opacity-50' : ''}`}>
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className={`font-bold text-sm ${isBWinner ? 'text-green-600 dark:text-green-400' : 'text-[var(--text)]'} ${winner && !isBWinner ? 'line-through opacity-50 text-gray-400' : ''}`}>
               {duel.optionB.title}
             </span>
-            <span className="text-sm font-bold text-[var(--primary)]">{duel.votesB}</span>
+            <div className="flex items-center gap-2">
+              {votedForB && <span className="text-green-500 font-bold text-xs">✓</span>}
+              <span className="text-xs font-bold text-[var(--primary)]">{duel.votesB}</span>
+              {isActive && !hasVoted && username && !winner && (
+                <button
+                  onClick={() => onVote(duel.optionB.id)}
+                  className="px-2 py-0.5 bg-purple-500 hover:bg-purple-600 text-white rounded text-xs font-medium transition-colors"
+                >
+                  Votar
+                </button>
+              )}
+            </div>
           </div>
-          <div className="w-full bg-[var(--surface-2)] rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-[var(--surface-2)] rounded-full h-1.5 overflow-hidden">
             <motion.div
               className="bg-gradient-to-r from-purple-500 to-purple-600 h-full rounded-full"
               initial={{ width: 0 }}
@@ -80,40 +94,22 @@ export const DuelCard = ({ duel, votesToWin, isActive, username, onVote, userVot
           </div>
         </div>
 
-        {/* Votes to win indicator */}
-        <div className="text-center text-xs text-[var(--text-muted)] mb-3">
-          {votesToWin} votes to win
-        </div>
-
-        {/* Vote buttons or result */}
-        {isActive && !hasVoted && username ? (
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => onVote(duel.optionA.id)}
-              disabled={!!winner}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm"
-            >
-              Vote {duel.optionA.title}
-            </button>
-            <button
-              onClick={() => onVote(duel.optionB.id)}
-              disabled={!!winner}
-              className="px-4 py-2 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm"
-            >
-              Vote {duel.optionB.title}
-            </button>
-          </div>
-        ) : hasVoted ? (
-          <div className="text-center text-sm text-[var(--text-muted)]">
-            You voted for {userVote === duel.optionA.id ? duel.optionA.title : duel.optionB.title}
+        {/* Status message */}
+        {hasVoted ? (
+          <div className="text-center text-xs text-[var(--text-muted)] mt-2">
+            Votaste por {userVote === duel.optionA.id ? duel.optionA.title : duel.optionB.title}
           </div>
         ) : !username ? (
-          <div className="text-center text-sm text-[var(--text-muted)]">
-            Set your username to vote
+          <div className="text-center text-xs text-[var(--text-muted)] mt-2">
+            Configura tu nombre para votar
           </div>
         ) : winner ? (
-          <div className="text-center text-sm font-medium text-green-600 dark:text-green-400">
-            🏆 {winner.title} wins!
+          <div className="text-center text-xs font-medium text-green-600 dark:text-green-400 mt-2">
+            🏆 {winner.title} gana
+          </div>
+        ) : !isActive ? (
+          <div className="text-center text-xs text-[var(--text-muted)] mt-2">
+            {duel.optionA.title === '???' ? '???' : 'Próximo'}
           </div>
         ) : null}
       </div>

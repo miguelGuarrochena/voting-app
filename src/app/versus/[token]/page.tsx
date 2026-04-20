@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useUsername } from '@/context/UsernameContext';
 import { getPollData, storePollData, hasVotedInDuel, markDuelVote, getDuelVote, deleteTournamentData, isExpired } from '@/lib/token';
 import { VersusTournament } from '@/types/versus';
@@ -8,17 +8,20 @@ import { BracketView } from '@/components/versus/BracketView';
 import { CelebrationScreen } from '@/components/versus/CelebrationScreen';
 import { ExpiredTournament } from '@/components/versus/ExpiredTournament';
 import { voteInDuel, isDuelWon, isRoundComplete, advanceToNextRound, handleExpiration } from '@/lib/bracket';
-import { Swords, Clock, AlertTriangle } from 'lucide-react';
+import { Swords, Clock, AlertTriangle, Share2, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Toast from '@/components/ui/Toast';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     token: string;
-  };
+  }>;
 }
 
 export default function VersusTournamentPage({ params }: PageProps) {
-  const { token } = params;
+  const { token } = use(params);
   const { username } = useUsername();
   const [tournament, setTournament] = useState<VersusTournament | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,9 +29,21 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [userVotes, setUserVotes] = useState<Record<string, string>>({});
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const searchParams = useSearchParams();
+  const justCreated = searchParams.get('created') === 'true';
 
   // Load tournament data
   useEffect(() => {
+    // Show toast if just created
+    if (justCreated) {
+      setToastMessage('Torneo creado');
+      setShowToast(true);
+      // Remove the query param from URL without triggering a reload
+      window.history.replaceState({}, '', `/versus/${token}`);
+    }
+
     const loadTournament = () => {
       const data = getPollData(token, 'versus');
       if (!data) {
@@ -190,6 +205,17 @@ export default function VersusTournamentPage({ params }: PageProps) {
     return userVotes[duelId] || null;
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setToastMessage('Link copiado');
+      setShowToast(true);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   // Format time remaining
   const formatTimeRemaining = (ms: number) => {
     if (ms <= 0) return 'Expired';
@@ -234,10 +260,10 @@ export default function VersusTournamentPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-bounce">⚔️</div>
-          <p className="text-[var(--text-muted)]">Loading tournament...</p>
+          <p className="text-[var(--text-muted)]">Cargando torneo...</p>
         </div>
       </div>
     );
@@ -252,50 +278,76 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const statusInfo = getStatusInfo();
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] pb-24 md:pb-8">
-      {/* Header */}
-      <div className="bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-[var(--bg)] pt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <Link
+                href="/versus"
+                className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+              </Link>
               <Swords className="w-6 h-6 text-[var(--primary)]" />
               <div>
                 <h1 className="text-lg font-bold text-[var(--text)]">{tournament.title}</h1>
                 <p className="text-xs text-[var(--text-muted)]">
-                  by {tournament.createdBy} • {tournament.options.length} options • {tournament.votesToWin} votes to win
+                  por {tournament.createdBy} • {tournament.options.length} opciones • {tournament.votesToWin} votos para ganar
                 </p>
               </div>
             </div>
 
-            {/* Status Chip */}
-            {statusInfo && (
-              <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-                  statusInfo.showIcon ? 'animate-pulse' : ''
-                }`}
-                style={{
-                  backgroundColor: statusInfo.bgColor,
-                  color: statusInfo.textColor,
-                }}
+            <div className="flex items-center gap-3">
+              {/* Share Button */}
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
               >
-                {statusInfo.showIcon ? <AlertTriangle size={16} /> : <Clock size={16} />}
-                {statusInfo.text}
-              </div>
-            )}
+                <Share2 size={18} />
+                Compartir
+              </button>
+
+              {/* Status Chip */}
+              {statusInfo && (
+                <div
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+                    statusInfo.showIcon ? 'animate-pulse' : ''
+                  }`}
+                  style={{
+                    backgroundColor: statusInfo.bgColor,
+                    color: statusInfo.textColor,
+                  }}
+                >
+                  {statusInfo.showIcon ? <AlertTriangle size={16} /> : <Clock size={16} />}
+                  {statusInfo.text}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Bracket */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <BracketView
-          bracket={tournament.bracket}
-          votesToWin={tournament.votesToWin}
-          currentRound={tournament.bracket.currentRound}
-          username={username}
-          onVote={handleVote}
-          getUserVote={getUserVote}
-        />
+        {/* Round Indicator */}
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-2 inline-block mb-6">
+          <p className="text-sm font-medium text-[var(--text)]">
+            Ronda {tournament.bracket.currentRound + 1} de {tournament.bracket.rounds.length}
+          </p>
+        </div>
+
+        {/* Bracket */}
+        <div className="flex items-center justify-center">
+          <div className="w-full overflow-x-auto">
+            <BracketView
+              bracket={tournament.bracket}
+              votesToWin={tournament.votesToWin}
+              currentRound={tournament.bracket.currentRound}
+              username={username}
+              onVote={handleVote}
+              getUserVote={getUserVote}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Celebration Screen */}
@@ -306,6 +358,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
           onShareResult={() => {}}
         />
       )}
+      <Toast message={toastMessage} isVisible={showToast} onClose={() => setShowToast(false)} />
     </div>
   );
 }
