@@ -40,7 +40,7 @@ const features = [
     id: 'versus',
     title: 'Versus',
     description: 'Tournament-style elimination brackets',
-    icon: Swords,
+    icon: null,
     href: '/versus',
   }
 ];
@@ -99,11 +99,13 @@ export default function Home() {
                 >
                   <div className="h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer group flex flex-col justify-center">
                     {/* Icon */}
-                    <div className="flex justify-center mb-3">
-                      <div className="w-10 h-10 flex items-center justify-center text-[var(--primary)]">
-                        <Icon size={40} />
+                    {Icon && (
+                      <div className="flex justify-center mb-3">
+                        <div className="w-10 h-10 flex items-center justify-center text-[var(--primary)]">
+                          <Icon size={40} />
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Title */}
                     <h3 className="text-lg font-bold text-[var(--text)] mb-2 text-center">

@@ -14,5 +14,6 @@
   "chooseImage": "Elegir una imagen",
   "loadMoreImages": "Cargar más imágenes",
   "photoBy": "Foto por {author}",
-  "imageAttribution": "Imágenes proporcionadas por servicios de stock photo gratuitos. Siempre verificá los términos de licencia para uso comercial."
+  "imageAttribution": "Imágenes proporcionadas por servicios de stock photo gratuitos. Siempre verificá los términos de licencia para uso comercial.",
+  "back": "Volver"
 }

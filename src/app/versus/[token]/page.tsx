@@ -9,13 +9,13 @@ import { getTournament, updateTournamentBracket, submitDuelVote, getDuelVotes, h
 import { generateBracket } from '@/lib/bracket';
 import { VersusTournament, VersusOption } from '@/types/versus';
 import { supabase } from '@/lib/supabase';
+import { PageLayout } from '@/components/PageLayout';
 import { BracketView } from '@/components/versus/BracketView';
 import { CelebrationScreen } from '@/components/versus/CelebrationScreen';
 import { ExpiredTournament } from '@/components/versus/ExpiredTournament';
 import { selectWinner, calculateCompletedBracket, isBracketComplete, getBracketProgress, createUserBracket } from '@/lib/bracket';
 import { useRouter } from 'next/navigation';
 import { Swords, Clock, AlertTriangle, Share2, ArrowLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -317,17 +317,38 @@ export default function VersusTournamentPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] pt-20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4 animate-bounce">⚔️</div>
-          <p className="text-[var(--text-muted)]">{t('versus.loadingTournament')}</p>
+      <PageLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (notFound) {
-    return <ExpiredTournament />;
+    return (
+      <PageLayout>
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => router.back()}
+              className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+              <span className="text-sm text-[var(--text-muted)]">{t('common.back')}</span>
+            </button>
+          </div>
+          <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+            <div className="text-6xl mb-4">😕</div>
+            <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Tournament not found</h2>
+            <p className="text-[var(--text-muted)] mb-6">This tournament may have been deleted or the link is invalid.</p>
+            <Link href="/" className="text-[var(--primary)] hover:underline">
+              Go back home
+            </Link>
+          </div>
+        </div>
+      </PageLayout>
+    );
   }
 
   if (!tournament) return null;
@@ -337,103 +358,107 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const displayBracket = userBracket || tournament.bracket;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] md:pt-20">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-8">
+    <PageLayout>
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3 md:p-4 mb-4 md:mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <button
-                onClick={() => router.back()}
-                className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+              <span className="text-sm text-[var(--text-muted)]">{t('common.back')}</span>
+            </button>
+            <Swords className="w-5 h-5 text-[var(--primary)] flex-shrink-0" />
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-[var(--text)] truncate">{tournament.title}</h1>
+              <p className="text-xs text-[var(--text-muted)]">
+                {t('versus.by')} {tournament.createdBy} • {tournament.options.length} {t('versus.options')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Status Chip */}
+            {statusInfo && (
+              <div
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
+                  statusInfo.showIcon ? 'animate-pulse' : ''
+                }`}
+                style={{
+                  backgroundColor: statusInfo.bgColor,
+                  color: statusInfo.textColor,
+                }}
               >
-                <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-              </button>
-              <Swords className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--primary)] flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-base sm:text-lg font-bold text-[var(--text)] truncate">{tournament.title}</h1>
-                <p className="text-xs text-[var(--text-muted)]">
-                  {t('versus.by')} {tournament.createdBy} • {tournament.options.length} {t('versus.options')}
-                </p>
+                {statusInfo.showIcon ? <AlertTriangle size={14} /> : <Clock size={14} />}
+                <span className="hidden sm:inline">{statusInfo.text}</span>
+                <span className="sm:hidden">{statusInfo.text.split(' ')[0]}</span>
               </div>
-            </div>
+            )}
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              {/* Status Chip */}
-              {statusInfo && (
-                <div
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                    statusInfo.showIcon ? 'animate-pulse' : ''
-                  }`}
-                  style={{
-                    backgroundColor: statusInfo.bgColor,
-                    color: statusInfo.textColor,
-                  }}
-                >
-                  {statusInfo.showIcon ? <AlertTriangle size={14} /> : <Clock size={14} />}
-                  <span className="hidden sm:inline">{statusInfo.text}</span>
-                  <span className="sm:hidden">{statusInfo.text.split(' ')[0]}</span>
-                </div>
-              )}
+            {/* Share Result Button (when bracket is completed) */}
+            {userBracket && displayBracket.champion && (
+              <button
+                onClick={handleShareResult}
+                className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+              >
+                <Share2 size={14} />
+                <span className="hidden sm:inline">{shareResultText}</span>
+                <span className="sm:hidden">Resultado</span>
+              </button>
+            )}
 
-              {/* Share Result Button (when bracket is completed) */}
-              {userBracket && displayBracket.champion && (
-                <button
-                  onClick={handleShareResult}
-                  className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
-                >
-                  <Share2 size={14} />
-                  <span className="hidden sm:inline">{shareResultText}</span>
-                  <span className="sm:hidden">Resultado</span>
-                </button>
-              )}
+            {/* Share Button */}
+            {!displayBracket.champion && (
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+              >
+                <Share2 size={14} />
+                <span className="hidden sm:inline">{t('versus.share')}</span>
+                <span className="sm:hidden">{t('versus.comp')}</span>
+              </button>
+            )}
 
-              {/* Share Button */}
-              {!displayBracket.champion && (
-                <button
-                  onClick={handleShare}
-                  className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
-                >
-                  <Share2 size={14} />
-                  <span className="hidden sm:inline">{t('versus.share')}</span>
-                  <span className="sm:hidden">{t('versus.comp')}</span>
-                </button>
-              )}
-
-              {/* Submit Button */}
-              {!userBracket && progress > 0 && progress === 100 && (
-                <button
-                  onClick={handleSubmitBracket}
-                  className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
-                >
-                  <span className="hidden sm:inline">{t('versus.submitBracket')}</span>
-                  <span className="sm:hidden">{t('versus.submit')}</span>
-                </button>
-              )}
-            </div>
+            {/* Submit Button */}
+            {!userBracket && progress > 0 && progress === 100 && (
+              <button
+                onClick={handleSubmitBracket}
+                className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+              >
+                <span className="hidden sm:inline">{t('versus.submitBracket')}</span>
+                <span className="sm:hidden">{t('versus.submit')}</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Bracket */}
-        <div className="flex items-center justify-center">
-          <div className="w-full">
-            <div ref={bracketRef} className="bg-[var(--surface)] p-2 sm:p-4 md:p-8 rounded-2xl border-2 border-[var(--border)] overflow-visible">
-              {/* Header for image (hidden on mobile) */}
-              <div className="hidden md:block text-center mb-6 pb-4 border-b border-[var(--border)]">
-                <h2 className="text-2xl font-bold text-[var(--text)] mb-2">{tournament.title}</h2>
-                <p className="text-sm text-[var(--text-muted)]">
-                  {t('versus.bracketOf')} {username || t('versus.anonymous')} • {new Date().toLocaleDateString()}
-                </p>
-              </div>
-              <BracketView
-                bracket={displayBracket}
-                votesToWin={1}
-                currentRound={0}
-                username={username}
-                onVote={handleSelectWinner}
-                getUserVote={getUserSelection}
-              />
+        {/* Countdown Banner */}
+        <div className="bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] rounded-lg p-4 mb-6 text-center">
+          <p className="text-sm text-[var(--text-muted)] mb-1">{t('versus.timeRemaining')}</p>
+          <p className="text-2xl font-bold text-[var(--primary)]">
+            {formatTimeRemaining(timeRemaining)}
+          </p>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8">
+          <div ref={bracketRef}>
+            {/* Header for image (hidden on mobile) */}
+            <div className="hidden md:block text-center mb-6 pb-4 border-b border-[var(--border)]">
+              <h2 className="text-2xl font-bold text-[var(--text)] mb-2">{tournament.title}</h2>
+              <p className="text-sm text-[var(--text-muted)]">
+                {t('versus.bracketOf')} {username || t('versus.anonymous')} • {new Date().toLocaleDateString()}
+              </p>
             </div>
+            <BracketView
+              bracket={displayBracket}
+              votesToWin={1}
+              currentRound={0}
+              username={username}
+              onVote={handleSelectWinner}
+              getUserVote={getUserSelection}
+            />
           </div>
         </div>
       </div>
@@ -446,6 +471,6 @@ export default function VersusTournamentPage({ params }: PageProps) {
           onShareResult={handleShareResult}
         />
       )}
-    </div>
+    </PageLayout>
   );
 }

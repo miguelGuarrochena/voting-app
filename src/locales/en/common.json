@@ -14,5 +14,6 @@
   "chooseImage": "Choose an image",
   "loadMoreImages": "Load More Images",
   "photoBy": "Photo by {author}",
-  "imageAttribution": "Images provided by free stock photo services. Always check licensing terms for commercial use."
+  "imageAttribution": "Images provided by free stock photo services. Always check licensing terms for commercial use.",
+  "back": "Back"
 }

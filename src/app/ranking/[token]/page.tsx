@@ -6,6 +6,7 @@ import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
 import { PageLayout } from '@/components/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Share2, ArrowLeft } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function RankingTokenPage() {
   const router = useRouter();
   const params = useParams();
   const { username } = useUsername();
+  const { t } = useLanguage();
   const token = params.token as string;
   const [pollData, setPollData] = useState<any>(null);
   const [responses, setResponses] = useState<any[]>([]);
@@ -209,9 +211,10 @@ export default function RankingTokenPage() {
           <div className="flex items-center gap-3 mb-6">
             <button
               onClick={() => router.back()}
-              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+              className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+              <span className="text-sm text-[var(--text-muted)]">{t('common.back')}</span>
             </button>
           </div>
           <div className="flex flex-col items-center justify-center h-[50vh] text-center">
@@ -234,9 +237,10 @@ export default function RankingTokenPage() {
           <div className="flex items-center gap-3 mb-6">
             <button
               onClick={() => router.back()}
-              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+              className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+              <span className="text-sm text-[var(--text-muted)]">{t('common.back')}</span>
             </button>
           </div>
           <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8 text-center">
@@ -293,9 +297,10 @@ export default function RankingTokenPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+              className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+              <span className="text-sm text-[var(--text-muted)]">{t('common.back')}</span>
             </button>
             <h1 className="text-2xl font-bold text-[var(--text)]">{pollData.title}</h1>
           </div>

@@ -185,9 +185,10 @@ export default function CreateRatingPage() {
             <div className="mb-6">
               <button
                 onClick={() => router.back()}
-                className="hidden md:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors inline-flex"
+                className="hidden md:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+                <span className="text-sm text-[var(--text-muted)]">{t('common.back')}</span>
               </button>
             </div>
 

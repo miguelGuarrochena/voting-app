@@ -27,8 +27,8 @@
   "wonTournament": "ganó el torneo",
   "inPickly": "en Pickly",
   "emptyState": "Compartí un link para que tus amigos puedan competir ✨",
-  "createTournament": "Crear Torneo ⚔️",
-  "subtitle": "Brackets de eliminación al estilo torneo",
+  "createTournament": "Crear Torneo",
+  "subtitle": "Llaves de eliminación al estilo torneo",
   "tournamentTitleLabel": "Título del torneo *",
   "tournamentTitlePlaceholder": "ej. Mejor canción de los 90s",
   "bracketSizeLabel": "Tamaño del bracket *",
@@ -52,5 +52,6 @@
   "14days": "14 días",
   "4options": "4 opciones",
   "8options": "8 opciones",
-  "16options": "16 opciones"
+  "16options": "16 opciones",
+  "timeRemaining": "Tiempo restante"
 }

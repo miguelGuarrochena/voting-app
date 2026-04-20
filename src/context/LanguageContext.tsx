@@ -11,11 +11,9 @@ import homeEn from '@/locales/en/home.json';
 import spinEn from '@/locales/en/spin.json';
 import pollEn from '@/locales/en/poll.json';
 import createEn from '@/locales/en/create.json';
-import myPollsEn from '@/locales/en/myPolls.json';
 import emptyEn from '@/locales/en/empty.json';
 import votesEn from '@/locales/en/votes.json';
 import formEn from '@/locales/en/form.json';
-import exploreEn from '@/locales/en/explore.json';
 import versusEn from '@/locales/en/versus.json';
 import footerEn from '@/locales/en/footer.json';
 import rankingEn from '@/locales/en/ranking.json';
@@ -29,11 +27,9 @@ import homeEs from '@/locales/es/home.json';
 import spinEs from '@/locales/es/spin.json';
 import pollEs from '@/locales/es/poll.json';
 import createEs from '@/locales/es/create.json';
-import myPollsEs from '@/locales/es/myPolls.json';
 import emptyEs from '@/locales/es/empty.json';
 import votesEs from '@/locales/es/votes.json';
 import formEs from '@/locales/es/form.json';
-import exploreEs from '@/locales/es/explore.json';
 import versusEs from '@/locales/es/versus.json';
 import footerEs from '@/locales/es/footer.json';
 import rankingEs from '@/locales/es/ranking.json';
@@ -75,11 +71,9 @@ const translations = {
     ...flattenObject(spinEn, 'spin'),
     ...flattenObject(pollEn, 'poll'),
     ...flattenObject(createEn, 'create'),
-    ...flattenObject(myPollsEn, 'myPolls'),
     ...flattenObject(emptyEn, 'empty'),
     ...flattenObject(votesEn, 'votes'),
     ...flattenObject(formEn, 'form'),
-    ...flattenObject(exploreEn, 'explore'),
     ...flattenObject(versusEn, 'versus'),
     ...flattenObject(footerEn, 'footer'),
     ...flattenObject(rankingEn, 'ranking'),
@@ -94,11 +88,9 @@ const translations = {
     ...flattenObject(spinEs, 'spin'),
     ...flattenObject(pollEs, 'poll'),
     ...flattenObject(createEs, 'create'),
-    ...flattenObject(myPollsEs, 'myPolls'),
     ...flattenObject(emptyEs, 'empty'),
     ...flattenObject(votesEs, 'votes'),
     ...flattenObject(formEs, 'form'),
-    ...flattenObject(exploreEs, 'explore'),
     ...flattenObject(versusEs, 'versus'),
     ...flattenObject(footerEs, 'footer'),
     ...flattenObject(rankingEs, 'ranking'),

@@ -309,6 +309,28 @@ export async function deleteTournament(token: string): Promise<boolean> {
   }
 }
 
+export async function getTournaments(): Promise<any[]> {
+  try {
+    const { data, error } = await supabase
+      .from('tournaments')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    
+    return (data || []).map(tournament => ({
+      ...tournament,
+      expiresAt: tournament.expires_at,
+      createdBy: tournament.created_by,
+      votesToWin: tournament.votes_to_win
+    }))
+  } catch (error) {
+    console.error('Error fetching tournaments:', error)
+    toast.error('Error de conexión, intenta de nuevo')
+    return []
+  }
+}
+
 // ============ HELPER FUNCTIONS ============
 
 function generateToken(): string {
