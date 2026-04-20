@@ -24,18 +24,18 @@ const features = [
     href: '/ranking',
   },
   {
-    id: 'spin',
-    title: 'Spin Wheel',
-    description: 'Spin to decide randomly',
-    icon: RefreshCw,
-    href: '/spin',
-  },
-  {
     id: 'ratings',
     title: 'Ratings',
     description: 'Rate and compare items with stars',
     icon: Star,
     href: '/ratings',
+  },
+  {
+    id: 'spin',
+    title: 'Spin Wheel',
+    description: 'Spin to decide randomly',
+    icon: RefreshCw,
+    href: '/spin',
   }
 ];
 
@@ -92,14 +92,15 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+                style={{ height: '200px' }}
               >
                 <Link
                   href={feature.href}
                   className="block h-full"
                 >
-                  <div className={`h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer group ${feature.id === 'spin' ? 'mt-4 pt-0' : ''}`}>
+                  <div className="h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer group flex flex-col justify-center">
                     {/* Icon */}
-                    <div className="flex justify-center mb-4">
+                    <div className="flex justify-center mb-3">
                       <div className="w-10 h-10 flex items-center justify-center text-[var(--primary)]">
                         <Icon size={40} />
                       </div>
@@ -111,7 +112,7 @@ export default function Home() {
                     </h3>
 
                     {/* Description */}
-                    <p className="text-[var(--text-muted)] text-sm text-center leading-relaxed">
+                    <p className="text-[var(--text-muted)] text-sm text-center leading-relaxed line-clamp-2">
                       {feature.description}
                     </p>
                   </div>

@@ -12,7 +12,7 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { Menu as MenuIcon, X, Moon, Sun, Globe } from 'lucide-react';
+import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe } from 'lucide-react';
 import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -26,6 +26,7 @@ const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUsernameMenu, setShowUsernameMenu] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [showChangeUsernameModal, setShowChangeUsernameModal] = useState(false);
   const [newUsername, setNewUsername] = useState('');
 
@@ -158,6 +159,42 @@ const Navbar = () => {
                 <Globe className="w-5 h-5" />
                 <span>{language === 'en' ? t('lang.es') : t('lang.en')}</span>
               </button>
+
+              <div className="border-t border-[var(--border)] my-2"></div>
+
+              {/* Create options */}
+              <Link
+                href="/create?type=vote"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <ChartBarIcon className="w-5 h-5" />
+                <span>Create Vote</span>
+              </Link>
+              <Link
+                href="/create?type=rank"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <TrophyIcon className="w-5 h-5" />
+                <span>Create Ranking</span>
+              </Link>
+              <Link
+                href="/ratings/create"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <StarIcon className="w-5 h-5" />
+                <span>Create Rating</span>
+              </Link>
+              <Link
+                href="/spin"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <ArrowPathIcon className="w-5 h-5" />
+                <span>Spin Wheel</span>
+              </Link>
             </div>
           </div>
         )}
@@ -325,40 +362,99 @@ const Navbar = () => {
             {/* Right side */}
             <div className="flex items-center space-x-3 sm:space-x-4">
               {username && (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUsernameMenu(!showUsernameMenu)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full hover:bg-[var(--surface)] transition-colors"
-                  >
-                    <span className="text-sm font-medium text-[var(--text)]">{username}</span>
-                    <span className="text-lg">✨</span>
-                  </button>
-                  {showUsernameMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg py-2 z-50">
-                      <button
-                        onClick={() => {
-                          setShowChangeUsernameModal(true);
-                          setShowUsernameMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                      >
-                        Cambiar nombre
-                      </button>
-                      <button
-                        onClick={handleDeleteUsername}
-                        className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      >
-                        Salir
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowCreateMenu(!showCreateMenu)}
+                      className="bg-[var(--primary)] text-white px-4 sm:px-6 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm sm:text-base flex items-center gap-2"
+                    >
+                      <Plus size={16} />
+                      <span>Create</span>
+                    </button>
+
+                    {showCreateMenu && (
+                      <div className="absolute right-0 top-full mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg z-50 min-w-[180px] overflow-hidden">
+                        <div className="py-1">
+                          <Link
+                            href="/create?type=vote"
+                            onClick={() => setShowCreateMenu(false)}
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          >
+                            <ChartBarIcon className="w-4 h-4" />
+                            <span>Vote</span>
+                          </Link>
+                          <Link
+                            href="/create?type=rank"
+                            onClick={() => setShowCreateMenu(false)}
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          >
+                            <TrophyIcon className="w-4 h-4" />
+                            <span>Ranking</span>
+                          </Link>
+                          <Link
+                            href="/ratings/create"
+                            onClick={() => setShowCreateMenu(false)}
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          >
+                            <StarIcon className="w-4 h-4" />
+                            <span>Ratings</span>
+                          </Link>
+                          <Link
+                            href="/spin"
+                            onClick={() => setShowCreateMenu(false)}
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          >
+                            <ArrowPathIcon className="w-4 h-4" />
+                            <span>Spin Wheel</span>
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUsernameMenu(!showUsernameMenu)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full hover:bg-[var(--surface)] transition-colors"
+                    >
+                      <span className="text-sm font-medium text-[var(--text)]">{username}</span>
+                      <span className="text-lg">✨</span>
+                    </button>
+                    {showUsernameMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg py-2 z-50">
+                        <button
+                          onClick={() => {
+                            setShowChangeUsernameModal(true);
+                            setShowUsernameMenu(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                        >
+                          Cambiar nombre
+                        </button>
+                        <button
+                          onClick={handleDeleteUsername}
+                          className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          Salir
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
               <ThemeLanguageSwitcher />
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Click outside to close create menu */}
+      {showCreateMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowCreateMenu(false)}
+        />
+      )}
 
       {/* Change Username Modal - outside nav to cover full screen */}
       {showChangeUsernameModal && (
