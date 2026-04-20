@@ -5,7 +5,7 @@
 export interface TokenData {
   token: string;
   expiresAt: Date;
-  type: 'vote' | 'ranking' | 'rating';
+  type: 'vote' | 'ranking' | 'rating' | 'versus';
 }
 
 /**
@@ -23,9 +23,10 @@ export function generateToken(): string {
 /**
  * Generates the full shareable URL with the token
  */
-export function generateShareLink(token: string, type: 'vote' | 'ranking' | 'rating'): string {
+export function generateShareLink(token: string, type: 'vote' | 'ranking' | 'rating' | 'versus'): string {
   const basePath = typeof window !== 'undefined' ? window.location.origin : '';
-  return `${basePath}/${type === 'ranking' ? 'ranking' : type === 'rating' ? 'ratings' : 'votes'}/${token}`;
+  const path = type === 'ranking' ? 'ranking' : type === 'rating' ? 'ratings' : type === 'versus' ? 'versus' : 'votes';
+  return `${basePath}/${path}/${token}`;
 }
 
 /**
@@ -69,7 +70,7 @@ export function formatTimeRemaining(ms: number): string {
 /**
  * Stores poll data in localStorage
  */
-export function storePollData(token: string, data: any, type: 'vote' | 'ranking' | 'rating'): void {
+export function storePollData(token: string, data: any, type: 'vote' | 'ranking' | 'rating' | 'versus'): void {
   const storageKey = `pickly_${type}_${token}`;
   localStorage.setItem(storageKey, JSON.stringify(data));
 }
@@ -77,7 +78,7 @@ export function storePollData(token: string, data: any, type: 'vote' | 'ranking'
 /**
  * Retrieves poll data from localStorage
  */
-export function getPollData(token: string, type: 'vote' | 'ranking' | 'rating'): any | null {
+export function getPollData(token: string, type: 'vote' | 'ranking' | 'rating' | 'versus'): any | null {
   const storageKey = `pickly_${type}_${token}`;
   const data = localStorage.getItem(storageKey);
   return data ? JSON.parse(data) : null;
@@ -86,7 +87,7 @@ export function getPollData(token: string, type: 'vote' | 'ranking' | 'rating'):
 /**
  * Checks if user has already voted on this poll from this device
  */
-export function hasVoted(token: string, type: 'vote' | 'ranking' | 'rating'): boolean {
+export function hasVoted(token: string, type: 'vote' | 'ranking' | 'rating' | 'versus'): boolean {
   const voteKey = `pickly_voted_${type}_${token}`;
   return localStorage.getItem(voteKey) !== null;
 }
@@ -94,7 +95,39 @@ export function hasVoted(token: string, type: 'vote' | 'ranking' | 'rating'): bo
 /**
  * Marks that user has voted on this poll
  */
-export function markAsVoted(token: string, type: 'vote' | 'ranking' | 'rating'): void {
+export function markAsVoted(token: string, type: 'vote' | 'ranking' | 'rating' | 'versus'): void {
   const voteKey = `pickly_voted_${type}_${token}`;
   localStorage.setItem(voteKey, new Date().toISOString());
+}
+
+/**
+ * Checks if user has voted in a specific duel (for versus tournaments)
+ */
+export function hasVotedInDuel(token: string, duelId: string, username: string): boolean {
+  const duelVoteKey = `pickly_versus_duel_${token}_${duelId}_${username}`;
+  return localStorage.getItem(duelVoteKey) !== null;
+}
+
+/**
+ * Marks that user has voted in a specific duel
+ */
+export function markDuelVote(token: string, duelId: string, username: string, optionId: string): void {
+  const duelVoteKey = `pickly_versus_duel_${token}_${duelId}_${username}`;
+  localStorage.setItem(duelVoteKey, optionId);
+}
+
+/**
+ * Gets which option a user voted for in a duel
+ */
+export function getDuelVote(token: string, duelId: string, username: string): string | null {
+  const duelVoteKey = `pickly_versus_duel_${token}_${duelId}_${username}`;
+  return localStorage.getItem(duelVoteKey);
+}
+
+/**
+ * Deletes tournament data from localStorage
+ */
+export function deleteTournamentData(token: string): void {
+  const storageKey = `pickly_versus_${token}`;
+  localStorage.removeItem(storageKey);
 }

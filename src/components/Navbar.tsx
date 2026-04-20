@@ -12,7 +12,7 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe } from 'lucide-react';
+import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe, Swords } from 'lucide-react';
 import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -195,6 +195,14 @@ const Navbar = () => {
                 <ArrowPathIcon className="w-5 h-5" />
                 <span>Spin Wheel</span>
               </Link>
+              <Link
+                href="/versus/create"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <Swords className="w-5 h-5" />
+                <span>Create Versus</span>
+              </Link>
             </div>
           </div>
         )}
@@ -248,6 +256,16 @@ const Navbar = () => {
             >
               <ArrowPathIcon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
               <span className="text-xs mt-1">Spin</span>
+            </Link>
+
+            <Link
+              href="/versus"
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                pathname === '/versus' ? 'text-[var(--text)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
+              }`}
+            >
+              <Swords className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300" />
+              <span className="text-xs mt-1">Versus</span>
             </Link>
           </div>
         </div>
@@ -357,6 +375,18 @@ const Navbar = () => {
                 <ArrowPathIcon className="w-5 h-5 transition-transform duration-300" />
                 <span>Spin</span>
               </Link>
+
+              <Link
+                href="/versus"
+                className={`text-base lg:text-lg font-medium transition-all duration-300 ease-out flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                  pathname === '/versus'
+                    ? 'text-[var(--text)] bg-[var(--surface-2)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]/50'
+                }`}
+              >
+                <Swords className="w-5 h-5 transition-transform duration-300" />
+                <span>Versus</span>
+              </Link>
             </div>
 
             {/* Right side */}
@@ -406,6 +436,14 @@ const Navbar = () => {
                           >
                             <ArrowPathIcon className="w-4 h-4" />
                             <span>Spin Wheel</span>
+                          </Link>
+                          <Link
+                            href="/versus/create"
+                            onClick={() => setShowCreateMenu(false)}
+                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                          >
+                            <Swords className="w-4 h-4" />
+                            <span>Versus</span>
                           </Link>
                         </div>
                       </div>
