@@ -60,8 +60,8 @@ const Navbar = () => {
   useEffect(() => {
     const checkMobile = () => {
       const width = window.innerWidth;
-      setIsMobile(width < 640);
-      setIsMedium(width >= 640 && width < 1024);
+      setIsMobile(width < 768);
+      setIsMedium(width >= 768 && width < 1200);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -330,16 +330,16 @@ const Navbar = () => {
             </Link>
 
             {/* Center nav links */}
-            <div className="hidden sm:flex items-center space-x-1">
+            <div className="hidden md:flex items-center space-x-2">
               <Link
                 href="/votes"
-                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/votes'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <ChartBarIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/votes' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <ChartBarIcon className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/votes' ? 'scale-110' : 'group-hover:scale-110'}`} />
                 {!isMedium && <span className="font-medium">{t('nav.votes')}</span>}
                 {isMedium && (
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
@@ -350,13 +350,13 @@ const Navbar = () => {
 
               <Link
                 href="/ranking"
-                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/ranking'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <TrophyIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/ranking' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <TrophyIcon className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/ranking' ? 'scale-110' : 'group-hover:scale-110'}`} />
                 {!isMedium && <span className="font-medium">{t('nav.ranking')}</span>}
                 {isMedium && (
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
@@ -367,13 +367,13 @@ const Navbar = () => {
 
               <Link
                 href="/ratings"
-                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/ratings'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <StarIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/ratings' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <StarIcon className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/ratings' ? 'scale-110' : 'group-hover:scale-110'}`} />
                 {!isMedium && <span className="font-medium">{t('nav.ratings')}</span>}
                 {isMedium && (
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
@@ -384,13 +384,13 @@ const Navbar = () => {
 
               <Link
                 href="/spin"
-                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/spin'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <ArrowPathIcon className={`w-5 h-5 transition-all duration-300 ${pathname === '/spin' ? 'scale-110' : 'group-hover:rotate-180'}`} />
+                <ArrowPathIcon className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/spin' ? 'scale-110' : 'group-hover:rotate-180'}`} />
                 {!isMedium && <span className="font-medium">{t('nav.spin')}</span>}
                 {isMedium && (
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
@@ -401,13 +401,13 @@ const Navbar = () => {
 
               <Link
                 href="/versus"
-                className={`relative group flex items-center ${isMedium ? 'justify-center px-3' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
+                className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/versus'
                     ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                <Swords className={`w-5 h-5 transition-all duration-300 ${pathname === '/versus' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <Swords className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/versus' ? 'scale-110' : 'group-hover:scale-110'}`} />
                 {!isMedium && <span className="font-medium">{t('nav.versus')}</span>}
                 {isMedium && (
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
@@ -424,9 +424,9 @@ const Navbar = () => {
                   <div className="relative">
                     <button
                       onClick={() => setShowCreateMenu(!showCreateMenu)}
-                      className={`relative group bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white ${isMedium ? 'px-3 py-2.5' : 'px-5 py-2.5'} rounded-full font-medium hover:shadow-lg hover:shadow-[var(--primary)]/30 hover:scale-105 transition-all duration-300 text-sm flex items-center ${isMedium ? 'justify-center' : 'gap-2'}`}
+                      className={`relative group bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white ${isMedium ? 'px-4 py-2.5' : 'px-5 py-2.5'} rounded-full font-medium hover:shadow-lg hover:shadow-[var(--primary)]/30 hover:scale-105 transition-all duration-300 text-sm flex items-center ${isMedium ? 'justify-center' : 'gap-2'}`}
                     >
-                      <Plus size={16} className="transition-transform group-hover:rotate-90" />
+                      <Plus size={isMedium ? 20 : 16} className="transition-transform group-hover:rotate-90" />
                       {!isMedium && <span>{t('nav.create')}</span>}
                       {isMedium && (
                         <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
