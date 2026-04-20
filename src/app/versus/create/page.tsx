@@ -159,7 +159,7 @@ export default function CreateVersusPage() {
           </button>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Crear Torneo Versus ⚔️</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">Crear Torneo ⚔️</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}

@@ -66,6 +66,7 @@ const translations = {
     'common.pollNotFound': 'Poll not found',
     'common.pollNotFoundDesc': 'Poll not found. It may have been deleted or never existed.',
     'common.loadingImages': 'Loading images...',
+    'common.emptyState': 'Share a link for your friends to vote ✨',
     
     // Theme/Language
     'theme.light': 'Light',
@@ -418,6 +419,7 @@ const translations = {
     'common.pollNotFound': 'Encuesta no encontrada',
     'common.pollNotFoundDesc': 'Encuesta no encontrada. Puede haber sido eliminada o nunca existió.',
     'common.loadingImages': 'Cargando imágenes...',
+    'common.emptyState': 'Compartí un link para que tus amigos puedan votar ✨',
     
     // Theme/Language
     'theme.light': 'Claro',

@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/PageLayout';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function RatingsPage() {
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [ratings, setRatings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,7 +59,7 @@ export default function RatingsPage() {
         {/* Empty State */}
         <div className="text-center py-16">
           <div className="text-6xl mb-4">⭐</div>
-          <h3 className="text-xl font-semibold text-[var(--text)] mb-2">Compartí un link para que tus amigos puedan votar ✨</h3>
+          <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('common.emptyState')}</h3>
         </div>
       </div>
 

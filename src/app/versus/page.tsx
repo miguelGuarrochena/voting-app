@@ -8,8 +8,10 @@ import { getPollData, isExpired } from '@/lib/token';
 import { VersusTournament } from '@/types/versus';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function VersusPage() {
+  const { t } = useLanguage();
   const [tournaments, setTournaments] = useState<VersusTournament[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -91,42 +93,21 @@ export default function VersusPage() {
     <PageLayout className="pb-24 md:pb-8">
       <div className="max-w-4xl mx-auto py-6 sm:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2 flex items-center gap-3">
-              <Swords className="w-8 h-8 sm:w-10 sm:h-10" />
-              Versus
-            </h1>
-            <p className="text-[var(--text-muted)]">
-              Tournament-style elimination brackets
-            </p>
-          </div>
-          <Link
-            href="/versus/create"
-            className="bg-[var(--primary)] text-white px-4 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors flex items-center gap-2"
-          >
-            <Plus size={18} />
-            <span className="hidden sm:inline">Create</span>
-          </Link>
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2 flex items-center gap-3">
+            <Swords className="w-8 h-8 sm:w-10 sm:h-10" />
+            Versus
+          </h1>
+          <p className="text-[var(--text-muted)]">
+            Tournament-style elimination brackets
+          </p>
         </div>
 
         {/* Tournament List */}
         {tournaments.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">⚔️</div>
-            <h2 className="text-xl font-bold text-[var(--text)] mb-2">
-              No tournaments yet
-            </h2>
-            <p className="text-[var(--text-muted)] mb-6">
-              Create your first Versus tournament and start the competition!
-            </p>
-            <Link
-              href="/versus/create"
-              className="inline-flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-3 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
-            >
-              <Plus size={18} />
-              Create Tournament
-            </Link>
+            <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('common.emptyState')}</h3>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -181,6 +162,14 @@ export default function VersusPage() {
           </div>
         )}
       </div>
+
+      {/* Mobile FAB */}
+      <Link
+        href="/versus/create"
+        className="sm:hidden fixed bottom-24 right-4 w-14 h-14 bg-[var(--primary)] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--primary-dark)] transition-colors z-40"
+      >
+        <Plus size={24} />
+      </Link>
     </PageLayout>
   );
 }

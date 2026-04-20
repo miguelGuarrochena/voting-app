@@ -335,7 +335,7 @@ const Navbar = () => {
                 href="/votes"
                 className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/votes'
-                    ? 'text-white bg-[var(--primary)] shadow-lg shadow-[var(--primary)]/30'
+                    ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
@@ -352,7 +352,7 @@ const Navbar = () => {
                 href="/ranking"
                 className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/ranking'
-                    ? 'text-white bg-[var(--primary)] shadow-lg shadow-[var(--primary)]/30'
+                    ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
@@ -369,7 +369,7 @@ const Navbar = () => {
                 href="/ratings"
                 className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/ratings'
-                    ? 'text-white bg-[var(--primary)] shadow-lg shadow-[var(--primary)]/30'
+                    ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
@@ -386,7 +386,7 @@ const Navbar = () => {
                 href="/spin"
                 className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/spin'
-                    ? 'text-white bg-[var(--primary)] shadow-lg shadow-[var(--primary)]/30'
+                    ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
@@ -403,7 +403,7 @@ const Navbar = () => {
                 href="/versus"
                 className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
                   pathname === '/versus'
-                    ? 'text-white bg-[var(--primary)] shadow-lg shadow-[var(--primary)]/30'
+                    ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
