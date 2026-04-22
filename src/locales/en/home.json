@@ -26,6 +26,7 @@
   "rankingDesc": "Let people rank options by preference",
   "ratingsDesc": "Rate and compare items with stars",
   "spinDesc": "Spin to decide randomly",
+  "versusDesc": "Tournament-style elimination brackets",
   "rankingBadge": "Ranking",
   "voteBadge": "Vote"
 }

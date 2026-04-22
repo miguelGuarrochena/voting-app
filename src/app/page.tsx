@@ -40,7 +40,7 @@ const features = [
     id: 'versus',
     title: 'Versus',
     description: 'Tournament-style elimination brackets',
-    icon: null,
+    icon: Swords,
     href: '/versus',
   }
 ];
@@ -114,7 +114,7 @@ export default function Home() {
 
                     {/* Description */}
                     <p className="text-[var(--text-muted)] text-sm text-center leading-relaxed line-clamp-2">
-                      {feature.id === 'votes' ? t('home.votesDesc') : feature.id === 'ranking' ? t('home.rankingDesc') : feature.id === 'ratings' ? t('home.ratingsDesc') : feature.id === 'spin' ? t('home.spinDesc') : 'Tournament-style elimination brackets'}
+                      {feature.id === 'votes' ? t('home.votesDesc') : feature.id === 'ranking' ? t('home.rankingDesc') : feature.id === 'ratings' ? t('home.ratingsDesc') : feature.id === 'spin' ? t('home.spinDesc') : t('home.versusDesc')}
                     </p>
                   </div>
                 </Link>
