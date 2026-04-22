@@ -11,6 +11,7 @@ import Footer from '@/components/layout/Footer';
 import OnboardingScreen from '@/components/onboarding/OnboardingScreen';
 import { CleanupEffect } from '@/components/effects/CleanupEffect';
 import { Toaster } from 'react-hot-toast';
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -77,6 +78,7 @@ const RootLayout = ({
             border: '1px solid var(--border)',
           },
         }} />
+        <Analytics />
       </body>
     </html>
   );
