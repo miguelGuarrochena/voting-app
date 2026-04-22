@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import html2canvas from 'html2canvas';
 import Link from 'next/link';
 import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Trash2, Share2, Check } from 'lucide-react';
@@ -41,6 +42,7 @@ export const SpinWheel = () => {
   const [shareCopied, setShareCopied] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
+  const captureRef = useRef<HTMLDivElement>(null);
   const currentAngleRef = useRef<number>(0);
   const optionsRef = useRef(options);
 
@@ -332,39 +334,75 @@ export const SpinWheel = () => {
   }, [spin]);
 
   // ----------------------------------------------------------------
-  //  Share — mismo patrón que Versus: intenta Web Share API,
-  //  cae a clipboard si el usuario cancela o el nav no soporta.
+  //  Share — captura el contenedor completo (rueda + resultado) con html2canvas,
+  //  similar a Versus, con fallback a texto si falla.
   // ----------------------------------------------------------------
   const handleShareResult = useCallback(async () => {
-    if (!selectedOption) return;
+    if (!selectedOption || !captureRef.current) return;
 
     const text =
       t('spin.shareText').replace('{option}', selectedOption.text) +
       ' ' +
       t('spin.inPickly');
 
-    // Web Share (mobile)
     try {
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        await navigator.share({
-          title: t('spin.theWheelHasSpoken'),
-          text,
-          url: typeof window !== 'undefined' ? window.location.href : undefined,
-        });
-        return;
-      }
-    } catch {
-      // Usuario canceló el share nativo → seguimos al clipboard
-    }
+      // Capture container as image
+      const canvas = await html2canvas(captureRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+        allowTaint: true,
+        useCORS: true,
+      });
 
-    // Fallback: clipboard
-    try {
-      await navigator.clipboard.writeText(text);
-      setShareCopied(true);
-      toast.success(t('spin.resultCopied'));
-      setTimeout(() => setShareCopied(false), 2000);
+      // Convert to blob
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+
+        // Copy image to clipboard
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          setShareCopied(true);
+          toast.success(t('spin.resultCopied'));
+          setTimeout(() => setShareCopied(false), 2000);
+        } catch (err) {
+          console.error('Failed to copy image:', err);
+          // Fallback: download the image
+          const url = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = `wheel-result-${selectedOption.text}.png`;
+          link.href = url;
+          link.click();
+          toast.success(t('spin.resultDownloaded'));
+        }
+      });
     } catch (err) {
-      console.error('Share failed:', err);
+      console.error('Failed to capture container:', err);
+      // Fallback: Web Share API with text (mobile)
+      try {
+        if (typeof navigator !== 'undefined' && navigator.share) {
+          await navigator.share({
+            title: t('spin.theWheelHasSpoken'),
+            text,
+            url: typeof window !== 'undefined' ? window.location.href : undefined,
+          });
+          return;
+        }
+      } catch {
+        // Usuario canceló el share nativo → seguimos al clipboard
+      }
+
+      // Final fallback: clipboard text
+      try {
+        await navigator.clipboard.writeText(text);
+        setShareCopied(true);
+        toast.success(t('spin.resultCopied'));
+        setTimeout(() => setShareCopied(false), 2000);
+      } catch (err) {
+        console.error('Share failed:', err);
+      }
     }
   }, [selectedOption, t]);
 
@@ -409,46 +447,47 @@ export const SpinWheel = () => {
           <div className="hidden lg:grid lg:grid-cols-2 gap-12 items-start">
             <motion.div className="flex flex-col items-center" initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }}>
               <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] border border-[var(--border)] p-4 lg:p-8 w-full">
-                <div className="relative w-[280px] h-[280px] lg:w-[400px] lg:h-[400px] max-w-full mx-auto">
+                <div ref={captureRef} className="flex flex-col items-center">
+                  <div className="relative w-[280px] h-[280px] lg:w-[400px] lg:h-[400px] max-w-full mx-auto">
 
-                  <div ref={wheelRef} style={{ width: '100%', height: '100%' }}>
-                    <canvas ref={canvasRef} className="w-full h-full" />
+                    <div ref={wheelRef} style={{ width: '100%', height: '100%' }}>
+                      <canvas ref={canvasRef} className="w-full h-full" />
+                    </div>
+
+
+                    <button
+                      onClick={spin}
+                      disabled={!canSpin}
+                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 ${
+                        canSpin
+                          ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white'
+                          : 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed opacity-50'
+                      }`}
+                    >
+                      {isSpinning ? t('spin.spinning') : t('spin.spin')}
+                    </button>
                   </div>
 
-                  
-                  <button
-                    onClick={spin}
-                    disabled={!canSpin}
-                    className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 ${
-                      canSpin
-                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white'
-                        : 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed opacity-50'
-                    }`}
-                  >
-                    {isSpinning ? t('spin.spinning') : t('spin.spin')}
-                  </button>
-                </div>
+                  <AnimatePresence>
+                    {validationError && (
+                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[var(--radius-md)] text-red-700 text-sm text-center">
+                        {validationError}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                <AnimatePresence>
-                  {validationError && (
-                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                      className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[var(--radius-md)] text-red-700 text-sm text-center">
-                      {validationError}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <AnimatePresence>
-                  {showResult && selectedOption && (
-                    <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                      className="mt-8 p-6 bg-gradient-to-r from-[var(--primary-light)] to-[var(--primary-light)/50] rounded-[var(--radius-lg)] text-center border border-[var(--primary-light)]">
-                      <div className="text-3xl mb-3">🎉</div>
-                      <h3 className="font-display text-xl font-bold text-[var(--text)] mb-2">{t('spin.theWheelHasSpoken')}</h3>
-                      <div className="text-2xl font-bold text-[var(--primary)] mb-4">{selectedOption.text}</div>
-                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                        <button onClick={handleShareResult}
-                          className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-[var(--primary)] text-white rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors">
-                          {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
+                  <AnimatePresence>
+                    {showResult && selectedOption && (
+                      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                        className="mt-8 p-6 bg-gradient-to-r from-[var(--primary-light)] to-[var(--primary-light)/50] rounded-[var(--radius-lg)] text-center border border-[var(--primary-light)]">
+                        <div className="text-3xl mb-3">🎉</div>
+                        <h3 className="font-display text-xl font-bold text-[var(--text)] mb-2">{t('spin.theWheelHasSpoken')}</h3>
+                        <div className="text-2xl font-bold text-[var(--primary)] mb-4">{selectedOption.text}</div>
+                        <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                          <button onClick={handleShareResult}
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-[var(--primary)] text-white rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors">
+                            {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
                           {shareCopied ? t('spin.resultCopied') : t('spin.shareResult')}
                         </button>
                         <button onClick={spinAgain}
@@ -459,6 +498,7 @@ export const SpinWheel = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
+                </div>
               </div>
             </motion.div>
 
@@ -731,57 +771,59 @@ export const SpinWheel = () => {
                 className="flex flex-col items-center"
               >
                 <div className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] border border-[var(--border)] p-4 w-full">
-                  <div className="relative mx-auto" style={{ width: 280, height: 280 }}>
-                    <div ref={wheelRef} style={{ width: '100%', height: '100%' }}>
-                      <canvas ref={canvasRef} className="w-full h-full" />
+                  <div ref={captureRef} className="flex flex-col items-center">
+                    <div className="relative mx-auto" style={{ width: 280, height: 280 }}>
+                      <div ref={wheelRef} style={{ width: '100%', height: '100%' }}>
+                        <canvas ref={canvasRef} className="w-full h-full" />
+                      </div>
                     </div>
+
+                    <div className="mt-3">
+                      <button
+                        onClick={spin}
+                        disabled={!canSpin}
+                        className="w-full py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white font-bold text-base rounded-2xl shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSpinning ? t('spin.spinning') : showResult ? t('spin.spinAgain') : t('spin.spin')}
+                      </button>
+                      {!canSpin && !isSpinning && (
+                        <p className="text-xs text-center text-gray-400 mt-2">
+                          {t('spin.enterAtLeastTwoOptions')}
+                        </p>
+                      )}
+                    </div>
+
+                    <AnimatePresence>
+                      {validationError && (
+                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                          className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[var(--radius-md)] text-red-700 text-sm text-center">
+                          {validationError}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                      {showResult && selectedOption && (
+                        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                          className="mt-3 p-3 bg-gradient-to-r from-[var(--primary-light)] to-[var(--primary-light)/50] rounded-[var(--radius-lg)] text-center border border-[var(--primary-light)]">
+                          <div className="text-2xl mb-2">🎉</div>
+                          <h3 className="font-display text-lg font-bold text-[var(--text)] mb-1">{t('spin.theWheelHasSpoken')}</h3>
+                          <div className="text-xl font-bold text-[var(--primary)] mb-2">{selectedOption.text}</div>
+                          <div className="flex flex-col gap-2 items-center">
+                            <button onClick={handleShareResult}
+                              className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-[var(--primary)] text-white rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm">
+                              {shareCopied ? <Check size={14} /> : <Share2 size={14} />}
+                              {shareCopied ? t('spin.resultCopied') : t('spin.shareResult')}
+                            </button>
+                            <button onClick={spinAgain}
+                              className="px-4 py-1.5 bg-[var(--surface)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--surface-2)] transition-colors border border-[var(--primary)] text-sm">
+                              {t('spin.spinAgain')}
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-
-                  <div className="mt-3">
-                    <button
-                      onClick={spin}
-                      disabled={!canSpin}
-                      className="w-full py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white font-bold text-base rounded-2xl shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSpinning ? t('spin.spinning') : showResult ? t('spin.spinAgain') : t('spin.spin')}
-                    </button>
-                    {!canSpin && !isSpinning && (
-                      <p className="text-xs text-center text-gray-400 mt-2">
-                        {t('spin.enterAtLeastTwoOptions')}
-                      </p>
-                    )}
-                  </div>
-
-                  <AnimatePresence>
-                    {validationError && (
-                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                        className="mt-4 p-3 bg-red-50 border border-red-200 rounded-[var(--radius-md)] text-red-700 text-sm text-center">
-                        {validationError}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <AnimatePresence>
-                    {showResult && selectedOption && (
-                      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                        className="mt-3 p-3 bg-gradient-to-r from-[var(--primary-light)] to-[var(--primary-light)/50] rounded-[var(--radius-lg)] text-center border border-[var(--primary-light)]">
-                        <div className="text-2xl mb-2">🎉</div>
-                        <h3 className="font-display text-lg font-bold text-[var(--text)] mb-1">{t('spin.theWheelHasSpoken')}</h3>
-                        <div className="text-xl font-bold text-[var(--primary)] mb-2">{selectedOption.text}</div>
-                        <div className="flex flex-col gap-2 items-center">
-                          <button onClick={handleShareResult}
-                            className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-[var(--primary)] text-white rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm">
-                            {shareCopied ? <Check size={14} /> : <Share2 size={14} />}
-                            {shareCopied ? t('spin.resultCopied') : t('spin.shareResult')}
-                          </button>
-                          <button onClick={spinAgain}
-                            className="px-4 py-1.5 bg-[var(--surface)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--surface-2)] transition-colors border border-[var(--primary)] text-sm">
-                            {t('spin.spinAgain')}
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
 
                 <button

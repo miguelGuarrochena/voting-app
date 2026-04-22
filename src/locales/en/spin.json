@@ -39,6 +39,7 @@
   "shareResult": "Share result",
   "copyResult": "Copy result",
   "resultCopied": "Result copied 🎉",
+  "resultDownloaded": "Result downloaded 🎉",
   "shareText": "The wheel picked: {option} 🎲",
   "inPickly": "— spun on Pickly"
 }
