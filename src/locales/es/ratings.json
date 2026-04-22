@@ -27,5 +27,8 @@
   "titleRequired": "El título es requerido",
   "titleMinLength": "El título debe tener al menos 3 caracteres",
   "atLeast2ItemsRequired": "Se requieren al menos 2 items",
-  "failedToCreate": "Error al crear la valoración"
+  "failedToCreate": "Error al crear la valoración",
+  "submitRatings": "Enviar valoraciones",
+  "needToRateAll": "Faltan {count} items por puntuar",
+  "rateFromTo": "Puntuá cada item del 1 al 5 — todos son obligatorios"
 }

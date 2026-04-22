@@ -1,70 +1,109 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import usePollStore from '@/store/pollStore';
-import { PollCard } from '@/components/poll/PollCard';
+import toast from 'react-hot-toast';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import { PageLayout } from '@/components/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
+import { MyPollCard } from '@/components/mypolls/MyPollCard';
+import { ListingEmptyState } from '@/components/mypolls/ListingEmptyState';
+import {
+  getMyPolls,
+  removeMyPoll,
+  pruneExpiredMyPolls,
+  type MyPollEntry,
+} from '@/lib/mypolls';
 
 export default function RankingPage() {
   const { t } = useLanguage();
-  const { polls, loadPolls, isLoading } = usePollStore();
   const [mounted, setMounted] = useState(false);
+  const [entries, setEntries] = useState<MyPollEntry[]>([]);
+
+  const refresh = useCallback(() => {
+    pruneExpiredMyPolls();
+    setEntries(getMyPolls('ranking'));
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-    loadPolls();
-  }, [loadPolls]);
+    refresh();
+  }, [refresh]);
 
-  // Get ranking-type polls only
-  const rankingPolls = polls.filter(poll =>
-    poll.type === 'rank'
-  );
+  const handleRemove = (token: string) => {
+    removeMyPoll(token);
+    toast.success(t('common.removed'));
+    refresh();
+  };
 
   if (!mounted) {
     return (
       <PageLayout>
         <div className="flex flex-col items-center justify-center h-[50vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-          <p className="text-[var(--text-muted)] mt-4">Loading...</p>
+          <p className="text-[var(--text-muted)] mt-4">{t('common.loading')}</p>
         </div>
       </PageLayout>
     );
   }
 
+  const isEmpty = entries.length === 0;
+
   return (
     <PageLayout className="pb-24 md:pb-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)]">{t('ranking.title')}</h1>
-            <p className="text-[var(--text-muted)] mt-1">{t('ranking.subtitle')}</p>
+        <div className="flex items-start sm:items-center justify-between gap-3 mb-6">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] truncate">
+              {t('ranking.title')}
+            </h1>
+            <p className="text-[var(--text-muted)] text-sm sm:text-base mt-1">
+              {t('ranking.subtitle')}
+            </p>
           </div>
-          <Link
-            href="/create?type=rank"
-            className="hidden sm:flex items-center gap-2 bg-[var(--primary)] text-white px-4 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors"
-          >
-            <PlusIcon className="w-5 h-5" />
-            <span>{t('ranking.createRanking')}</span>
-          </Link>
+          {!isEmpty && (
+            <Link
+              href="/create?type=rank"
+              className="hidden sm:inline-flex items-center gap-2 bg-[var(--primary)] text-white px-4 py-2 rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors whitespace-nowrap"
+            >
+              <PlusIcon className="w-5 h-5" />
+              <span>{t('ranking.createRanking')}</span>
+            </Link>
+          )}
         </div>
 
-
-        {/* Empty State */}
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4">🏆</div>
-          <h3 className="text-xl font-semibold text-[var(--text)] mb-2">{t('ranking.emptyState')}</h3>
-        </div>
+        {isEmpty ? (
+          <ListingEmptyState
+            emoji="🏆"
+            title={t('ranking.emptyState')}
+            ctaHref="/create?type=rank"
+            ctaLabel={t('ranking.createRanking')}
+          />
+        ) : (
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+            {entries.map((entry) => (
+              <MyPollCard
+                key={entry.token}
+                entry={entry}
+                href={`/ranking/${entry.token}`}
+                onRemove={handleRemove}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Mobile FAB */}
-      <Link
-        href="/create?type=rank"
-        className="sm:hidden fixed bottom-24 right-4 w-14 h-14 bg-[var(--primary)] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--primary-dark)] transition-colors z-40"
-      >
-        <PlusIcon className="w-6 h-6" />
-      </Link>
+      {!isEmpty && (
+        <Link
+          href="/create?type=rank"
+          className="sm:hidden fixed bottom-24 right-4 w-14 h-14 bg-[var(--primary)] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--primary-dark)] transition-colors z-40"
+          aria-label={t('ranking.createRanking')}
+        >
+          <PlusIcon className="w-6 h-6" />
+        </Link>
+      )}
     </PageLayout>
   );
 }

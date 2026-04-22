@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PlusIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import { Trash2, ArrowLeft } from 'lucide-react';
-import { PageLayout } from '@/components/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 import toast from 'react-hot-toast';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { generateShareLink } from '@/lib/token';
 import { createPoll } from '@/lib/db';
+import { addMyPoll } from '@/lib/mypolls';
+import { safeBack } from '@/lib/navigation';
 
 type RatingItemForm = {
   id: string;
@@ -174,6 +176,16 @@ export default function CreateRatingPage() {
       return;
     }
 
+    // Guardar en "mis ratings" (localStorage) como creador.
+    addMyPoll({
+      token,
+      type: 'rating',
+      title: title.trim(),
+      role: 'creator',
+      createdBy: username || 'Anonymous',
+      expiresAt: expiresAt.toISOString(),
+    });
+
     // Redirect directly to detail page with success flag
     router.push(`/ratings/${token}?created=true`);
   };
@@ -184,7 +196,7 @@ export default function CreateRatingPage() {
         <>
             <div className="mb-6">
               <button
-                onClick={() => router.back()}
+                onClick={() => safeBack(router, '/ratings')}
                 className="hidden md:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />

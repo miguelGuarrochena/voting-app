@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
-import { PageLayout } from '@/components/PageLayout';
+import { addMyPoll } from '@/lib/mypolls';
+import { safeBack } from '@/lib/navigation';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'next/navigation';
@@ -51,6 +53,16 @@ export default function RatingTokenPage() {
       setExpired(isExpired(new Date(data.expiresAt)));
       setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
       setLoading(false);
+
+      // Guardar en "mis ratings" como participante.
+      addMyPoll({
+        token,
+        type: 'rating',
+        title: data.title,
+        role: 'participant',
+        createdBy: data.createdBy,
+        expiresAt: data.expiresAt,
+      });
 
       // Load responses to check if user has voted
       const responses = await getPollResponses(token);
@@ -124,7 +136,19 @@ export default function RatingTokenPage() {
   };
 
   const handleSubmitRating = async () => {
-    if (!pollData || Object.keys(ratings).length === 0) return;
+    if (!pollData) return;
+
+    // Requerimos que el usuario haya puntuado TODAS las opciones.
+    const missing = pollData.options.filter(
+      (opt: any) => !ratings[opt.id] || ratings[opt.id] < 1
+    );
+    if (missing.length > 0) {
+      toast.error(
+        t('ratings.needToRateAll')
+          .replace('{count}', String(missing.length))
+      );
+      return;
+    }
 
     // Submit response to Supabase
     const success = await submitResponse(token, username || 'Anonymous', { ratings });
@@ -196,7 +220,7 @@ export default function RatingTokenPage() {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/ratings')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
@@ -222,7 +246,7 @@ export default function RatingTokenPage() {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/ratings')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
@@ -322,7 +346,7 @@ export default function RatingTokenPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/ratings')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
@@ -427,7 +451,7 @@ export default function RatingTokenPage() {
           ) : (
             /* Show Rating Interface */
             <div className="space-y-6">
-              <p className="text-[var(--text-muted)] mb-4">Rate each item from 1 to 5 stars:</p>
+              <p className="text-[var(--text-muted)] mb-4">{t('ratings.rateFromTo')}</p>
               {pollData.options.map((option: any) => (
                 <div key={option.id} className="bg-[var(--surface-2)] rounded-lg p-4">
                   {option.imageUrl && (
@@ -478,13 +502,39 @@ export default function RatingTokenPage() {
                 </div>
               ))}
 
-              <button
-                onClick={handleSubmitRating}
-                disabled={Object.keys(ratings).length === 0}
-                className="w-full bg-[var(--primary)] text-white py-3 rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Submit Ratings
-              </button>
+              {(() => {
+                const totalOptions = pollData.options.length;
+                const ratedOptions = pollData.options.filter(
+                  (o: any) => ratings[o.id] && ratings[o.id] > 0
+                ).length;
+                const missing = totalOptions - ratedOptions;
+                const ready = missing === 0;
+
+                return (
+                  <div className="space-y-2">
+                    {!ready && (
+                      <p className="text-sm text-amber-600 dark:text-amber-400 text-center">
+                        {t('ratings.needToRateAll').replace(
+                          '{count}',
+                          String(missing)
+                        )}
+                      </p>
+                    )}
+                    <button
+                      onClick={handleSubmitRating}
+                      className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                        ready
+                          ? 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]'
+                          : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--surface)]'
+                      }`}
+                    >
+                      {ready
+                        ? t('ratings.submitRatings')
+                        : `${t('ratings.submitRatings')} (${ratedOptions}/${totalOptions})`}
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

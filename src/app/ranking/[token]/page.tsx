@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
-import { PageLayout } from '@/components/PageLayout';
+import { addMyPoll } from '@/lib/mypolls';
+import { safeBack } from '@/lib/navigation';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'next/navigation';
@@ -52,6 +54,16 @@ export default function RankingTokenPage() {
       setExpired(isExpired(new Date(data.expiresAt)));
       setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
       setLoading(false);
+
+      // Guardar en "mis rankings" como participante.
+      addMyPoll({
+        token,
+        type: 'ranking',
+        title: data.title,
+        role: 'participant',
+        createdBy: data.createdBy,
+        expiresAt: data.expiresAt,
+      });
 
       // Load responses to check if user has voted
       const responses = await getPollResponses(token);
@@ -210,7 +222,7 @@ export default function RankingTokenPage() {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/ranking')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
@@ -236,7 +248,7 @@ export default function RankingTokenPage() {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/ranking')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
@@ -296,7 +308,7 @@ export default function RankingTokenPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/ranking')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />

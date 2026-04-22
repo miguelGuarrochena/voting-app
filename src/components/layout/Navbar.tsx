@@ -13,8 +13,9 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe, Swords } from 'lucide-react';
-import ThemeLanguageSwitcher from '@/components/ThemeLanguageSwitcher';
+import ThemeLanguageSwitcher from '@/components/layout/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
+import { safeBack } from '@/lib/navigation';
 
 const Navbar = () => {
   const { t, language, toggleLanguage } = useLanguage();
@@ -85,7 +86,7 @@ const Navbar = () => {
                       // Dispatch custom event for spin page to handle step navigation
                       window.dispatchEvent(new CustomEvent('spin-back'));
                     } else {
-                      router.back();
+                      safeBack(router, '/');
                     }
                   }}
                   className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] hover:bg-[var(--surface)] transition-colors"

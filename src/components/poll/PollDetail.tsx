@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
+import { safeBack } from '@/lib/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -10,7 +11,7 @@ import { Poll, PollOption, getPositiveVotes } from '@/types/poll';
 import { useLanguage } from '@/context/LanguageContext';
 import { RankPollVote } from './RankPollVote';
 import { RankPollResults } from './RankPollResults';
-import { ImageModal } from '@/components/ImageModal';
+import { ImageModal } from '@/components/modals/ImageModal';
 import { ArrowLeft } from 'lucide-react';
 
 
@@ -251,7 +252,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
         <div className="flex flex-row items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 flex-1">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/')}
               className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors flex-shrink-0"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />

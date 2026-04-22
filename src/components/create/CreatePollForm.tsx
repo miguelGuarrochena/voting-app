@@ -8,6 +8,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import ImagePickerModal from './ImagePickerModal';
 import { generateShareLink } from '@/lib/token';
 import { createPoll } from '@/lib/db';
+import { addMyPoll } from '@/lib/mypolls';
 import { Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -266,7 +267,9 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       }
       const expiresAt = new Date(Date.now() + durationMs);
 
-      const pollTypeForUrl = pollType === 'rank' ? 'ranking' : pollType === 'vote' ? 'vote' : 'vote';
+      // OJO: la ruta de vote es "/votes/[token]" en plural.
+      // Antes mandábamos a "/vote/..." en singular → 404.
+      const pollTypeForUrl = pollType === 'rank' ? 'ranking' : 'votes';
       const dbType = pollType === 'rank' ? 'ranking' : 'vote';
 
       // Prepare options
@@ -297,6 +300,16 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       }
 
       console.log('[CreatePoll] Poll created successfully with token:', token);
+
+      // Guardar en "mis polls" (localStorage) como creador.
+      addMyPoll({
+        token,
+        type: dbType === 'ranking' ? 'ranking' : 'vote',
+        title: title.trim(),
+        role: 'creator',
+        createdBy: username || 'Anonymous',
+        expiresAt: expiresAt.toISOString(),
+      });
 
       // Redirect directly to detail page with success flag
       router.push(`/${pollTypeForUrl}/${token}?created=true`);

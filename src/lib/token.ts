@@ -46,25 +46,20 @@ export function getTimeRemaining(expiresAt: Date): number {
 }
 
 /**
- * Formats remaining time as a human-readable string
+ * Formats remaining time as a compact, i18n-agnostic string (e.g. "2d", "3h", "45m", "30s")
  */
 export function formatTimeRemaining(ms: number): string {
-  if (ms <= 0) return 'Expired';
-  
+  if (ms <= 0) return '—';
+
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (days > 0) {
-    return `${days} day${days > 1 ? 's' : ''}`;
-  } else if (hours > 0) {
-    return `${hours} hour${hours > 1 ? 's' : ''}`;
-  } else if (minutes > 0) {
-    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
-  } else {
-    return `${seconds} second${seconds > 1 ? 's' : ''}`;
-  }
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  if (minutes > 0) return `${minutes}m`;
+  return `${seconds}s`;
 }
 
 /**

@@ -15,5 +15,12 @@
   "loadMoreImages": "Cargar más imágenes",
   "photoBy": "Foto por {author}",
   "imageAttribution": "Imágenes proporcionadas por servicios de stock photo gratuitos. Siempre verificá los términos de licencia para uso comercial.",
-  "back": "Volver"
+  "back": "Volver",
+  "createdByYou": "Creado por ti",
+  "sharedWithYou": "Compartido contigo",
+  "expiresIn": "Expira en {time}",
+  "expired": "Expirado",
+  "remove": "Quitar de mi lista",
+  "removed": "Eliminado de tu lista",
+  "open": "Abrir"
 }

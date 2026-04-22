@@ -5,7 +5,7 @@ import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor, Keyboar
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Poll, PollOption } from '@/types/poll';
-import { ImageModal } from '@/components/ImageModal';
+import { ImageModal } from '@/components/modals/ImageModal';
 
 interface RankPollVoteProps {
   poll: Poll;

@@ -1,4 +1,4 @@
-import { SpinWheel } from '@/components/SpinWheel';
+import { SpinWheel } from '@/components/wheel/SpinWheel';
 
 export default function SpinWheelPage() {
   return <SpinWheel />;

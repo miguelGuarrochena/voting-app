@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import ErrorState from '@/components/ErrorState';
+import ErrorState from '@/components/states/ErrorState';
 import { HomeIcon, PlusCircleIcon, MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -87,22 +87,28 @@ const NotFound = () => {
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <Link
-                href="/"
+                href="/votes"
                 className="text-sm text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors font-medium"
               >
-                Browse Polls
+                My Votes
               </Link>
               <Link
-                href="/trending"
+                href="/ranking"
                 className="text-sm text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors font-medium"
               >
-                Trending
+                Rankings
               </Link>
               <Link
-                href="/explore"
+                href="/ratings"
                 className="text-sm text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors font-medium"
               >
-                Explore
+                Ratings
+              </Link>
+              <Link
+                href="/versus"
+                className="text-sm text-[var(--primary)] hover:text-[var(--primary-dark)] transition-colors font-medium"
+              >
+                Versus
               </Link>
             </div>
           </div>

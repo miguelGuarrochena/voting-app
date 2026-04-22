@@ -2,9 +2,10 @@
 
 import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import CreatePollForm from '@/components/create/create-poll-form';
-import { PageLayout } from '@/components/PageLayout';
+import CreatePollForm from '@/components/create/CreatePollForm';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
+import { safeBack } from '@/lib/navigation';
 
 function CreatePollContent() {
   const router = useRouter();
@@ -17,7 +18,7 @@ function CreatePollContent() {
       <div className="max-w-3xl mx-auto">
         <div className="mb-4">
           <button
-            onClick={() => router.back()}
+            onClick={() => safeBack(router, '/')}
             className="hidden md:flex text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
           >
             ← {t('create.back')}

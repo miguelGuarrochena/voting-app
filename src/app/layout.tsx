@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/layout/Navbar';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { UsernameProvider } from '@/context/UsernameContext';
 import StoreProvider from '@/providers/StoreProvider';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import Footer from '@/components/Footer';
-import OnboardingScreen from '@/components/OnboardingScreen';
-import { CleanupEffect } from '@/components/CleanupEffect';
+import { ErrorBoundary } from '@/components/states/ErrorBoundary';
+import Footer from '@/components/layout/Footer';
+import OnboardingScreen from '@/components/onboarding/OnboardingScreen';
+import { CleanupEffect } from '@/components/effects/CleanupEffect';
 import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ['latin'] });

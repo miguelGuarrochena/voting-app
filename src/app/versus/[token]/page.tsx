@@ -6,10 +6,12 @@ import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { isExpired } from '@/lib/token';
 import { getTournament, updateTournamentBracket, submitDuelVote, getDuelVotes, hasVotedInDuel, deleteTournament } from '@/lib/db';
+import { addMyPoll } from '@/lib/mypolls';
+import { safeBack } from '@/lib/navigation';
 import { generateBracket } from '@/lib/bracket';
 import { VersusTournament, VersusOption } from '@/types/versus';
 import { supabase } from '@/lib/supabase';
-import { PageLayout } from '@/components/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { BracketView } from '@/components/versus/BracketView';
 import { CelebrationScreen } from '@/components/versus/CelebrationScreen';
 import { ExpiredTournament } from '@/components/versus/ExpiredTournament';
@@ -59,6 +61,16 @@ export default function VersusTournamentPage({ params }: PageProps) {
       }
       setTournament(data);
       setLoading(false);
+
+      // Guardar en "mis torneos" como participante.
+      addMyPoll({
+        token,
+        type: 'versus',
+        title: data.title,
+        role: 'participant',
+        createdBy: data.createdBy,
+        expiresAt: data.expiresAt,
+      });
 
       // Calculate time remaining
       const expiresAt = new Date(data.expiresAt);
@@ -331,7 +343,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/versus')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
@@ -364,7 +376,7 @@ export default function VersusTournamentPage({ params }: PageProps) {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.back()}
+              onClick={() => safeBack(router, '/versus')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />

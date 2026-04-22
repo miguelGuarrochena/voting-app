@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Poll } from '@/types/poll';
-import { ImageModal } from '@/components/ImageModal';
+import { ImageModal } from '@/components/modals/ImageModal';
 
 interface RankPollResultsProps {
   poll: Poll;

@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlusIcon, Trash2, ArrowLeft } from 'lucide-react';
-import { PageLayout } from '@/components/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 import toast from 'react-hot-toast';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { generateShareLink } from '@/lib/token';
 import { createTournament } from '@/lib/db';
+import { addMyPoll } from '@/lib/mypolls';
+import { safeBack } from '@/lib/navigation';
 import { generateBracket } from '@/lib/bracket';
 import { VersusTournament, VersusOption } from '@/types/versus';
 
@@ -132,6 +134,16 @@ export default function CreateVersusPage() {
       return;
     }
 
+    // Guardar en "mis torneos" (localStorage) como creador.
+    addMyPoll({
+      token,
+      type: 'versus',
+      title: title.trim(),
+      role: 'creator',
+      createdBy: username || 'Anónimo',
+      expiresAt: expiresAt.toISOString(),
+    });
+
     // Redirect directly to detail page with success flag
     router.push(`/versus/${token}?created=true`);
   };
@@ -154,7 +166,7 @@ export default function CreateVersusPage() {
       <div className="max-w-2xl mx-auto py-8">
         <div className="mb-6">
           <button
-            onClick={() => router.back()}
+            onClick={() => safeBack(router, '/versus')}
             className="hidden md:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />

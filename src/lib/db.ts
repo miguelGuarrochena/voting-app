@@ -1,6 +1,17 @@
 import { supabase } from './supabase'
 import toast from 'react-hot-toast'
 
+// ============================================================
+//  ACCESO A LA BASE DE DATOS
+// ------------------------------------------------------------
+//  Las LECTURAS (SELECT) van todas por funciones RPC definidas
+//  en Supabase con SECURITY DEFINER. Cada una exige el token.
+//  Ver: supabase/privacy-migration.sql
+//
+//  Las ESCRITURAS (insert/update/delete) van por la API directa,
+//  usando las policies permisivas de RLS.
+// ============================================================
+
 // ============ POLLS ============
 
 export async function createPoll(
@@ -12,8 +23,10 @@ export async function createPoll(
 ): Promise<string | null> {
   try {
     const token = generateToken()
-    
-    const { data, error } = await supabase
+
+    // No usamos .select() acá: con RLS bloqueando SELECT directo,
+    // el RETURNING no funciona. El token ya lo tenemos nosotros.
+    const { error } = await supabase
       .from('polls')
       .insert({
         token,
@@ -23,12 +36,10 @@ export async function createPoll(
         expires_at: expiresAt.toISOString(),
         options
       })
-      .select('token')
-      .single()
 
     if (error) throw error
-    
-    return data.token
+
+    return token
   } catch (error) {
     console.error('Error creating poll:', error)
     toast.error('Error de conexión, intenta de nuevo')
@@ -39,27 +50,18 @@ export async function createPoll(
 export async function getPoll(token: string): Promise<any | null> {
   try {
     const { data, error } = await supabase
-      .from('polls')
-      .select('*')
-      .eq('token', token)
-      .single()
+      .rpc('get_poll_by_token', { p_token: token })
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null // Not found
-      }
-      throw error
-    }
+    if (error) throw error
 
-    // Check if expired
-    if (new Date(data.expires_at) < new Date()) {
-      return null
-    }
+    // La RPC devuelve SETOF polls → array (0 o 1 filas)
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row) return null
 
     return {
-      ...data,
-      expiresAt: data.expires_at,
-      createdBy: data.created_by
+      ...row,
+      expiresAt: row.expires_at,
+      createdBy: row.created_by
     }
   } catch (error) {
     console.error('Error fetching poll:', error)
@@ -85,7 +87,7 @@ export async function submitResponse(
       })
 
     if (error) throw error
-    
+
     return true
   } catch (error) {
     console.error('Error submitting response:', error)
@@ -97,12 +99,10 @@ export async function submitResponse(
 export async function getPollResponses(pollToken: string): Promise<any[]> {
   try {
     const { data, error } = await supabase
-      .from('poll_responses')
-      .select('*')
-      .eq('poll_token', pollToken)
+      .rpc('get_poll_responses_by_token', { p_token: pollToken })
 
     if (error) throw error
-    
+
     return data || []
   } catch (error) {
     console.error('Error fetching poll responses:', error)
@@ -119,7 +119,7 @@ export async function deletePoll(token: string): Promise<boolean> {
       .eq('token', token)
 
     if (error) throw error
-    
+
     return true
   } catch (error) {
     console.error('Error deleting poll:', error)
@@ -140,8 +140,8 @@ export async function createTournament(
 ): Promise<string | null> {
   try {
     const token = generateToken()
-    
-    const { data, error } = await supabase
+
+    const { error } = await supabase
       .from('tournaments')
       .insert({
         token,
@@ -152,12 +152,10 @@ export async function createTournament(
         votes_to_win: votesToWin,
         bracket
       })
-      .select('token')
-      .single()
 
     if (error) throw error
-    
-    return data.token
+
+    return token
   } catch (error) {
     console.error('Error creating tournament:', error)
     toast.error('Error de conexión, intenta de nuevo')
@@ -168,23 +166,18 @@ export async function createTournament(
 export async function getTournament(token: string): Promise<any | null> {
   try {
     const { data, error } = await supabase
-      .from('tournaments')
-      .select('*')
-      .eq('token', token)
-      .single()
+      .rpc('get_tournament_by_token', { p_token: token })
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null // Not found
-      }
-      throw error
-    }
+    if (error) throw error
+
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row) return null
 
     return {
-      ...data,
-      expiresAt: data.expires_at,
-      createdBy: data.created_by,
-      votesToWin: data.votes_to_win
+      ...row,
+      expiresAt: row.expires_at,
+      createdBy: row.created_by,
+      votesToWin: row.votes_to_win
     }
   } catch (error) {
     console.error('Error fetching tournament:', error)
@@ -210,7 +203,7 @@ export async function updateTournamentBracket(
       .eq('token', token)
 
     if (error) throw error
-    
+
     return true
   } catch (error) {
     console.error('Error updating tournament bracket:', error)
@@ -238,7 +231,7 @@ export async function submitDuelVote(
       })
 
     if (error) throw error
-    
+
     return true
   } catch (error) {
     console.error('Error submitting duel vote:', error)
@@ -250,12 +243,10 @@ export async function submitDuelVote(
 export async function getDuelVotes(tournamentToken: string): Promise<any[]> {
   try {
     const { data, error } = await supabase
-      .from('duel_votes')
-      .select('*')
-      .eq('tournament_token', tournamentToken)
+      .rpc('get_duel_votes_by_token', { p_token: tournamentToken })
 
     if (error) throw error
-    
+
     return data || []
   } catch (error) {
     console.error('Error fetching duel votes:', error)
@@ -271,21 +262,15 @@ export async function hasVotedInDuel(
 ): Promise<boolean> {
   try {
     const { data, error } = await supabase
-      .from('duel_votes')
-      .select('id')
-      .eq('tournament_token', tournamentToken)
-      .eq('duel_id', duelId)
-      .eq('username', username)
-      .single()
+      .rpc('has_voted_in_duel', {
+        p_token: tournamentToken,
+        p_duel_id: duelId,
+        p_username: username
+      })
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return false // Not found
-      }
-      throw error
-    }
-    
-    return !!data
+    if (error) throw error
+
+    return Boolean(data)
   } catch (error) {
     console.error('Error checking duel vote:', error)
     return false
@@ -300,7 +285,7 @@ export async function deleteTournament(token: string): Promise<boolean> {
       .eq('token', token)
 
     if (error) throw error
-    
+
     return true
   } catch (error) {
     console.error('Error deleting tournament:', error)
@@ -309,32 +294,31 @@ export async function deleteTournament(token: string): Promise<boolean> {
   }
 }
 
-export async function getTournaments(): Promise<any[]> {
-  try {
-    const { data, error } = await supabase
-      .from('tournaments')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-    
-    return (data || []).map(tournament => ({
-      ...tournament,
-      expiresAt: tournament.expires_at,
-      createdBy: tournament.created_by,
-      votesToWin: tournament.votes_to_win
-    }))
-  } catch (error) {
-    console.error('Error fetching tournaments:', error)
-    toast.error('Error de conexión, intenta de nuevo')
-    return []
-  }
-}
+// ------------------------------------------------------------
+//  NOTA: getTournaments() fue eliminada a propósito.
+//  Antes devolvía TODOS los torneos del mundo a cualquier visitante
+//  — un leak grave de privacidad.
+//  Los listados ahora leen desde localStorage (ver src/lib/mypolls.ts).
+// ------------------------------------------------------------
 
 // ============ HELPER FUNCTIONS ============
 
 function generateToken(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
+  // crypto.getRandomValues es criptográficamente seguro,
+  // a diferencia de Math.random() que era predecible.
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(7)
+    crypto.getRandomValues(bytes)
+    let out = ''
+    for (let i = 0; i < 7; i++) {
+      out += chars[bytes[i] % 62]
+    }
+    return out
+  }
+
+  // Fallback (no debería pasar en navegadores modernos ni en Node 19+)
   let result = ''
   for (let i = 0; i < 7; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length))

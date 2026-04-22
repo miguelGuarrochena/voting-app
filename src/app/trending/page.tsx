@@ -1,6 +1,6 @@
 'use client';
 
-import { PageLayout } from '@/components/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 
 const TrendingPage = () => {
   return (

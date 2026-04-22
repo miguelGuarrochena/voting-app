@@ -27,5 +27,8 @@
   "titleRequired": "Title is required",
   "titleMinLength": "Title must be at least 3 characters",
   "atLeast2ItemsRequired": "At least 2 items are required",
-  "failedToCreate": "Failed to create rating"
+  "failedToCreate": "Failed to create rating",
+  "submitRatings": "Submit ratings",
+  "needToRateAll": "{count} items left to rate",
+  "rateFromTo": "Rate each item from 1 to 5 — all are required"
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { BarChart2, Trophy, RefreshCw, Star, Swords } from 'lucide-react';
-import { PageLayout } from '@/components/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
 
 const features = [
