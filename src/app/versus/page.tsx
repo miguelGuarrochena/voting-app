@@ -62,79 +62,83 @@ export default function VersusPage() {
   const isEmpty = entries.length === 0;
 
   return (
-    <PageLayout className="pb-24 md:pb-8">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Hero — card blanca, limpio, sin gradient */}
-        <div className="mb-6 sm:mb-8 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-sm p-5 sm:p-7">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center flex-shrink-0">
-                <Swords className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--primary)]" />
+    <>
+      <PageLayout className="pb-24 md:pb-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Hero — card blanca, limpio, sin gradient */}
+          <div className="mb-6 sm:mb-8 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-sm p-5 sm:p-7">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center flex-shrink-0">
+                  <Swords className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--primary)]" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight text-[var(--text)]">
+                    {t('versus.heroTitle')}
+                  </h1>
+                  <p className="text-[var(--text-muted)] text-sm sm:text-base mt-1 max-w-md">
+                    {t('versus.heroSubtitle')}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight text-[var(--text)]">
-                  {t('versus.heroTitle')}
-                </h1>
-                <p className="text-[var(--text-muted)] text-sm sm:text-base mt-1 max-w-md">
-                  {t('versus.heroSubtitle')}
-                </p>
-              </div>
+
+              {/* Botón en el hero solo si ya hay torneos (si está vacío, el CTA es el del EmptyState) */}
+              {!isEmpty && (
+                <Link
+                  href="/versus/create"
+                  className="hidden sm:inline-flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold hover:bg-[var(--primary-dark)] hover:shadow-lg transition-all whitespace-nowrap self-start sm:self-auto"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                  <span>{t('versus.createTournament')}</span>
+                </Link>
+              )}
             </div>
 
-            {/* Botón en el hero solo si ya hay torneos (si está vacío, el CTA es el del EmptyState) */}
+            {/* stats row */}
             {!isEmpty && (
-              <Link
-                href="/versus/create"
-                className="inline-flex items-center justify-center gap-2 bg-[var(--primary)] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold hover:bg-[var(--primary-dark)] hover:shadow-lg transition-all whitespace-nowrap self-start sm:self-auto"
-              >
-                <PlusIcon className="w-5 h-5" />
-                <span>{t('versus.createTournament')}</span>
-              </Link>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-[var(--border)]">
+                <StatChip icon={<Trophy className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.createdSection')} value={created.length} />
+                <StatChip icon={<Users className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.joinedSection')} value={joined.length} />
+                <StatChip icon={<Clock className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.active')} value={entries.length} />
+              </div>
             )}
           </div>
 
-          {/* stats row */}
-          {!isEmpty && (
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-[var(--border)]">
-              <StatChip icon={<Trophy className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.createdSection')} value={created.length} />
-              <StatChip icon={<Users className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.joinedSection')} value={joined.length} />
-              <StatChip icon={<Clock className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.active')} value={entries.length} />
+          {/* Content */}
+          {isEmpty ? (
+            <EmptyState t={t} />
+          ) : (
+            <div className="space-y-8">
+              {created.length > 0 && (
+                <Section title={t('versus.createdSection')} icon={<Trophy className="w-5 h-5 text-[var(--primary)]" />}>
+                  {created.map((e) => (
+                    <VersusCard key={e.token} entry={e} onRemove={handleRemove} t={t} />
+                  ))}
+                </Section>
+              )}
+              {joined.length > 0 && (
+                <Section title={t('versus.joinedSection')} icon={<Users className="w-5 h-5 text-[var(--primary)]" />}>
+                  {joined.map((e) => (
+                    <VersusCard key={e.token} entry={e} onRemove={handleRemove} t={t} />
+                  ))}
+                </Section>
+              )}
             </div>
           )}
         </div>
+      </PageLayout>
 
-        {/* Content */}
-        {isEmpty ? (
-          <EmptyState t={t} />
-        ) : (
-          <div className="space-y-8">
-            {created.length > 0 && (
-              <Section title={t('versus.createdSection')} icon={<Trophy className="w-5 h-5 text-[var(--primary)]" />}>
-                {created.map((e) => (
-                  <VersusCard key={e.token} entry={e} onRemove={handleRemove} t={t} />
-                ))}
-              </Section>
-            )}
-            {joined.length > 0 && (
-              <Section title={t('versus.joinedSection')} icon={<Users className="w-5 h-5 text-[var(--primary)]" />}>
-                {joined.map((e) => (
-                  <VersusCard key={e.token} entry={e} onRemove={handleRemove} t={t} />
-                ))}
-              </Section>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Mobile FAB */}
-      <Link
-        href="/versus/create"
-        className="sm:hidden fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform z-40"
-        aria-label={t('versus.createTournament')}
-      >
-        <PlusIcon className="w-6 h-6" />
-      </Link>
-    </PageLayout>
+      {/* Mobile FAB - outside PageLayout to avoid positioning issues */}
+      {!isEmpty && (
+        <Link
+          href="/versus/create"
+          className="sm:hidden fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform z-50"
+          aria-label={t('versus.createTournament')}
+        >
+          <PlusIcon className="w-6 h-6" />
+        </Link>
+      )}
+    </>
   );
 }
 
@@ -244,7 +248,7 @@ function VersusCard({
           onRemove(entry.token);
         }}
         aria-label={t('common.remove')}
-        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-red-500 transition-opacity flex items-center justify-center"
+        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 hover:text-red-500 transition-opacity flex items-center justify-center"
       >
         <TrashIcon className="w-4 h-4" />
       </button>

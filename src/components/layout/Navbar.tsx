@@ -154,7 +154,7 @@ const Navbar = () => {
                 className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
               >
                 <Globe className="w-5 h-5" />
-                <span>{language === 'en' ? t('lang.es') : t('lang.en')}</span>
+                <span>{language === 'en' ? t('theme.langEs') : t('theme.langEn')}</span>
               </button>
 
               <div className="border-t border-[var(--border)] my-2"></div>

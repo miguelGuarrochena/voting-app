@@ -1,8 +1,8 @@
 {
   "light": "Light",
   "dark": "Dark",
-  "lang.en": "English",
-  "lang.es": "Español",
+  "langEn": "English",
+  "langEs": "Español",
   "switchToSpanish": "Switch to Spanish",
   "switchToEnglish": "Switch to English"
 }

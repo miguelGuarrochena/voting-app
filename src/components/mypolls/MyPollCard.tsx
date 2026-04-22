@@ -87,7 +87,7 @@ export function MyPollCard({ entry, href, onRemove, meta }: MyPollCardProps) {
             onRemove(entry.token);
           }}
           aria-label={t('common.remove')}
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-red-500 transition-opacity flex items-center justify-center"
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 hover:text-red-500 transition-opacity flex items-center justify-center"
         >
           <Trash2 size={16} />
         </button>

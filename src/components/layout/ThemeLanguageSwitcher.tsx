@@ -70,7 +70,7 @@ const ThemeLanguageSwitcher = () => {
               >
                 <div className="flex items-center gap-2">
                   <span>🇺🇸</span>
-                  <span>{t('theme.lang.en')}</span>
+                  <span>{t('theme.langEn')}</span>
                 </div>
               </button>
               <button
@@ -81,14 +81,14 @@ const ThemeLanguageSwitcher = () => {
                   setShowLanguageMenu(false);
                 }}
                 className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
-                  language === 'es' 
-                    ? 'text-[var(--primary)] bg-[var(--primary-light)]' 
+                  language === 'es'
+                    ? 'text-[var(--primary)] bg-[var(--primary-light)]'
                     : 'text-[var(--text)] hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span>🇪🇸</span>
-                  <span>{t('theme.lang.es')}</span>
+                  <span>{t('theme.langEs')}</span>
                 </div>
               </button>
             </div>
