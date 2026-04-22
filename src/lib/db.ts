@@ -12,6 +12,73 @@ import toast from 'react-hot-toast'
 //  usando las policies permisivas de RLS.
 // ============================================================
 
+// ------------------------------------------------------------
+//  Helper: log detallado de errores de Supabase.
+//  Antes mostrábamos "Error de conexión" genérico — inútil
+//  para debuggear 401/RLS/JWT inválido/migration faltante.
+//  Ahora dumpeamos el objeto completo y elegimos un mensaje
+//  amigable según el status.
+// ------------------------------------------------------------
+function logSupabaseError(context: string, error: any): string {
+  // Dump completo a consola (code, message, hint, details, status)
+  // eslint-disable-next-line no-console
+  console.log(`[${context}] Error details:`, {
+    'error === null': error === null,
+    'error === undefined': error === undefined,
+    'typeof error': typeof error,
+    'errorType': error?.constructor?.name,
+    'errorString': String(error),
+    'message': error?.message,
+    'code': error?.code,
+    'status': error?.status,
+    'statusCode': error?.statusCode,
+    'raw keys': error ? Object.keys(error) : [],
+    'raw': error,
+  })
+  // eslint-disable-next-line no-console
+  console.error(`[${context}]`, {
+    message: error?.message,
+    code: error?.code,
+    details: error?.details,
+    hint: error?.hint,
+    status: error?.status,
+    statusCode: error?.statusCode,
+    errorType: error?.constructor?.name,
+    errorString: String(error),
+    raw: error,
+  })
+
+  // Handle null/undefined errors
+  if (!error) {
+    return 'Error desconocido al conectar con la base de datos'
+  }
+
+  const status = error?.status || error?.statusCode
+  const code = error?.code
+
+  // 401 → auth / clave inválida
+  if (status === 401 || code === 'PGRST301' || code === '401') {
+    return 'Error de autenticación con la base de datos. Revisá que la migración esté aplicada y la API key sea válida.'
+  }
+  // 403 / 42501 → RLS bloqueó la operación
+  if (status === 403 || code === '42501') {
+    return 'Operación bloqueada por permisos. Puede que falte correr la migración.'
+  }
+  // 404 → RPC no existe
+  if (status === 404 || code === 'PGRST202') {
+    return 'Función no encontrada en la base. Correr la migración de privacidad.'
+  }
+  // Network / offline
+  if (error?.message?.toLowerCase().includes('failed to fetch')) {
+    return 'No se pudo conectar al servidor. Revisá tu conexión.'
+  }
+
+  // Fallback — mostramos el mensaje real si existe
+  return error?.message
+    ? `Error: ${error.message}`
+    : 'Error de conexión, intenta de nuevo'
+}
+
 // ============ POLLS ============
 
 export async function createPoll(
@@ -41,8 +108,7 @@ export async function createPoll(
 
     return token
   } catch (error) {
-    console.error('Error creating poll:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('createPoll', error))
     return null
   }
 }
@@ -64,8 +130,7 @@ export async function getPoll(token: string): Promise<any | null> {
       createdBy: row.created_by
     }
   } catch (error) {
-    console.error('Error fetching poll:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('getPoll', error))
     return null
   }
 }
@@ -76,22 +141,41 @@ export async function submitResponse(
   response: any
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
+    // ------------------------------------------------------------
+    //  Workaround de upsert:
+    //  .upsert() de supabase-js manda Prefer: return=representation,
+    //  que fuerza un RETURNING y requiere policy de SELECT. Como el
+    //  diseño privacy-first NO tiene policy de SELECT (todas las
+    //  lecturas van por RPC), el upsert rompe con 42501.
+    //
+    //  Reemplazo: INSERT plano (return=minimal, no requiere SELECT).
+    //  Si choca la UNIQUE (23505) → caemos a UPDATE.
+    // ------------------------------------------------------------
+    const insertRes = await supabase
       .from('poll_responses')
-      .upsert({
+      .insert({
         poll_token: pollToken,
         username,
         response
-      }, {
-        onConflict: 'poll_token,username'
       })
 
-    if (error) throw error
+    // 23505 = unique_violation → ya existe una fila del mismo usuario
+    // para este poll. Actualizamos la response.
+    if (insertRes.error && insertRes.error.code === '23505') {
+      const updateRes = await supabase
+        .from('poll_responses')
+        .update({ response })
+        .eq('poll_token', pollToken)
+        .eq('username', username)
 
+      if (updateRes.error) throw updateRes.error
+      return true
+    }
+
+    if (insertRes.error) throw insertRes.error
     return true
   } catch (error) {
-    console.error('Error submitting response:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('submitResponse', error))
     return false
   }
 }
@@ -105,8 +189,7 @@ export async function getPollResponses(pollToken: string): Promise<any[]> {
 
     return data || []
   } catch (error) {
-    console.error('Error fetching poll responses:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('getPollResponses', error))
     return []
   }
 }
@@ -122,8 +205,7 @@ export async function deletePoll(token: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error('Error deleting poll:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('deletePoll', error))
     return false
   }
 }
@@ -157,8 +239,7 @@ export async function createTournament(
 
     return token
   } catch (error) {
-    console.error('Error creating tournament:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('createTournament', error))
     return null
   }
 }
@@ -180,8 +261,7 @@ export async function getTournament(token: string): Promise<any | null> {
       votesToWin: row.votes_to_win
     }
   } catch (error) {
-    console.error('Error fetching tournament:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('getTournament', error))
     return null
   }
 }
@@ -206,8 +286,7 @@ export async function updateTournamentBracket(
 
     return true
   } catch (error) {
-    console.error('Error updating tournament bracket:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('updateTournamentBracket', error))
     return false
   }
 }
@@ -234,8 +313,7 @@ export async function submitDuelVote(
 
     return true
   } catch (error) {
-    console.error('Error submitting duel vote:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('submitDuelVote', error))
     return false
   }
 }
@@ -249,8 +327,7 @@ export async function getDuelVotes(tournamentToken: string): Promise<any[]> {
 
     return data || []
   } catch (error) {
-    console.error('Error fetching duel votes:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('getDuelVotes', error))
     return []
   }
 }
@@ -272,7 +349,9 @@ export async function hasVotedInDuel(
 
     return Boolean(data)
   } catch (error) {
-    console.error('Error checking duel vote:', error)
+    // Esta función se llama muchas veces al renderizar — no toasteamos
+    // eslint-disable-next-line no-console
+    console.error('[hasVotedInDuel]', error)
     return false
   }
 }
@@ -288,8 +367,7 @@ export async function deleteTournament(token: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error('Error deleting tournament:', error)
-    toast.error('Error de conexión, intenta de nuevo')
+    toast.error(logSupabaseError('deleteTournament', error))
     return false
   }
 }

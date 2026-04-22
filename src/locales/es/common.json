@@ -22,5 +22,13 @@
   "expired": "Expirado",
   "remove": "Quitar de mi lista",
   "removed": "Eliminado de tu lista",
-  "open": "Abrir"
+  "open": "Abrir",
+  "share": "Compartir",
+  "shareLink": "Compartir link",
+  "copyLink": "Copiar link",
+  "copied": "¡Link copiado! 🎉",
+  "copyFail": "No se pudo copiar el link",
+  "results": "Resultados",
+  "liveResults": "Resultados en vivo",
+  "seeResultsBelow": "Mirá los resultados debajo"
 }

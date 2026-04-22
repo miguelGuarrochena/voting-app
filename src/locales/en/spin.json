@@ -35,5 +35,10 @@
   "clearAllModalTitle": "Clear all?",
   "clearAllModalSubtitle": "All wheel options will be removed.",
   "cancel": "Cancel",
-  "clear": "Clear"
+  "clear": "Clear",
+  "shareResult": "Share result",
+  "copyResult": "Copy result",
+  "resultCopied": "Result copied 🎉",
+  "shareText": "The wheel picked: {option} 🎲",
+  "inPickly": "— spun on Pickly"
 }

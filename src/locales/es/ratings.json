@@ -30,5 +30,20 @@
   "failedToCreate": "Error al crear la valoración",
   "submitRatings": "Enviar valoraciones",
   "needToRateAll": "Faltan {count} items por puntuar",
-  "rateFromTo": "Puntuá cada item del 1 al 5 — todos son obligatorios"
+  "rateFromTo": "Puntuá cada item del 1 al 5 — todos son obligatorios",
+  "notFound": "Rating no encontrado",
+  "notFoundDesc": "Este rating puede haber sido eliminado o el link es inválido.",
+  "createdToast": "¡Rating creado con éxito! 🎉",
+  "submittedToast": "¡Valoraciones enviadas! 🎉",
+  "submitError": "Error al enviar tus valoraciones",
+  "alreadyRated": "Ya puntuaste. Resultados en vivo debajo.",
+  "expiredTitle": "¡Se acabó el tiempo! 🎉",
+  "expiredDesc": "Este rating terminó. Estos son los resultados finales:",
+  "participants": "Participantes",
+  "createYourOwn": "Creá tu propio rating",
+  "notRated": "Sin puntuar",
+  "star": "estrella",
+  "stars": "estrellas",
+  "ratingCount": "valoraciones",
+  "average": "prom."
 }

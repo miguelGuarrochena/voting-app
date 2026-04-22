@@ -6,5 +6,19 @@
   "loadingRankings": "Loading rankings...",
   "noRankingsYet": "No rankings yet",
   "beFirst": "Be the first to create a ranking!",
-  "emptyState": "Share a link so your friends can rank ✨"
+  "emptyState": "Share a link so your friends can rank ✨",
+  "notFound": "Ranking not found",
+  "notFoundDesc": "This ranking may have been deleted or the link is invalid.",
+  "createdToast": "Ranking created successfully 🎉",
+  "submittedToast": "Ranking sent! 🎉",
+  "submitError": "Error sending your ranking",
+  "dragToReorder": "Drag to reorder — 1 is your favorite",
+  "submitRanking": "Submit ranking",
+  "alreadyRanked": "You already ranked. Live results below.",
+  "expiredTitle": "Time's up 🎉",
+  "expiredDesc": "This ranking has ended. Here are the final results:",
+  "points": "pts",
+  "participants": "Participants",
+  "createYourOwn": "Create your own ranking",
+  "checkYourRanking": "Your ranking is locked in"
 }

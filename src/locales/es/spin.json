@@ -35,5 +35,10 @@
   "clearAllModalTitle": "¿Limpiar todo?",
   "clearAllModalSubtitle": "Se eliminarán todas las opciones de la rueda.",
   "cancel": "Cancelar",
-  "clear": "Limpiar"
+  "clear": "Limpiar",
+  "shareResult": "Compartir resultado",
+  "copyResult": "Copiar resultado",
+  "resultCopied": "¡Resultado copiado! 🎉",
+  "shareText": "La rueda eligió: {option} 🎲",
+  "inPickly": "— giré en Pickly"
 }

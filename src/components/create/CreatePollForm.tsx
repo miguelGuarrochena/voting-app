@@ -440,7 +440,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                         onClick={removeTitleImage}
                         className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        ×
+                        <Trash2 size={12} />
                       </button>
                     </div>
                   )}
@@ -532,10 +532,10 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                             <button
                               type="button"
                               onClick={() => updateOption(option.id, { emoji: '' })}
-                              className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-700 text-sm font-bold rounded-full hover:bg-red-50 transition-colors"
+                              className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-700 rounded-full hover:bg-red-50 transition-colors"
                               title="Clear emoji"
                             >
-                              ✕
+                              <Trash2 size={12} />
                             </button>
                           )}
                         </div>

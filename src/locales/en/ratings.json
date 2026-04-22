@@ -30,5 +30,20 @@
   "failedToCreate": "Failed to create rating",
   "submitRatings": "Submit ratings",
   "needToRateAll": "{count} items left to rate",
-  "rateFromTo": "Rate each item from 1 to 5 — all are required"
+  "rateFromTo": "Rate each item from 1 to 5 — all are required",
+  "notFound": "Rating not found",
+  "notFoundDesc": "This rating may have been deleted or the link is invalid.",
+  "createdToast": "Rating created successfully 🎉",
+  "submittedToast": "Ratings sent! 🎉",
+  "submitError": "Error sending your ratings",
+  "alreadyRated": "You already rated. Live results below.",
+  "expiredTitle": "Time's up 🎉",
+  "expiredDesc": "This rating has ended. Here are the final results:",
+  "participants": "Participants",
+  "createYourOwn": "Create your own rating",
+  "notRated": "Not rated",
+  "star": "star",
+  "stars": "stars",
+  "ratingCount": "ratings",
+  "average": "avg"
 }

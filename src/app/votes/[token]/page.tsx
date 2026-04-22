@@ -1,48 +1,61 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { Share2, ArrowLeft, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
 import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
 import { addMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
+import { supabase } from '@/lib/supabase';
+
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Share2, ArrowLeft } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
+
+// ------------------------------------------------------------
+//  VOTE — Detalle por token
+//  UX:
+//   - Tap a card → se selecciona (check verde + borde).
+//   - "Cambiar" antes de enviar permite deseleccionar.
+//   - Submit: envía el voto y deja los resultados en vivo debajo.
+// ------------------------------------------------------------
 
 export default function VoteTokenPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { username } = useUsername();
+  const { t } = useLanguage();
+
   const token = params.token as string;
+  const justCreated = searchParams.get('created') === 'true';
+
   const [pollData, setPollData] = useState<any>(null);
   const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [hasVotedState, setHasVotedState] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [expired, setExpired] = useState(false);
-  const searchParams = useSearchParams();
-  const justCreated = searchParams.get('created') === 'true';
 
+  // ---------- cargar poll + subscripción realtime ----------
   useEffect(() => {
     const loadPoll = async () => {
-      // Show toast if just created
       if (justCreated) {
-        toast('¡Voto creado con éxito! 🎉');
-        // Remove the query param from URL without triggering a reload
+        toast.success(t('votes.createdToast'));
         window.history.replaceState({}, '', `/votes/${token}`);
       }
 
-      // Load poll data from Supabase
       const data = await getPoll(token);
       if (!data) {
-        setError('Poll not found');
+        setError('not_found');
         setLoading(false);
         return;
       }
@@ -52,7 +65,6 @@ export default function VoteTokenPage() {
       setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
       setLoading(false);
 
-      // Guardar en "mis polls" como participante (si no es el creador ya).
       addMyPoll({
         token,
         type: 'vote',
@@ -62,13 +74,14 @@ export default function VoteTokenPage() {
         expiresAt: data.expiresAt,
       });
 
-      // Load responses to check if user has voted
       const responses = await getPollResponses(token);
       setResponses(responses);
-      const userResponse = responses.find(r => r.username === username);
-      setHasVotedState(!!userResponse);
+      const userResponse = responses.find((r) => r.username === username);
+      if (userResponse) {
+        setHasVotedState(true);
+        setSelectedOption(userResponse.response?.optionId ?? null);
+      }
 
-      // Update time remaining every second
       const interval = setInterval(() => {
         const remaining = getTimeRemaining(new Date(data.expiresAt));
         setTimeRemaining(remaining);
@@ -83,38 +96,24 @@ export default function VoteTokenPage() {
 
     loadPoll();
 
-    // Set up Realtime subscription
     const channel = supabase
-      .channel('poll-responses')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'poll_responses',
-        filter: `poll_token=eq.${token}`
-      }, async (payload) => {
-        // Reload responses when new response comes in
-        const responses = await getPollResponses(token);
-        setResponses(responses);
-        const userResponse = responses.find(r => r.username === username);
-        setHasVotedState(!!userResponse);
-
-        // Recalculate vote counts
-        const voteCounts: Record<string, number> = {};
-        responses.forEach(response => {
-          const optionId = response.response.optionId;
-          voteCounts[optionId] = (voteCounts[optionId] || 0) + 1;
-        });
-
-        // Update poll options with new vote counts
-        setPollData((prev: any) => ({
-          ...prev,
-          options: prev.options.map((opt: any) => ({
-            ...opt,
-            votes: voteCounts[opt.id] || 0
-          })),
-          votes: responses.map(r => ({ optionId: r.response.optionId, voter: r.username, timestamp: r.created_at }))
-        }));
-      })
+      .channel(`poll-responses-${token}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'poll_responses',
+          filter: `poll_token=eq.${token}`,
+        },
+        async () => {
+          const newResponses = await getPollResponses(token);
+          setResponses(newResponses);
+          setPollData((prev: any) =>
+            prev ? { ...prev, options: recomputeVotes(prev.options, newResponses) } : prev
+          );
+        }
+      )
       .subscribe();
 
     return () => {
@@ -122,90 +121,58 @@ export default function VoteTokenPage() {
     };
   }, [token, username]);
 
+  // ---------- handlers ----------
   const handleVote = async () => {
-    if (!selectedOption || !pollData) return;
+    if (!selectedOption || !pollData || submitting) return;
+    setSubmitting(true);
+    const ok = await submitResponse(token, username || 'Anonymous', { optionId: selectedOption });
+    setSubmitting(false);
 
-    // Submit response to Supabase
-    const success = await submitResponse(token, username || 'Anonymous', { optionId: selectedOption });
-    
-    if (!success) {
-      toast.error('Error al enviar tu voto');
-      return;
-    }
+    if (!ok) return; // db.ts ya mostró el toast con el error real
 
     setHasVotedState(true);
-    toast('¡Voto enviado! 🎉');
+    toast.success(t('votes.submittedToast'));
 
-    // Reload responses to get updated vote counts
     const newResponses = await getPollResponses(token);
     setResponses(newResponses);
-
-    // Calculate vote counts from responses
-    const voteCounts: Record<string, number> = {};
-    const votersByOption: Record<string, string[]> = {};
-
-    newResponses.forEach(response => {
-      const optionId = response.response.optionId;
-      voteCounts[optionId] = (voteCounts[optionId] || 0) + 1;
-      if (!votersByOption[optionId]) {
-        votersByOption[optionId] = [];
-      }
-      votersByOption[optionId].push(response.username);
-    });
-
-    // Update poll data with new vote counts
-    const updatedOptions = pollData.options.map((opt: any) => ({
-      ...opt,
-      votes: voteCounts[opt.id] || 0
+    setPollData((prev: any) => ({
+      ...prev,
+      options: recomputeVotes(prev.options, newResponses),
     }));
-
-    const updatedPollData = {
-      ...pollData,
-      options: updatedOptions,
-      votes: newResponses.map(r => ({ optionId: r.response.optionId, voter: r.username, timestamp: r.created_at })),
-    };
-
-    setPollData(updatedPollData);
   };
 
   const handleShare = async () => {
     const url = window.location.href;
     try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: pollData?.title, url });
+        return;
+      }
+    } catch {
+      // usuario canceló, seguimos al clipboard
+    }
+    try {
       await navigator.clipboard.writeText(url);
-      toast('¡Link copiado! 🎉');
-    } catch (err) {
-      console.error('Failed to copy:', err);
+      toast.success(t('common.copied'));
+    } catch {
+      toast.error(t('common.copyFail'));
     }
   };
 
-  if (loading) {
-    return (
-      <PageLayout>
-        <div className="flex items-center justify-center h-[50vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-        </div>
-      </PageLayout>
-    );
-  }
+  // ---------- render ----------
+  if (loading) return <FullPageSpinner />;
 
-  if (error) {
+  if (error === 'not_found') {
     return (
       <PageLayout>
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <button
-              onClick={() => safeBack(router, '/votes')}
-              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-            </button>
-          </div>
+        <div className="max-w-2xl mx-auto px-4">
+          <HeaderBackOnly router={router} fallback="/votes" label={t('common.back')} />
           <div className="flex flex-col items-center justify-center h-[50vh] text-center">
             <div className="text-6xl mb-4">😕</div>
-            <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Poll not found</h2>
-            <p className="text-[var(--text-muted)] mb-6">This poll may have been deleted or the link is invalid.</p>
-            <Link href="/" className="text-[var(--primary)] hover:underline">
-              Go back home
+            <h2 className="text-2xl font-bold text-[var(--text)] mb-2">{t('votes.notFound')}</h2>
+            <p className="text-[var(--text-muted)] mb-6">{t('votes.notFoundDesc')}</p>
+            <Link href="/" className="text-[var(--primary)] hover:underline font-medium">
+              {t('votes.goHome')}
             </Link>
           </div>
         </div>
@@ -213,174 +180,323 @@ export default function VoteTokenPage() {
     );
   }
 
-  if (expired) {
-    return (
-      <PageLayout>
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <button
-              onClick={() => safeBack(router, '/votes')}
-              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-            </button>
-          </div>
-          <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8 text-center">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-[var(--text)] mb-2">¡Se acabó el tiempo! 🎉</h2>
-            <p className="text-[var(--text-muted)] mb-6">This poll has expired. Here are the final results:</p>
-
-            {/* Results */}
-            <div className="space-y-4 mb-6">
-              {pollData.options
-                .sort((a: any, b: any) => b.votes - a.votes)
-                .map((option: any) => {
-                  const totalVotes = pollData.options.reduce((sum: number, opt: any) => sum + opt.votes, 0);
-                  const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
-                  const voters = responses.filter((r: any) => r.response.optionId === option.id).map((r: any) => r.username);
-
-                  return (
-                    <div key={option.id} className="bg-[var(--surface-2)] rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-[var(--text)]">{option.title}</span>
-                        <span className="text-[var(--text-muted)]">{option.votes} votes ({percentage}%)</span>
-                      </div>
-                      <div className="w-full bg-[var(--bg)] rounded-full h-2">
-                        <div
-                          className="bg-[var(--primary)] h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${percentage}%` }}
-                        ></div>
-                      </div>
-                      {voters.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {voters.map((voter: string, idx: number) => (
-                            <span key={idx} className="text-xs bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] px-2 py-1 rounded-full text-[var(--primary)]">
-                              {voter}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-
-            <Link href="/" className="text-[var(--primary)] hover:underline">
-              Create your own poll
-            </Link>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
+  const totalVotes = (pollData?.options ?? []).reduce(
+    (sum: number, opt: any) => sum + (opt.votes || 0),
+    0
+  );
 
   return (
-    <PageLayout>
-      <div className="max-w-2xl mx-auto">
-        {/* Header with Share button */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+    <PageLayout className="pb-24 md:pb-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-4 sm:mb-6">
+          <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
             <button
               onClick={() => safeBack(router, '/votes')}
-              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors flex-shrink-0"
+              aria-label={t('common.back')}
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
             </button>
-            <h1 className="text-2xl font-bold text-[var(--text)]">{pollData.title}</h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text)] break-words">
+              {pollData.title}
+            </h1>
           </div>
           <button
             onClick={handleShare}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium"
+            className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] transition-colors rounded-full sm:rounded-lg font-medium flex-shrink-0"
+            aria-label={t('common.share')}
           >
             <Share2 size={18} />
-            Share
+            <span className="hidden sm:inline ml-2 text-sm">{t('common.share')}</span>
           </button>
         </div>
 
-        {/* Countdown */}
-        <div className="bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] rounded-lg p-4 mb-6 text-center">
-          <p className="text-sm text-[var(--text-muted)] mb-1">Time remaining</p>
-          <p className="text-2xl font-bold text-[var(--primary)]">
-            {formatTimeRemaining(timeRemaining)}
+        {/* Countdown / expired banner */}
+        <div
+          className={`rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border ${
+            expired
+              ? 'bg-[var(--badge-neutral-bg)] border-[var(--border)]'
+              : 'bg-[var(--primary-light)]/40 border-[var(--primary-light)]'
+          }`}
+        >
+          <p className="text-xs text-[var(--text-muted)] mb-1">{t('votes.timeRemaining')}</p>
+          <p className="text-lg sm:text-xl font-bold text-[var(--primary)]">
+            {expired ? t('common.expired') : formatTimeRemaining(timeRemaining)}
           </p>
         </div>
 
-        {/* Poll Card */}
-        <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-8">
+        {/* Banner después de votar */}
+        {hasVotedState && !expired && (
+          <div className="flex items-center gap-2 bg-[var(--badge-success-bg)] text-[var(--badge-success-text)] rounded-xl px-4 py-3 mb-4 sm:mb-6 text-sm">
+            <Check className="w-5 h-5 flex-shrink-0" />
+            <span>{t('votes.alreadyVoted')}</span>
+          </div>
+        )}
+
+        {/* Main card */}
+        <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-4 sm:p-6 md:p-8">
           {pollData.description && (
-            <p className="text-[var(--text-muted)] mb-6">{pollData.description}</p>
+            <p className="text-[var(--text-muted)] mb-4 sm:mb-6">{pollData.description}</p>
           )}
 
-          {hasVotedState ? (
-            /* Show Results */
-            <div className="space-y-4">
-              <p className="text-[var(--text-muted)] mb-4">You have already voted. Here are the current results:</p>
-              {pollData.options
-                .sort((a: any, b: any) => b.votes - a.votes)
-                .map((option: any) => {
-                  const totalVotes = pollData.options.reduce((sum: number, opt: any) => sum + opt.votes, 0);
-                  const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
-                  const voters = responses.filter((r: any) => r.response.optionId === option.id).map((r: any) => r.username);
-
-                  return (
-                    <div key={option.id} className="bg-[var(--surface-2)] rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-[var(--text)]">{option.title}</span>
-                        <span className="text-[var(--text-muted)]">{option.votes} votes ({percentage}%)</span>
-                      </div>
-                      <div className="w-full bg-[var(--bg)] rounded-full h-2 mb-2">
-                        <div
-                          className="bg-[var(--primary)] h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${percentage}%` }}
-                        ></div>
-                      </div>
-                      {voters.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {voters.map((voter: string, idx: number) => (
-                            <span key={idx} className="text-xs bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] px-2 py-1 rounded-full text-[var(--primary)]">
-                              {voter}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
+          {!hasVotedState && !expired ? (
+            <VoteForm
+              options={pollData.options}
+              selectedOption={selectedOption}
+              setSelectedOption={setSelectedOption}
+              onSubmit={handleVote}
+              submitting={submitting}
+              pickLabel={t('votes.pickAnOption')}
+              submitLabel={t('votes.submitVote')}
+              changeLabel={t('votes.change')}
+            />
           ) : (
-            /* Show Voting Options */
-            <div className="space-y-4">
-              {pollData.options.map((option: any) => (
-                <button
-                  key={option.id}
-                  onClick={() => setSelectedOption(option.id)}
-                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                    selectedOption === option.id
-                      ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20]'
-                      : 'border-[var(--border)] hover:border-[var(--primary)] bg-[var(--surface-2)]'
-                  }`}
-                >
-                  <span className="font-medium text-[var(--text)]">{option.title}</span>
-                </button>
-              ))}
-
-              <button
-                onClick={handleVote}
-                disabled={!selectedOption}
-                className="w-full bg-[var(--primary)] text-white py-3 rounded-lg font-medium hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Submit Vote
-              </button>
-            </div>
+            <ResultsList
+              options={pollData.options}
+              totalVotes={totalVotes}
+              userVotedOption={selectedOption}
+              expired={expired}
+              expiredTitle={t('votes.expiredTitle')}
+              expiredDesc={t('votes.expiredDesc')}
+              votesLabel={t('votes.votes')}
+            />
           )}
         </div>
 
-        <div className="text-center mt-6">
-          <Link href="/" className="text-[var(--text-muted)] hover:text-[var(--text)]">
-            Create your own poll
+        {/* Participants */}
+        {responses.length > 0 && (hasVotedState || expired) && (
+          <div className="mt-4 sm:mt-6 px-2">
+            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-2">
+              {t('votes.voters')} ({responses.length})
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {responses.map((r: any, idx: number) => (
+                <span
+                  key={idx}
+                  className="text-xs bg-[var(--primary-light)]/50 text-[var(--primary)] px-2.5 py-1 rounded-full font-medium"
+                >
+                  {r.username}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="text-center mt-6 sm:mt-8">
+          <Link
+            href="/create?type=vote"
+            className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] underline-offset-4 hover:underline"
+          >
+            {t('votes.createYourOwn')}
           </Link>
         </div>
       </div>
     </PageLayout>
   );
+}
+
+// ============================================================
+//  SUBCOMPONENTES
+// ============================================================
+
+function FullPageSpinner() {
+  return (
+    <PageLayout>
+      <div className="flex items-center justify-center h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]" />
+      </div>
+    </PageLayout>
+  );
+}
+
+function HeaderBackOnly({
+  router,
+  fallback,
+  label,
+}: {
+  router: ReturnType<typeof useRouter>;
+  fallback: string;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      <button
+        onClick={() => safeBack(router, fallback)}
+        className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+        aria-label={label}
+      >
+        <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+        <span className="text-sm text-[var(--text-muted)]">{label}</span>
+      </button>
+    </div>
+  );
+}
+
+// --------- Form de votación con checkmark ---------
+function VoteForm({
+  options,
+  selectedOption,
+  setSelectedOption,
+  onSubmit,
+  submitting,
+  pickLabel,
+  submitLabel,
+  changeLabel,
+}: {
+  options: any[];
+  selectedOption: string | null;
+  setSelectedOption: (id: string | null) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+  pickLabel: string;
+  submitLabel: string;
+  changeLabel: string;
+}) {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-[var(--text-muted)] font-medium">{pickLabel}</p>
+      <div className="space-y-2.5">
+        {options.map((option: any) => {
+          const isSelected = selectedOption === option.id;
+          return (
+            <motion.button
+              key={option.id}
+              type="button"
+              onClick={() => setSelectedOption(isSelected ? null : option.id)}
+              whileTap={{ scale: 0.99 }}
+              className={`relative w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
+                isSelected
+                  ? 'border-[var(--success)] bg-[var(--badge-success-bg)] shadow-sm'
+                  : 'border-[var(--border)] hover:border-[var(--primary)] bg-[var(--surface-2)]'
+              }`}
+            >
+              <span className="font-medium text-[var(--text)] flex-1 min-w-0 break-words">
+                {option.title}
+              </span>
+
+              {/* Checkmark animado */}
+              <AnimatePresence>
+                {isSelected && (
+                  <motion.span
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    className="w-8 h-8 rounded-full bg-[var(--success)] flex items-center justify-center flex-shrink-0 shadow-sm"
+                    aria-hidden
+                  >
+                    <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={onSubmit}
+        disabled={!selectedOption || submitting}
+        className="w-full bg-[var(--primary)] text-white py-3 sm:py-3.5 rounded-xl font-semibold hover:bg-[var(--primary-dark)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {submitting ? '…' : submitLabel}
+      </button>
+
+      {selectedOption && (
+        <button
+          type="button"
+          onClick={() => setSelectedOption(null)}
+          className="w-full text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+        >
+          {changeLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// --------- Lista de resultados (barras) ---------
+function ResultsList({
+  options,
+  totalVotes,
+  userVotedOption,
+  expired,
+  expiredTitle,
+  expiredDesc,
+  votesLabel,
+}: {
+  options: any[];
+  totalVotes: number;
+  userVotedOption: string | null;
+  expired: boolean;
+  expiredTitle: string;
+  expiredDesc: string;
+  votesLabel: string;
+}) {
+  const sorted = [...options].sort(
+    (a: any, b: any) => (b.votes || 0) - (a.votes || 0)
+  );
+
+  return (
+    <div className="space-y-3">
+      {expired && (
+        <div className="text-center mb-4">
+          <div className="text-5xl mb-2">🏆</div>
+          <h2 className="text-lg sm:text-xl font-bold text-[var(--text)]">{expiredTitle}</h2>
+          <p className="text-sm text-[var(--text-muted)]">{expiredDesc}</p>
+        </div>
+      )}
+      {sorted.map((option: any, index: number) => {
+        const votes = option.votes || 0;
+        const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+        const isUserChoice = option.id === userVotedOption;
+        const isWinner = index === 0 && votes > 0;
+
+        return (
+          <div
+            key={option.id}
+            className={`rounded-xl p-3 sm:p-4 border transition-all ${
+              isUserChoice
+                ? 'bg-[var(--badge-success-bg)] border-[var(--success)]'
+                : isWinner
+                  ? 'bg-[var(--surface-2)] border-[var(--primary-light)]'
+                  : 'bg-[var(--surface-2)] border-[var(--border)]'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 min-w-0">
+                {isWinner && <span aria-hidden>👑</span>}
+                <span className="font-medium text-[var(--text)] truncate">{option.title}</span>
+                {isUserChoice && (
+                  <Check className="w-4 h-4 text-[var(--success)] flex-shrink-0" />
+                )}
+              </div>
+              <span className="text-sm text-[var(--text-muted)] font-semibold flex-shrink-0">
+                {votes} {votesLabel} · {percentage}%
+              </span>
+            </div>
+            <div className="w-full bg-[var(--progress-track)] rounded-full h-2 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  isUserChoice ? 'bg-[var(--success)]' : 'bg-[var(--primary)]'
+                }`}
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// --------- Helpers ---------
+function recomputeVotes(options: any[], responses: any[]) {
+  const counts: Record<string, number> = {};
+  responses.forEach((r) => {
+    const id = r.response?.optionId;
+    if (id) counts[id] = (counts[id] || 0) + 1;
+  });
+  return options.map((opt: any) => ({ ...opt, votes: counts[opt.id] || 0 }));
 }

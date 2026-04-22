@@ -22,5 +22,13 @@
   "expired": "Expired",
   "remove": "Remove from my list",
   "removed": "Removed from your list",
-  "open": "Open"
+  "open": "Open",
+  "share": "Share",
+  "shareLink": "Share link",
+  "copyLink": "Copy link",
+  "copied": "Link copied 🎉",
+  "copyFail": "Could not copy link",
+  "results": "Results",
+  "liveResults": "Live results",
+  "seeResultsBelow": "See results below"
 }

@@ -5,12 +5,25 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
--- PASO A — Borrar las policies permisivas existentes
+-- PASO A — Borrar TODAS las policies previas (viejas y nuevas)
+-- Así la migración es 100% idempotente: se puede correr N veces.
 -- ------------------------------------------------------------
-DROP POLICY IF EXISTS public_all ON public.polls;
-DROP POLICY IF EXISTS public_all ON public.tournaments;
-DROP POLICY IF EXISTS public_all ON public.poll_responses;
-DROP POLICY IF EXISTS public_all ON public.duel_votes;
+-- Viejas (versión permisiva inicial)
+DROP POLICY IF EXISTS public_all    ON public.polls;
+DROP POLICY IF EXISTS public_all    ON public.tournaments;
+DROP POLICY IF EXISTS public_all    ON public.poll_responses;
+DROP POLICY IF EXISTS public_all    ON public.duel_votes;
+
+-- Nuevas (por si una corrida previa las dejó a medias)
+DROP POLICY IF EXISTS polls_insert  ON public.polls;
+DROP POLICY IF EXISTS polls_delete  ON public.polls;
+DROP POLICY IF EXISTS tourn_insert  ON public.tournaments;
+DROP POLICY IF EXISTS tourn_update  ON public.tournaments;
+DROP POLICY IF EXISTS tourn_delete  ON public.tournaments;
+DROP POLICY IF EXISTS resp_insert   ON public.poll_responses;
+DROP POLICY IF EXISTS resp_update   ON public.poll_responses;
+DROP POLICY IF EXISTS duel_insert   ON public.duel_votes;
+DROP POLICY IF EXISTS duel_update   ON public.duel_votes;
 
 -- ------------------------------------------------------------
 -- PASO B — Asegurar RLS activo en todas las tablas

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Trash2 } from 'lucide-react';
 import type { MyPollEntry } from '@/lib/mypolls';
 import { formatTimeRemaining, getTimeRemaining } from '@/lib/token';
 import { useLanguage } from '@/context/LanguageContext';
@@ -89,7 +89,7 @@ export function MyPollCard({ entry, href, onRemove, meta }: MyPollCardProps) {
           aria-label={t('common.remove')}
           className="absolute top-2 right-2 w-8 h-8 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-red-500 transition-opacity flex items-center justify-center"
         >
-          <XMarkIcon className="w-4 h-4" />
+          <Trash2 size={16} />
         </button>
       )}
     </div>

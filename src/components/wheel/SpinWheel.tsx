@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Link from 'next/link';
 import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Share2, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useLanguage } from '@/context/LanguageContext';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 
@@ -37,6 +38,7 @@ export const SpinWheel = () => {
   const [addingAfterId, setAddingAfterId] = useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
   const currentAngleRef = useRef<number>(0);
@@ -324,9 +326,47 @@ export const SpinWheel = () => {
     setSelectedOption(null);
     setShowResult(false);
     setValidationError('');
+    setShareCopied(false);
     // Iniciar un nuevo giro inmediatamente
     setTimeout(() => spin(), 100); // Pequeño delay para que el UI se actualice
   }, [spin]);
+
+  // ----------------------------------------------------------------
+  //  Share — mismo patrón que Versus: intenta Web Share API,
+  //  cae a clipboard si el usuario cancela o el nav no soporta.
+  // ----------------------------------------------------------------
+  const handleShareResult = useCallback(async () => {
+    if (!selectedOption) return;
+
+    const text =
+      t('spin.shareText').replace('{option}', selectedOption.text) +
+      ' ' +
+      t('spin.inPickly');
+
+    // Web Share (mobile)
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({
+          title: t('spin.theWheelHasSpoken'),
+          text,
+          url: typeof window !== 'undefined' ? window.location.href : undefined,
+        });
+        return;
+      }
+    } catch {
+      // Usuario canceló el share nativo → seguimos al clipboard
+    }
+
+    // Fallback: clipboard
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareCopied(true);
+      toast.success(t('spin.resultCopied'));
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch (err) {
+      console.error('Share failed:', err);
+    }
+  }, [selectedOption, t]);
 
   const isFormValid = newOptionText.trim().length > 0 && options.length < 12;
   const canSpin = options.filter(opt => opt.text.trim().length > 0).length >= 2 && !isSpinning;
@@ -405,10 +445,17 @@ export const SpinWheel = () => {
                       <div className="text-3xl mb-3">🎉</div>
                       <h3 className="font-display text-xl font-bold text-[var(--text)] mb-2">{t('spin.theWheelHasSpoken')}</h3>
                       <div className="text-2xl font-bold text-[var(--primary)] mb-4">{selectedOption.text}</div>
-                      <button onClick={spinAgain}
-                        className="px-6 py-2 bg-[var(--surface)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--surface-2)] transition-colors border border-[var(--primary)]">
-                        {t('spin.spinAgain')}
-                      </button>
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                        <button onClick={handleShareResult}
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-[var(--primary)] text-white rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors">
+                          {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
+                          {shareCopied ? t('spin.resultCopied') : t('spin.shareResult')}
+                        </button>
+                        <button onClick={spinAgain}
+                          className="px-5 py-2 bg-[var(--surface)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--surface-2)] transition-colors border border-[var(--primary)]">
+                          {t('spin.spinAgain')}
+                        </button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -721,10 +768,17 @@ export const SpinWheel = () => {
                         <div className="text-2xl mb-2">🎉</div>
                         <h3 className="font-display text-lg font-bold text-[var(--text)] mb-1">{t('spin.theWheelHasSpoken')}</h3>
                         <div className="text-xl font-bold text-[var(--primary)] mb-2">{selectedOption.text}</div>
-                        <button onClick={spinAgain}
-                          className="px-4 py-1.5 bg-[var(--surface)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--surface-2)] transition-colors border border-[var(--primary)] text-sm">
-                          {t('spin.spinAgain')}
-                        </button>
+                        <div className="flex flex-col gap-2 items-center">
+                          <button onClick={handleShareResult}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-[var(--primary)] text-white rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm">
+                            {shareCopied ? <Check size={14} /> : <Share2 size={14} />}
+                            {shareCopied ? t('spin.resultCopied') : t('spin.shareResult')}
+                          </button>
+                          <button onClick={spinAgain}
+                            className="px-4 py-1.5 bg-[var(--surface)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--surface-2)] transition-colors border border-[var(--primary)] text-sm">
+                            {t('spin.spinAgain')}
+                          </button>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
