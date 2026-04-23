@@ -51,6 +51,8 @@
   "notCreatorDesc": "Solo el creador puede editar esta encuesta",
   "expired": "La encuesta expiró",
   "expiredEditDesc": "No podés editar una encuesta que ya expiró",
+  "hasResponses": "Ya hay votos",
+  "hasResponsesDesc": "No podés editar las opciones de una encuesta que ya recibió respuestas. Podés cerrarla y crear una nueva.",
   "editRatingHint": "Podés actualizar el título, descripción e imagen de portada. Los items (opciones a puntuar) no se editan desde acá.",
   "editRatingItemsNote": "Para cambiar los items, creá un rating nuevo o borrá este y volvé a hacerlo."
 }

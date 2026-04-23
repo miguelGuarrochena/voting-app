@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { getPoll, updatePoll } from '@/lib/db';
+import { getPoll, updatePoll, getPollResponses } from '@/lib/db';
 import { findMyPoll } from '@/lib/mypolls';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
@@ -43,6 +43,14 @@ export default function EditVotePage() {
       const expiryDate = new Date(data.expiresAt);
       if (expiryDate <= now) {
         setError('expired');
+        setLoading(false);
+        return;
+      }
+
+      // Block editing if responses already exist (avoid orphan option IDs)
+      const responses = await getPollResponses(token);
+      if (responses.length > 0) {
+        setError('has_responses');
         setLoading(false);
         return;
       }
@@ -110,6 +118,20 @@ export default function EditVotePage() {
             <div className="text-6xl mb-4">⏰</div>
             <h2 className="text-2xl font-bold text-[var(--text)] mb-2">{t('poll.expired')}</h2>
             <p className="text-[var(--text-muted)] mb-6">{t('poll.expiredEditDesc')}</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  if (error === 'has_responses') {
+    return (
+      <PageLayout>
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+            <div className="text-6xl mb-4">🗳️</div>
+            <h2 className="text-2xl font-bold text-[var(--text)] mb-2">{t('poll.hasResponses')}</h2>
+            <p className="text-[var(--text-muted)] mb-6">{t('poll.hasResponsesDesc')}</p>
           </div>
         </div>
       </PageLayout>

@@ -300,9 +300,6 @@ export async function updatePoll(
       payload.cover_image = data.coverImage.trim() || null
     }
 
-    // eslint-disable-next-line no-console
-    console.log('[updatePoll] Updating poll with token:', token, 'payload:', payload)
-
     const { error } = await supabase
       .from('polls')
       .update(payload)

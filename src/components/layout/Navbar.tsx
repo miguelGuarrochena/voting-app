@@ -16,6 +16,7 @@ import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe, Swords } from 'lucide-reac
 import ThemeLanguageSwitcher from '@/components/layout/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 import { safeBack } from '@/lib/navigation';
+import { FEATURES } from '@/lib/features';
 
 const Navbar = () => {
   const { t, language, toggleLanguage } = useLanguage();
@@ -192,14 +193,25 @@ const Navbar = () => {
                 <ArrowPathIcon className="w-5 h-5" />
                 <span>{t('nav.spinWheel')}</span>
               </Link>
-              <Link
-                href="/versus/create"
-                onClick={() => setShowMobileMenu(false)}
-                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-              >
-                <Swords className="w-5 h-5" />
-                <span>{t('nav.createVersus')}</span>
-              </Link>
+              {FEATURES.versus ? (
+                <Link
+                  href="/versus/create"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                >
+                  <Swords className="w-5 h-5" />
+                  <span>{t('nav.createVersus')}</span>
+                </Link>
+              ) : (
+                <div
+                  aria-disabled="true"
+                  title={t('versus.comingSoonTitle')}
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text-muted)] opacity-50 cursor-not-allowed"
+                >
+                  <Swords className="w-5 h-5" />
+                  <span>{t('nav.createVersus')}</span>
+                </div>
+              )}
 
               {username && (
                 <>
@@ -263,14 +275,24 @@ const Navbar = () => {
               <ArrowPathIcon className="w-6 h-6" />
             </Link>
 
-            <Link
-              href="/versus"
-              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
-                pathname === '/versus' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
-              }`}
-            >
-              <Swords className="w-6 h-6" />
-            </Link>
+            {FEATURES.versus ? (
+              <Link
+                href="/versus"
+                className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                  pathname === '/versus' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
+                }`}
+              >
+                <Swords className="w-6 h-6" />
+              </Link>
+            ) : (
+              <div
+                aria-disabled="true"
+                title={t('versus.comingSoonTitle')}
+                className="relative flex items-center justify-center p-2 rounded-lg flex-1 text-[var(--text-muted)] opacity-50 cursor-not-allowed"
+              >
+                <Swords className="w-6 h-6" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -400,22 +422,38 @@ const Navbar = () => {
                 )}
               </Link>
 
-              <Link
-                href="/versus"
-                className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
-                  pathname === '/versus'
-                    ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
-                }`}
-              >
-                <Swords className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/versus' ? 'scale-110' : 'group-hover:scale-110'}`} />
-                {!isMedium && <span className="font-medium">{t('nav.versus')}</span>}
-                {isMedium && (
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-                    {t('nav.versus')}
-                  </span>
-                )}
-              </Link>
+              {FEATURES.versus ? (
+                <Link
+                  href="/versus"
+                  className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
+                    pathname === '/versus'
+                      ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
+                  }`}
+                >
+                  <Swords className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/versus' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                  {!isMedium && <span className="font-medium">{t('nav.versus')}</span>}
+                  {isMedium && (
+                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                      {t('nav.versus')}
+                    </span>
+                  )}
+                </Link>
+              ) : (
+                <div
+                  aria-disabled="true"
+                  title={t('versus.comingSoonTitle')}
+                  className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl text-[var(--text-muted)] opacity-60 cursor-not-allowed`}
+                >
+                  <Swords className={`w-5 h-5 ${isMedium ? 'w-6 h-6' : ''}`} />
+                  {!isMedium && <span className="font-medium">{t('nav.versus')}</span>}
+                  {isMedium && (
+                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                      {t('nav.versus')}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right side */}
@@ -471,14 +509,25 @@ const Navbar = () => {
                             <ArrowPathIcon className="w-4 h-4 transition-transform group-hover:rotate-180" />
                             <span>{t('nav.spinWheel')}</span>
                           </Link>
-                          <Link
-                            href="/versus/create"
-                            onClick={() => setShowCreateMenu(false)}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
-                          >
-                            <Swords className="w-4 h-4 transition-transform group-hover:scale-110" />
-                            <span>{t('nav.versus')}</span>
-                          </Link>
+                          {FEATURES.versus ? (
+                            <Link
+                              href="/versus/create"
+                              onClick={() => setShowCreateMenu(false)}
+                              className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
+                            >
+                              <Swords className="w-4 h-4 transition-transform group-hover:scale-110" />
+                              <span>{t('nav.versus')}</span>
+                            </Link>
+                          ) : (
+                            <div
+                              aria-disabled="true"
+                              title={t('versus.comingSoonTitle')}
+                              className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] opacity-50 cursor-not-allowed"
+                            >
+                              <Swords className="w-4 h-4" />
+                              <span>{t('nav.versus')}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

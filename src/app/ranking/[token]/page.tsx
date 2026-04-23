@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Share2, ArrowLeft, GripVertical, Check, Eye } from 'lucide-react';
+import { Share2, ArrowLeft, GripVertical, Check, Eye, ChevronUp, ChevronDown } from 'lucide-react';
 
 import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses, deletePoll, closePoll, updatePollTitle } from '@/lib/db';
@@ -152,7 +152,7 @@ export default function RankingTokenPage() {
     }
   }, [pollData, hasVotedState]);
 
-  // --- drag handlers ---
+  // --- drag handlers (desktop) ---
   const handleDragStart = (index: number) => setDraggedItem(index);
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
@@ -164,6 +164,16 @@ export default function RankingTokenPage() {
     setDraggedItem(index);
   };
   const handleDragEnd = () => setDraggedItem(null);
+
+  // --- move up/down (mobile + fallback accesible) ---
+  const handleMove = (from: number, direction: -1 | 1) => {
+    const to = from + direction;
+    if (to < 0 || to >= rankings.length) return;
+    const next = [...rankings];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    setRankings(next);
+  };
 
   // --- submit ---
   const handleSubmitRanking = async () => {
@@ -347,12 +357,15 @@ export default function RankingTokenPage() {
           {!hasVotedState && !expired ? (
             <div className="space-y-2.5">
               <p className="text-sm text-[var(--text-muted)] font-medium mb-3">
-                {t('ranking.dragToReorder')}
+                <span className="sm:hidden">{t('ranking.reorderHint')}</span>
+                <span className="hidden sm:inline">{t('ranking.dragToReorder')}</span>
               </p>
               {rankings.map((optionId, index) => {
                 const option = pollData.options.find((o: any) => o.id === optionId);
                 if (!option) return null;
                 const hasImage = !!option.imageUrl;
+                const isFirst = index === 0;
+                const isLast = index === rankings.length - 1;
 
                 return (
                   <div
@@ -361,7 +374,7 @@ export default function RankingTokenPage() {
                     onDragStart={() => handleDragStart(index)}
                     onDragOver={(e) => handleDragOver(e, index)}
                     onDragEnd={handleDragEnd}
-                    className={`flex items-center gap-3 bg-[var(--surface-2)] rounded-xl p-3 sm:p-4 cursor-move transition-all border ${
+                    className={`flex items-center gap-2 sm:gap-3 bg-[var(--surface-2)] rounded-xl p-2.5 sm:p-4 sm:cursor-move transition-all border ${
                       draggedItem === index
                         ? 'opacity-50 border-[var(--primary)]'
                         : 'border-transparent hover:border-[var(--border)]'
@@ -400,10 +413,43 @@ export default function RankingTokenPage() {
                         {option.emoji}
                       </span>
                     )}
-                    <span className="font-medium text-[var(--text)] flex-1 min-w-0 break-words">
+                    <span className="font-medium text-[var(--text)] flex-1 min-w-0 break-words text-sm sm:text-base">
                       {option.title}
                     </span>
-                    <GripVertical className="w-5 h-5 text-[var(--text-muted)] flex-shrink-0" />
+
+                    {/* Controles mobile: up/down en pila vertical.
+                        Visibles hasta sm (drag-and-drop no anda con dedos). */}
+                    <div className="flex sm:hidden flex-col flex-shrink-0 -my-1">
+                      <button
+                        type="button"
+                        draggable={false}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMove(index, -1);
+                        }}
+                        disabled={isFirst}
+                        aria-label={t('ranking.moveUp')}
+                        className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--text-muted)] disabled:opacity-25 active:bg-[var(--border)] transition-colors"
+                      >
+                        <ChevronUp className="w-5 h-5" strokeWidth={2.4} />
+                      </button>
+                      <button
+                        type="button"
+                        draggable={false}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMove(index, 1);
+                        }}
+                        disabled={isLast}
+                        aria-label={t('ranking.moveDown')}
+                        className="w-8 h-8 flex items-center justify-center rounded-md text-[var(--text-muted)] disabled:opacity-25 active:bg-[var(--border)] transition-colors"
+                      >
+                        <ChevronDown className="w-5 h-5" strokeWidth={2.4} />
+                      </button>
+                    </div>
+
+                    {/* Handle de drag visible solo en desktop */}
+                    <GripVertical className="hidden sm:block w-5 h-5 text-[var(--text-muted)] flex-shrink-0" />
                   </div>
                 );
               })}

@@ -6,8 +6,9 @@ import { motion } from 'framer-motion';
 import { BarChart2, Trophy, RefreshCw, Star, Swords } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
+import { FEATURES } from '@/lib/features';
 
-const features = [
+const allFeatures = [
   {
     id: 'votes',
     title: 'Votes',
@@ -49,6 +50,10 @@ export default function Home() {
   const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
+  // Versus se muestra siempre, pero deshabilitado si la flag está off.
+  const features = allFeatures;
+  const isDisabled = (id: string) => id === 'versus' && !FEATURES.versus;
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -82,42 +87,72 @@ export default function Home() {
         </div>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-12">
           {features.map((feature, index) => {
             const Icon = feature.icon;
+            const disabled = isDisabled(feature.id);
+
+            const cardTitle =
+              feature.id === 'votes' ? t('nav.votes')
+                : feature.id === 'ranking' ? t('nav.ranking')
+                : feature.id === 'ratings' ? t('nav.ratings')
+                : feature.id === 'spin' ? t('nav.spinWheel')
+                : t('nav.versus');
+
+            const cardDesc =
+              feature.id === 'votes' ? t('home.votesDesc')
+                : feature.id === 'ranking' ? t('home.rankingDesc')
+                : feature.id === 'ratings' ? t('home.ratingsDesc')
+                : feature.id === 'spin' ? t('home.spinDesc')
+                : t('home.versusDesc');
+
+            const inner = (
+              <div
+                className={`relative h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 transition-all duration-300 flex flex-col justify-center ${
+                  disabled
+                    ? 'opacity-60 cursor-not-allowed'
+                    : 'hover:scale-[1.02] hover:shadow-md cursor-pointer group'
+                }`}
+              >
+                {Icon && (
+                  <div className="flex justify-center mb-3">
+                    <div className="w-10 h-10 flex items-center justify-center text-[var(--primary)]">
+                      <Icon size={40} />
+                    </div>
+                  </div>
+                )}
+
+                <h3 className="text-lg font-bold text-[var(--text)] mb-2 text-center">
+                  {cardTitle}
+                </h3>
+
+                <p className="text-[var(--text-muted)] text-sm text-center leading-relaxed line-clamp-2">
+                  {cardDesc}
+                </p>
+              </div>
+            );
+
             return (
               <motion.div
                 key={feature.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                style={{ height: '200px' }}
+                className="h-auto sm:h-[200px]"
               >
-                <Link
-                  href={feature.href}
-                  className="block h-full"
-                >
-                  <div className="h-full bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer group flex flex-col justify-center">
-                    {/* Icon */}
-                    {Icon && (
-                      <div className="flex justify-center mb-3">
-                        <div className="w-10 h-10 flex items-center justify-center text-[var(--primary)]">
-                          <Icon size={40} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Title */}
-                    <h3 className="text-lg font-bold text-[var(--text)] mb-2 text-center">
-                      {feature.id === 'votes' ? t('nav.votes') : feature.id === 'ranking' ? t('nav.ranking') : feature.id === 'ratings' ? t('nav.ratings') : feature.id === 'spin' ? t('nav.spinWheel') : t('nav.versus')}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-[var(--text-muted)] text-sm text-center leading-relaxed line-clamp-2">
-                      {feature.id === 'votes' ? t('home.votesDesc') : feature.id === 'ranking' ? t('home.rankingDesc') : feature.id === 'ratings' ? t('home.ratingsDesc') : feature.id === 'spin' ? t('home.spinDesc') : t('home.versusDesc')}
-                    </p>
+                {disabled ? (
+                  <div
+                    aria-disabled="true"
+                    title={t('versus.comingSoonTitle')}
+                    className="block h-full"
+                  >
+                    {inner}
                   </div>
-                </Link>
+                ) : (
+                  <Link href={feature.href} className="block h-full">
+                    {inner}
+                  </Link>
+                )}
               </motion.div>
             );
           })}

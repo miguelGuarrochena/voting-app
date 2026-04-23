@@ -24,6 +24,8 @@ import Link from 'next/link';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
+import { FEATURES } from '@/lib/features';
+import { VersusComingSoon } from '@/components/versus/ComingSoon';
 
 interface PageProps {
   params: Promise<{
@@ -32,6 +34,11 @@ interface PageProps {
 }
 
 export default function VersusTournamentPage({ params }: PageProps) {
+  if (!FEATURES.versus) return <VersusComingSoon />;
+  return <VersusTournamentPageInner params={params} />;
+}
+
+function VersusTournamentPageInner({ params }: PageProps) {
   const router = useRouter();
   const { token } = use(params);
   const { username } = useUsername();

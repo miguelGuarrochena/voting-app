@@ -13,6 +13,8 @@ import { addMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
 import { generateBracket } from '@/lib/bracket';
 import { VersusTournament, VersusOption } from '@/types/versus';
+import { FEATURES } from '@/lib/features';
+import { VersusComingSoon } from '@/components/versus/ComingSoon';
 
 type OptionForm = {
   id: string;
@@ -22,6 +24,11 @@ type OptionForm = {
 type BracketSize = 4 | 8 | 16;
 
 export default function CreateVersusPage() {
+  if (!FEATURES.versus) return <VersusComingSoon />;
+  return <CreateVersusPageInner />;
+}
+
+function CreateVersusPageInner() {
   const router = useRouter();
   const { username } = useUsername();
   const { t } = useLanguage();

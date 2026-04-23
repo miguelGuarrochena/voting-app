@@ -61,5 +61,7 @@
   "4options": "4 options",
   "8options": "8 options",
   "16options": "16 options",
-  "timeRemaining": "Time remaining"
+  "timeRemaining": "Time remaining",
+  "comingSoonTitle": "Versus is being redesigned",
+  "comingSoonDesc": "We're improving the tournament mode. Check back in a few days — in the meantime you can create Votes, Rankings, Ratings or a Spin Wheel."
 }

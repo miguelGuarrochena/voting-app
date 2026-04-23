@@ -15,6 +15,8 @@ import {
   type MyPollEntry,
 } from '@/lib/mypolls';
 import { formatTimeRemaining, getTimeRemaining } from '@/lib/token';
+import { FEATURES } from '@/lib/features';
+import { VersusComingSoon } from '@/components/versus/ComingSoon';
 
 /**
  * Listing de torneos Versus.
@@ -22,6 +24,11 @@ import { formatTimeRemaining, getTimeRemaining } from '@/lib/token';
  * cards con badge de estado y CTA prominente.
  */
 export default function VersusPage() {
+  if (!FEATURES.versus) return <VersusComingSoon />;
+  return <VersusPageInner />;
+}
+
+function VersusPageInner() {
   const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [entries, setEntries] = useState<MyPollEntry[]>([]);

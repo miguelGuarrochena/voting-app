@@ -342,8 +342,6 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
           return;
         }
 
-        console.log('[CreatePoll] Poll created successfully with token:', token);
-
         // Guardar en "mis polls" (localStorage) como creador.
         addMyPoll({
           token,

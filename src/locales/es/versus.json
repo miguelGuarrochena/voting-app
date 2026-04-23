@@ -61,5 +61,7 @@
   "4options": "4 opciones",
   "8options": "8 opciones",
   "16options": "16 opciones",
-  "timeRemaining": "Tiempo restante"
+  "timeRemaining": "Tiempo restante",
+  "comingSoonTitle": "Versus está en rediseño",
+  "comingSoonDesc": "Estamos mejorando el modo torneo. Volvé en unos días — mientras tanto podés crear Votaciones, Rankings, Ratings o la Ruleta."
 }

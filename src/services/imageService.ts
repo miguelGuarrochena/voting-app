@@ -34,8 +34,7 @@ class ImageService {
         authorUrl: 'https://picsum.photos/'
       });
     }
-    
-    console.log('Picsum: Generated', images.length, 'images for query:', query || 'default');
+
     return images;
   }
 
@@ -153,11 +152,8 @@ class ImageService {
       return this.getPollPlaceholders(count);
     }
 
-    console.log('ImageService: Searching images with query:', query); // Debug log
-    
     // Try to get relevant images based on query
     const images = await this.getStockImages(query, count);
-    console.log('ImageService: Retrieved', images.length, 'images for query:', query); // Debug log
     return images;
   }
 }
