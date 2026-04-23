@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Share2, ArrowLeft, GripVertical, Check } from 'lucide-react';
+import { Share2, ArrowLeft, GripVertical, Check, Eye } from 'lucide-react';
 
 import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses, deletePoll, closePoll, updatePollTitle } from '@/lib/db';
@@ -18,6 +18,10 @@ import { useLanguage } from '@/context/LanguageContext';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
+import { ImageModal } from '@/components/modals/ImageModal';
+import { AnimatePresence } from 'framer-motion';
+import { WinnerPodium, PodiumEntry } from '@/components/results/WinnerPodium';
+import { fireWinnerConfetti } from '@/lib/confetti';
 
 // ------------------------------------------------------------
 //  RANKING — Detalle por token
@@ -48,6 +52,8 @@ export default function RankingTokenPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [zoomImage, setZoomImage] = useState<{ url: string; alt: string } | null>(null);
+  const [wasJustCreated, setWasJustCreated] = useState(justCreated);
 
   useEffect(() => {
     const load = async () => {
@@ -82,6 +88,12 @@ export default function RankingTokenPage() {
 
       const responses = await getPollResponses(token);
       setResponses(responses);
+      // Recomputar scores desde las responses ya guardadas.
+      // Sin esto, las opciones se ven con 0 puntos al abrir, hasta
+      // que entra un evento de realtime.
+      setPollData((prev: any) =>
+        prev ? { ...prev, options: recomputeScores(prev.options, responses) } : prev
+      );
       const userResponse = responses.find((r) => r.username === username);
       setHasVotedState(!!userResponse);
 
@@ -123,6 +135,16 @@ export default function RankingTokenPage() {
       supabase.removeChannel(channel);
     };
   }, [token, username]);
+
+  // Confeti al pasar a expirado
+  useEffect(() => {
+    if (expired && pollData) {
+      const hasScores = (pollData.options ?? []).some(
+        (o: any) => (o.rankingScore || 0) > 0
+      );
+      if (hasScores) fireWinnerConfetti(token);
+    }
+  }, [expired, pollData, token]);
 
   useEffect(() => {
     if (pollData && !hasVotedState && rankings.length === 0) {
@@ -231,11 +253,17 @@ export default function RankingTokenPage() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         {/* Breadcrumb */}
         <button
-          onClick={() => safeBack(router, '/ranking')}
+          onClick={() => {
+            if (isCreator && !hasVotedState && wasJustCreated) {
+              router.push(`/ranking/${token}/edit`);
+            } else {
+              safeBack(router, '/ranking');
+            }
+          }}
           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-3"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>{t('ranking.title')}</span>
+          <span>{isCreator && !hasVotedState && wasJustCreated ? t('poll.edit') : t('ranking.title')}</span>
         </button>
 
         {/* Header: título + acciones */}
@@ -266,6 +294,28 @@ export default function RankingTokenPage() {
             )}
           </div>
         </div>
+
+        {/* Cover image (si el creador la subió) */}
+        {pollData.coverImage && (
+          <button
+            type="button"
+            onClick={() => setZoomImage({ url: pollData.coverImage, alt: pollData.title })}
+            className="block w-full mb-4 sm:mb-6 rounded-2xl overflow-hidden cursor-zoom-in group"
+            aria-label={`Ver imagen de ${pollData.title}`}
+          >
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pollData.coverImage}
+                alt={pollData.title}
+                className="w-full h-40 sm:h-56 object-cover group-hover:opacity-95 transition-opacity"
+              />
+              <span className="absolute bottom-2 right-2 w-9 h-9 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center shadow-md group-hover:bg-black/70 transition-colors">
+                <Eye className="w-5 h-5 text-white" strokeWidth={2.2} />
+              </span>
+            </div>
+          </button>
+        )}
 
         {/* Countdown */}
         <div
@@ -302,6 +352,7 @@ export default function RankingTokenPage() {
               {rankings.map((optionId, index) => {
                 const option = pollData.options.find((o: any) => o.id === optionId);
                 if (!option) return null;
+                const hasImage = !!option.imageUrl;
 
                 return (
                   <div
@@ -319,6 +370,36 @@ export default function RankingTokenPage() {
                     <div className="w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
                       {index + 1}
                     </div>
+                    {hasImage && (
+                      <button
+                        type="button"
+                        draggable={false}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setZoomImage({ url: option.imageUrl, alt: option.title || '' });
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden flex-shrink-0 cursor-zoom-in relative group"
+                        aria-label={`Ver ${option.title}`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={option.imageUrl}
+                          alt={option.title || ''}
+                          className="w-full h-full object-cover"
+                          draggable={false}
+                        />
+                        <span className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors" />
+                        <span className="absolute bottom-0.5 right-0.5 w-5 h-5 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                          <Eye className="w-3 h-3 text-white" strokeWidth={2.4} />
+                        </span>
+                      </button>
+                    )}
+                    {option.emoji && (
+                      <span className="text-xl flex-shrink-0" aria-hidden>
+                        {option.emoji}
+                      </span>
+                    )}
                     <span className="font-medium text-[var(--text)] flex-1 min-w-0 break-words">
                       {option.title}
                     </span>
@@ -342,6 +423,7 @@ export default function RankingTokenPage() {
               expiredTitle={t('ranking.expiredTitle')}
               expiredDesc={t('ranking.expiredDesc')}
               pointsLabel={t('ranking.points')}
+              onZoomImage={(url, alt) => setZoomImage({ url, alt })}
             />
           )}
         </div>
@@ -407,6 +489,16 @@ export default function RankingTokenPage() {
         saveText={t('poll.save')}
         placeholder={t('poll.titlePlaceholder')}
       />
+
+      <AnimatePresence>
+        {zoomImage && (
+          <ImageModal
+            imageUrl={zoomImage.url}
+            alt={zoomImage.alt}
+            onClose={() => setZoomImage(null)}
+          />
+        )}
+      </AnimatePresence>
     </PageLayout>
   );
 }
@@ -477,17 +569,34 @@ function RankingResultsList({
   expiredTitle,
   expiredDesc,
   pointsLabel,
+  onZoomImage,
 }: {
   options: any[];
   expired: boolean;
   expiredTitle: string;
   expiredDesc: string;
   pointsLabel: string;
+  onZoomImage: (url: string, alt: string) => void;
 }) {
   const sorted = [...options].sort(
     (a: any, b: any) => (b.rankingScore || 0) - (a.rankingScore || 0)
   );
   const maxScore = Math.max(1, ...sorted.map((o: any) => o.rankingScore || 0));
+
+  const sortedWithScore = sorted.filter((o) => (o.rankingScore || 0) > 0);
+  const showPodium = expired && sortedWithScore.length > 0;
+
+  const podiumEntries: PodiumEntry[] = showPodium
+    ? sortedWithScore.slice(0, 3).map((o: any) => ({
+        id: o.id,
+        title: o.title,
+        emoji: o.emoji,
+        imageUrl: o.imageUrl,
+        primary: `${o.rankingScore || 0} ${pointsLabel}`,
+      }))
+    : [];
+  const podiumIds = new Set(podiumEntries.map((e) => e.id));
+  const listOptions = showPodium ? sorted.filter((o) => !podiumIds.has(o.id)) : sorted;
 
   return (
     <div className="space-y-3">
@@ -498,37 +607,70 @@ function RankingResultsList({
           <p className="text-sm text-[var(--text-muted)]">{expiredDesc}</p>
         </div>
       )}
-      {sorted.map((option: any, index: number) => {
+      {showPodium && (
+        <WinnerPodium entries={podiumEntries} onZoomImage={onZoomImage} />
+      )}
+      {listOptions.map((option: any) => {
+        const index = sorted.indexOf(option);
         const score = option.rankingScore || 0;
         const percentage = Math.round((score / maxScore) * 100);
         const isWinner = index === 0 && score > 0;
+        const hasImage = !!option.imageUrl;
 
         return (
           <div
             key={option.id}
-            className={`rounded-xl p-3 sm:p-4 border ${
+            className={`rounded-xl border overflow-hidden ${
               isWinner
                 ? 'bg-[var(--surface-2)] border-[var(--primary-light)]'
                 : 'bg-[var(--surface-2)] border-[var(--border)]'
             }`}
           >
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-7 h-7 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                  {index + 1}
+            <div className="flex items-stretch">
+              {hasImage && (
+                <button
+                  type="button"
+                  onClick={() => onZoomImage(option.imageUrl, option.title || '')}
+                  className="relative w-20 sm:w-24 flex-shrink-0 self-stretch cursor-zoom-in group"
+                  aria-label={`Ver ${option.title}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={option.imageUrl}
+                    alt={option.title || ''}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                  <span className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                    <Eye className="w-3.5 h-3.5 text-white" strokeWidth={2.2} />
+                  </span>
+                </button>
+              )}
+              <div className="flex-1 min-w-0 p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                      {index + 1}
+                    </div>
+                    {isWinner && <span aria-hidden>👑</span>}
+                    {option.emoji && (
+                      <span className="text-lg flex-shrink-0" aria-hidden>
+                        {option.emoji}
+                      </span>
+                    )}
+                    <span className="font-medium text-[var(--text)] truncate">{option.title}</span>
+                  </div>
+                  <span className="text-sm text-[var(--text-muted)] font-semibold flex-shrink-0">
+                    {score} {pointsLabel}
+                  </span>
                 </div>
-                {isWinner && <span aria-hidden>👑</span>}
-                <span className="font-medium text-[var(--text)] truncate">{option.title}</span>
+                <div className="w-full bg-[var(--progress-track)] rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[var(--primary)] transition-all duration-500"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
               </div>
-              <span className="text-sm text-[var(--text-muted)] font-semibold flex-shrink-0">
-                {score} {pointsLabel}
-              </span>
-            </div>
-            <div className="w-full bg-[var(--progress-track)] rounded-full h-2 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-[var(--primary)] transition-all duration-500"
-                style={{ width: `${percentage}%` }}
-              />
             </div>
           </div>
         );

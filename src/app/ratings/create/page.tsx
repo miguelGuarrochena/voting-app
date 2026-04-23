@@ -162,13 +162,15 @@ export default function CreateRatingPage() {
         ratingCount: 0,
       }));
 
-    // Create poll via Supabase
+    // Create poll via Supabase — mandamos description si la completaron.
+    // (ratings de momento no tiene cover_image propia en el form)
     const token = await createPoll(
       'rating',
       title,
       username || 'Anonymous',
       expiresAt,
-      options
+      options,
+      { description: description.trim() || undefined }
     );
 
     if (!token) {

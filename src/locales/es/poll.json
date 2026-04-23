@@ -40,5 +40,17 @@
   "closeNowTitle": "¿Cerrar esta encuesta?",
   "closeNowConfirm": "No se van a aceptar más votos. Los resultados quedan visibles pero la encuesta se bloquea.",
   "closeNowConfirmBtn": "Cerrar ahora",
-  "closedToast": "Encuesta cerrada"
+  "closedToast": "Encuesta cerrada",
+  "edit": "Editar",
+  "editVote": "Editar Voto",
+  "editRanking": "Editar Ranking",
+  "editRating": "Editar Rating",
+  "updated": "Encuesta actualizada correctamente",
+  "updateFailed": "Error al actualizar la encuesta",
+  "notCreator": "No sos el creador",
+  "notCreatorDesc": "Solo el creador puede editar esta encuesta",
+  "expired": "La encuesta expiró",
+  "expiredEditDesc": "No podés editar una encuesta que ya expiró",
+  "editRatingHint": "Podés actualizar el título, descripción e imagen de portada. Los items (opciones a puntuar) no se editan desde acá.",
+  "editRatingItemsNote": "Para cambiar los items, creá un rating nuevo o borrá este y volvé a hacerlo."
 }

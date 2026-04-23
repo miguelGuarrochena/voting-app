@@ -1,8 +1,73 @@
-# Supabase — cambios pendientes para habilitar "Cerrar ahora" y "Editar título"
+# Supabase — cambios pendientes
 
-> **TL;DR** — el frontend ya está listo y buildea. Falta correr **un solo SQL**
-> en Supabase (`supabase/features-v2.sql`) para que las nuevas acciones del
-> menú owner (⋮) funcionen end-to-end.
+> **TL;DR** — el frontend está listo. Faltan **dos SQL**, cualquier orden,
+> ambos idempotentes:
+>
+> 1. `supabase/features-v2.sql` — habilita "Cerrar ahora" + "Editar título"
+>    + **"Editar poll completo"** (desde `/[token]/edit`).
+> 2. `supabase/content-v3.sql` — persiste `description` y `cover_image` del
+>    poll/torneo (antes el form los capturaba pero se perdían).
+>
+> Las pages nuevas `/votes/[token]/edit`, `/ranking/[token]/edit` y
+> `/ratings/[token]/edit` usan `updatePoll()`, que hace `UPDATE polls …`.
+> Todos los UPDATE dependen de la misma policy `polls_update` que se crea
+> en `features-v2.sql`; por eso **no hace falta SQL adicional** para el
+> flujo de edición completa.
+
+---
+
+## 0. `supabase/content-v3.sql` — persistir descripción + imagen de portada
+
+### Qué hace
+
+Agrega dos columnas a `polls` y a `tournaments`:
+
+```sql
+ALTER TABLE public.polls
+  ADD COLUMN IF NOT EXISTS description text,
+  ADD COLUMN IF NOT EXISTS cover_image text;
+
+ALTER TABLE public.tournaments
+  ADD COLUMN IF NOT EXISTS description text,
+  ADD COLUMN IF NOT EXISTS cover_image text;
+```
+
+### Por qué
+
+Durante toda la beta, `CreatePollForm` permitía cargar:
+
+- una **descripción** (textarea),
+- una **imagen de portada del poll** (`titleImage`).
+
+Pero `createPoll()` nunca mandaba esos campos a la DB, así que se perdían
+silenciosamente. Ahora el form los manda como `extras: { description,
+coverImage }` y las detail pages los renderizan (hero image + párrafo
+debajo del countdown).
+
+### No requiere cambios en RPCs ni policies
+
+- `get_poll_by_token` devuelve `SETOF public.polls` → las columnas nuevas
+  aparecen automáticamente.
+- Lo mismo para `get_tournament_by_token`.
+- `polls_insert` / `polls_update` ya permitían setear columnas arbitrarias.
+
+### Comportamiento si todavía no corriste la migración
+
+El frontend solo incluye `description` / `cover_image` en el payload del
+INSERT **si el usuario los completó**. Por eso, si no corriste este SQL
+todavía, los polls "simples" (sin descripción ni foto del poll) se
+siguen creando bien. Los que cargan descripción o foto del poll van a
+tirar un error de Supabase (`column does not exist`) hasta aplicar
+`content-v3.sql`.
+
+### Rollback
+
+```sql
+ALTER TABLE public.polls       DROP COLUMN IF EXISTS description, DROP COLUMN IF EXISTS cover_image;
+ALTER TABLE public.tournaments DROP COLUMN IF EXISTS description, DROP COLUMN IF EXISTS cover_image;
+```
+
+---
 
 ---
 

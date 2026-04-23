@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Share2, ArrowLeft, Check } from 'lucide-react';
+import { Share2, ArrowLeft, Check, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
@@ -19,6 +19,9 @@ import { useLanguage } from '@/context/LanguageContext';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
+import { ImageModal } from '@/components/modals/ImageModal';
+import { WinnerPodium, PodiumEntry } from '@/components/results/WinnerPodium';
+import { fireWinnerConfetti } from '@/lib/confetti';
 
 // ------------------------------------------------------------
 //  VOTE — Detalle por token
@@ -51,6 +54,8 @@ export default function VoteTokenPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [zoomImage, setZoomImage] = useState<{ url: string; alt: string } | null>(null);
+  const [wasJustCreated, setWasJustCreated] = useState(justCreated);
 
   // ---------- cargar poll + subscripción realtime ----------
   useEffect(() => {
@@ -87,6 +92,12 @@ export default function VoteTokenPage() {
 
       const responses = await getPollResponses(token);
       setResponses(responses);
+      // Recomputar votos desde las responses ya guardadas.
+      // Sin esto, las opciones se ven con 0 votos al abrir, hasta
+      // que entra un evento de realtime.
+      setPollData((prev: any) =>
+        prev ? { ...prev, options: recomputeVotes(prev.options, responses) } : prev
+      );
       const userResponse = responses.find((r) => r.username === username);
       if (userResponse) {
         setHasVotedState(true);
@@ -131,6 +142,14 @@ export default function VoteTokenPage() {
       supabase.removeChannel(channel);
     };
   }, [token, username]);
+
+  // Confeti cuando la encuesta pasa a expirada (natural o "Cerrar ahora")
+  useEffect(() => {
+    if (expired && pollData) {
+      const hasWinner = (pollData.options ?? []).some((o: any) => (o.votes || 0) > 0);
+      if (hasWinner) fireWinnerConfetti(token);
+    }
+  }, [expired, pollData, token]);
 
   // ---------- handlers ----------
   const handleVote = async () => {
@@ -226,11 +245,17 @@ export default function VoteTokenPage() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         {/* Breadcrumb */}
         <button
-          onClick={() => safeBack(router, '/votes')}
+          onClick={() => {
+            if (isCreator && !hasVotedState && wasJustCreated) {
+              router.push(`/votes/${token}/edit`);
+            } else {
+              safeBack(router, '/votes');
+            }
+          }}
           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-3"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>{t('votes.title')}</span>
+          <span>{isCreator && !hasVotedState && wasJustCreated ? t('poll.edit') : t('votes.title')}</span>
         </button>
 
         {/* Header: título + acciones */}
@@ -261,6 +286,28 @@ export default function VoteTokenPage() {
             )}
           </div>
         </div>
+
+        {/* Cover image (si el creador la subió) */}
+        {pollData.coverImage && (
+          <button
+            type="button"
+            onClick={() => setZoomImage({ url: pollData.coverImage, alt: pollData.title })}
+            className="block w-full mb-4 sm:mb-6 rounded-2xl overflow-hidden cursor-zoom-in group"
+            aria-label={`Ver imagen de ${pollData.title}`}
+          >
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pollData.coverImage}
+                alt={pollData.title}
+                className="w-full h-40 sm:h-56 object-cover group-hover:opacity-95 transition-opacity"
+              />
+              <span className="absolute bottom-2 right-2 w-9 h-9 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center shadow-md group-hover:bg-black/70 transition-colors">
+                <Eye className="w-5 h-5 text-white" strokeWidth={2.2} />
+              </span>
+            </div>
+          </button>
+        )}
 
         {/* Countdown / expired banner */}
         <div
@@ -300,6 +347,7 @@ export default function VoteTokenPage() {
               pickLabel={t('votes.pickAnOption')}
               submitLabel={t('votes.submitVote')}
               changeLabel={t('votes.change')}
+              onZoomImage={(url, alt) => setZoomImage({ url, alt })}
             />
           ) : (
             <ResultsList
@@ -310,6 +358,7 @@ export default function VoteTokenPage() {
               expiredTitle={t('votes.expiredTitle')}
               expiredDesc={t('votes.expiredDesc')}
               votesLabel={t('votes.votes')}
+              onZoomImage={(url, alt) => setZoomImage({ url, alt })}
             />
           )}
         </div>
@@ -375,6 +424,16 @@ export default function VoteTokenPage() {
         saveText={t('poll.save')}
         placeholder={t('poll.titlePlaceholder')}
       />
+
+      <AnimatePresence>
+        {zoomImage && (
+          <ImageModal
+            imageUrl={zoomImage.url}
+            alt={zoomImage.alt}
+            onClose={() => setZoomImage(null)}
+          />
+        )}
+      </AnimatePresence>
     </PageLayout>
   );
 }
@@ -441,6 +500,8 @@ function HeaderBackOnly({
 }
 
 // --------- Form de votación con checkmark ---------
+// Muestra imagen (si la hay) + emoji + título. Tap en la imagen hace zoom;
+// tap en cualquier otra parte selecciona la opción.
 function VoteForm({
   options,
   selectedOption,
@@ -450,6 +511,7 @@ function VoteForm({
   pickLabel,
   submitLabel,
   changeLabel,
+  onZoomImage,
 }: {
   options: any[];
   selectedOption: string | null;
@@ -459,6 +521,7 @@ function VoteForm({
   pickLabel: string;
   submitLabel: string;
   changeLabel: string;
+  onZoomImage: (url: string, alt: string) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -466,37 +529,78 @@ function VoteForm({
       <div className="space-y-2.5">
         {options.map((option: any) => {
           const isSelected = selectedOption === option.id;
+          const hasImage = !!option.imageUrl;
           return (
             <motion.button
               key={option.id}
               type="button"
               onClick={() => setSelectedOption(isSelected ? null : option.id)}
               whileTap={{ scale: 0.99 }}
-              className={`relative w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
+              className={`relative w-full rounded-xl border-2 transition-all text-left overflow-hidden ${
                 isSelected
                   ? 'border-[var(--success)] bg-[var(--badge-success-bg)] shadow-sm'
                   : 'border-[var(--border)] hover:border-[var(--primary)] bg-[var(--surface-2)]'
               }`}
             >
-              <span className="font-medium text-[var(--text)] flex-1 min-w-0 break-words">
-                {option.title}
-              </span>
-
-              {/* Checkmark animado */}
-              <AnimatePresence>
-                {isSelected && (
-                  <motion.span
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                    className="w-8 h-8 rounded-full bg-[var(--success)] flex items-center justify-center flex-shrink-0 shadow-sm"
-                    aria-hidden
+              <div className="flex items-stretch">
+                {hasImage && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onZoomImage(option.imageUrl, option.title || '');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onZoomImage(option.imageUrl, option.title || '');
+                      }
+                    }}
+                    className="relative w-20 sm:w-24 flex-shrink-0 self-stretch cursor-zoom-in group"
+                    aria-label={`Ver ${option.title}`}
                   >
-                    <Check className="w-5 h-5 text-white" strokeWidth={3} />
-                  </motion.span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={option.imageUrl}
+                      alt={option.title || ''}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    <span className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                      <Eye className="w-3.5 h-3.5 text-white" strokeWidth={2.2} />
+                    </span>
+                  </span>
                 )}
-              </AnimatePresence>
+
+                <div className="flex items-center gap-3 flex-1 min-w-0 p-4">
+                  {option.emoji && (
+                    <span className="text-2xl flex-shrink-0" aria-hidden>
+                      {option.emoji}
+                    </span>
+                  )}
+                  <span className="font-medium text-[var(--text)] flex-1 min-w-0 break-words">
+                    {option.title}
+                  </span>
+
+                  {/* Checkmark animado */}
+                  <AnimatePresence>
+                    {isSelected && (
+                      <motion.span
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        className="w-8 h-8 rounded-full bg-[var(--success)] flex items-center justify-center flex-shrink-0 shadow-sm"
+                        aria-hidden
+                      >
+                        <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
             </motion.button>
           );
         })}
@@ -510,15 +614,6 @@ function VoteForm({
         {submitting ? '…' : submitLabel}
       </button>
 
-      {selectedOption && (
-        <button
-          type="button"
-          onClick={() => setSelectedOption(null)}
-          className="w-full text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
-        >
-          {changeLabel}
-        </button>
-      )}
     </div>
   );
 }
@@ -532,6 +627,7 @@ function ResultsList({
   expiredTitle,
   expiredDesc,
   votesLabel,
+  onZoomImage,
 }: {
   options: any[];
   totalVotes: number;
@@ -540,10 +636,33 @@ function ResultsList({
   expiredTitle: string;
   expiredDesc: string;
   votesLabel: string;
+  onZoomImage: (url: string, alt: string) => void;
 }) {
   const sorted = [...options].sort(
     (a: any, b: any) => (b.votes || 0) - (a.votes || 0)
   );
+
+  // Sólo las opciones que efectivamente recibieron votos entran al podio.
+  const sortedWithVotes = sorted.filter((o) => (o.votes || 0) > 0);
+  const showPodium = expired && sortedWithVotes.length > 0;
+
+  const podiumEntries: PodiumEntry[] = showPodium
+    ? sortedWithVotes.slice(0, 3).map((o: any) => {
+        const votes = o.votes || 0;
+        const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+        return {
+          id: o.id,
+          title: o.title,
+          emoji: o.emoji,
+          imageUrl: o.imageUrl,
+          primary: `${votes} ${votesLabel}`,
+          secondary: `${pct}%`,
+        };
+      })
+    : [];
+  // El resto (incluye empatados con 0 votos) va en la lista.
+  const podiumIds = new Set(podiumEntries.map((e) => e.id));
+  const listOptions = showPodium ? sorted.filter((o) => !podiumIds.has(o.id)) : sorted;
 
   return (
     <div className="space-y-3">
@@ -554,16 +673,27 @@ function ResultsList({
           <p className="text-sm text-[var(--text-muted)]">{expiredDesc}</p>
         </div>
       )}
-      {sorted.map((option: any, index: number) => {
+      {showPodium && (
+        <WinnerPodium entries={podiumEntries} onZoomImage={onZoomImage} />
+      )}
+      {listOptions.map((option: any) => {
+        const index = sorted.indexOf(option);
+        return renderOptionRow(option, index);
+      })}
+    </div>
+  );
+
+  function renderOptionRow(option: any, index: number) {
         const votes = option.votes || 0;
         const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
         const isUserChoice = option.id === userVotedOption;
         const isWinner = index === 0 && votes > 0;
+        const hasImage = !!option.imageUrl;
 
         return (
           <div
             key={option.id}
-            className={`rounded-xl p-3 sm:p-4 border transition-all ${
+            className={`rounded-xl border transition-all overflow-hidden ${
               isUserChoice
                 ? 'bg-[var(--badge-success-bg)] border-[var(--success)]'
                 : isWinner
@@ -571,31 +701,58 @@ function ResultsList({
                   : 'bg-[var(--surface-2)] border-[var(--border)]'
             }`}
           >
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2 min-w-0">
-                {isWinner && <span aria-hidden>👑</span>}
-                <span className="font-medium text-[var(--text)] truncate">{option.title}</span>
-                {isUserChoice && (
-                  <Check className="w-4 h-4 text-[var(--success)] flex-shrink-0" />
-                )}
+            <div className="flex items-stretch">
+              {hasImage && (
+                <button
+                  type="button"
+                  onClick={() => onZoomImage(option.imageUrl, option.title || '')}
+                  className="relative w-20 sm:w-24 flex-shrink-0 self-stretch cursor-zoom-in group"
+                  aria-label={`Ver ${option.title}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={option.imageUrl}
+                    alt={option.title || ''}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                  <span className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-black/55 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                    <Eye className="w-3.5 h-3.5 text-white" strokeWidth={2.2} />
+                  </span>
+                </button>
+              )}
+
+              <div className="flex-1 min-w-0 p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isWinner && <span aria-hidden>👑</span>}
+                    {option.emoji && (
+                      <span className="text-lg flex-shrink-0" aria-hidden>
+                        {option.emoji}
+                      </span>
+                    )}
+                    <span className="font-medium text-[var(--text)] truncate">{option.title}</span>
+                    {isUserChoice && (
+                      <Check className="w-4 h-4 text-[var(--success)] flex-shrink-0" />
+                    )}
+                  </div>
+                  <span className="text-sm text-[var(--text-muted)] font-semibold flex-shrink-0">
+                    {votes} {votesLabel} · {percentage}%
+                  </span>
+                </div>
+                <div className="w-full bg-[var(--progress-track)] rounded-full h-2 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      isUserChoice ? 'bg-[var(--success)]' : 'bg-[var(--primary)]'
+                    }`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
               </div>
-              <span className="text-sm text-[var(--text-muted)] font-semibold flex-shrink-0">
-                {votes} {votesLabel} · {percentage}%
-              </span>
-            </div>
-            <div className="w-full bg-[var(--progress-track)] rounded-full h-2 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  isUserChoice ? 'bg-[var(--success)]' : 'bg-[var(--primary)]'
-                }`}
-                style={{ width: `${percentage}%` }}
-              />
             </div>
           </div>
         );
-      })}
-    </div>
-  );
+  }
 }
 
 // --------- Helpers ---------

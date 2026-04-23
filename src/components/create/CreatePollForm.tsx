@@ -23,24 +23,34 @@ type FormPollOption = {
 
 interface CreatePollFormProps {
   defaultType?: 'vote' | 'rank';
+  initialData?: any;
+  isEdit?: boolean;
+  onSubmit?: (formData: any) => void;
 }
 
-export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
+export default function CreatePollForm({ defaultType, initialData, isEdit, onSubmit }: CreatePollFormProps) {
   const router = useRouter();
   const { username } = useUsername();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
 
   const [pollType, setPollType] = useState<'vote' | 'rank'>(defaultType || 'vote');
-  const [title, setTitle] = useState('');
-  const [titleImage, setTitleImage] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [titleImage, setTitleImage] = useState(initialData?.coverImage || '');
+  const [description, setDescription] = useState(initialData?.description || '');
   const [selectedDuration, setSelectedDuration] = useState('24h'); // Default to 24 hours
   const [isAnonymous, setIsAnonymous] = useState(true);
-  const [options, setOptions] = useState<FormPollOption[]>([
-    { id: crypto.randomUUID(), text: '', image: '' },
-    { id: crypto.randomUUID(), text: '', image: '' },
-  ]);
+  const [options, setOptions] = useState<FormPollOption[]>(
+    initialData?.options?.map((opt: any) => ({
+      id: opt.id,
+      text: opt.title,
+      image: opt.imageUrl || '',
+      emoji: opt.emoji,
+    })) || [
+      { id: crypto.randomUUID(), text: '', image: '' },
+      { id: crypto.randomUUID(), text: '', image: '' },
+    ]
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
@@ -269,64 +279,86 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
     setSubmitError(null);
 
     try {
-      // Calculate expiration date from selected duration
-      const selectedOption = durationOptions.find(opt => opt.value === selectedDuration);
-      let durationMs: number;
-      if (selectedOption?.minutes) {
-        durationMs = selectedOption.minutes * 60 * 1000;
-      } else {
-        durationMs = (selectedOption?.hours || 24) * 60 * 60 * 1000;
-      }
-      const expiresAt = new Date(Date.now() + durationMs);
-
-      // OJO: la ruta de vote es "/votes/[token]" en plural.
-      // Antes mandábamos a "/vote/..." en singular → 404.
-      const pollTypeForUrl = pollType === 'rank' ? 'ranking' : 'votes';
-      const dbType = pollType === 'rank' ? 'ranking' : 'vote';
-
       // Prepare options
       const pollOptions = options
         .filter(option => option.text.trim() !== '')
         .map(option => ({
-          id: crypto.randomUUID(),
+          id: option.id,
           title: option.text.trim(),
           imageUrl: option.image || undefined,
           emoji: option.emoji,
+        }));
+
+      if (isEdit && onSubmit) {
+        // Edit mode: call the onSubmit prop
+        await onSubmit({
+          title: title.trim(),
+          description: description.trim(),
+          coverImage: titleImage,
+          options: pollOptions,
+        });
+      } else {
+        // Create mode
+        // Calculate expiration date from selected duration
+        const selectedOption = durationOptions.find(opt => opt.value === selectedDuration);
+        let durationMs: number;
+        if (selectedOption?.minutes) {
+          durationMs = selectedOption.minutes * 60 * 1000;
+        } else {
+          durationMs = (selectedOption?.hours || 24) * 60 * 60 * 1000;
+        }
+        const expiresAt = new Date(Date.now() + durationMs);
+
+        // OJO: la ruta de vote es "/votes/[token]" en plural.
+        // Antes mandábamos a "/vote/..." en singular → 404.
+        const pollTypeForUrl = pollType === 'rank' ? 'ranking' : 'votes';
+        const dbType = pollType === 'rank' ? 'ranking' : 'vote';
+
+        // Add votes and reactions for new polls
+        const pollOptionsWithStats = pollOptions.map(option => ({
+          ...option,
           votes: 0,
           reactions: createEmptyReactions(),
         }));
 
-      // Create poll via Supabase
-      const token = await createPoll(
-        dbType as 'vote' | 'ranking' | 'rating',
-        title.trim(),
-        username || 'Anonymous',
-        expiresAt,
-        pollOptions
-      );
+        // Create poll via Supabase
+        // description + coverImage son opcionales: solo se mandan si el
+        // usuario los completó (ver supabase/content-v3.sql).
+        const token = await createPoll(
+          dbType as 'vote' | 'ranking' | 'rating',
+          title.trim(),
+          username || 'Anonymous',
+          expiresAt,
+          pollOptionsWithStats,
+          {
+            description: description.trim() || undefined,
+            coverImage: titleImage || undefined,
+          }
+        );
 
-      if (!token) {
-        toast.error(pollType === 'rank' ? t('create.failedRanking') : t('create.failed'));
-        setLoading(false);
-        return;
+        if (!token) {
+          toast.error(pollType === 'rank' ? t('create.failedRanking') : t('create.failed'));
+          setLoading(false);
+          return;
+        }
+
+        console.log('[CreatePoll] Poll created successfully with token:', token);
+
+        // Guardar en "mis polls" (localStorage) como creador.
+        addMyPoll({
+          token,
+          type: dbType === 'ranking' ? 'ranking' : 'vote',
+          title: title.trim(),
+          role: 'creator',
+          createdBy: username || 'Anonymous',
+          expiresAt: expiresAt.toISOString(),
+        });
+
+        // Redirect directly to detail page with success flag
+        router.push(`/${pollTypeForUrl}/${token}?created=true`);
       }
-
-      console.log('[CreatePoll] Poll created successfully with token:', token);
-
-      // Guardar en "mis polls" (localStorage) como creador.
-      addMyPoll({
-        token,
-        type: dbType === 'ranking' ? 'ranking' : 'vote',
-        title: title.trim(),
-        role: 'creator',
-        createdBy: username || 'Anonymous',
-        expiresAt: expiresAt.toISOString(),
-      });
-
-      // Redirect directly to detail page with success flag
-      router.push(`/${pollTypeForUrl}/${token}?created=true`);
     } catch (error) {
-      console.error('[CreatePoll] Failed to create poll:', error);
+      console.error('[CreatePoll] Failed to create/update poll:', error);
       const errorMessage = pollType === 'rank' ? t('create.failedRanking') : t('create.failed');
       setSubmitError(errorMessage);
       setErrors({ submit: errorMessage });
@@ -343,8 +375,8 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
           <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">{t('form.pollBasics')}</h2>
 
           <div className="space-y-6">
-            {/* Poll Type Selector - Only show if defaultType is not provided */}
-            {!defaultType && (
+            {/* Poll Type Selector - Only show if not editing and defaultType is not provided */}
+            {!isEdit && !defaultType && (
               <div>
                 <label className="block text-sm font-medium text-[var(--text)] mb-3">
                   {t('form.pollType')} *
@@ -484,24 +516,26 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{t('create.charactersCounter').replace('{count}', String(description.length))}</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="duration">
-                {t('form.expiration')} *
-              </label>
-              <select
-                id="duration"
-                value={selectedDuration}
-                onChange={(e) => setSelectedDuration(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors"
-              >
-                {durationOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{getContextLabel(t('create.autoCloseDuration'))}</p>
-            </div>
+            {!isEdit && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="duration">
+                  {t('form.expiration')} *
+                </label>
+                <select
+                  id="duration"
+                  value={selectedDuration}
+                  onChange={(e) => setSelectedDuration(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors"
+                >
+                  {durationOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{getContextLabel(t('create.autoCloseDuration'))}</p>
+              </div>
+            )}
           </div>
           {errors.options && (
             <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
@@ -695,7 +729,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50'
             }`}
           >
-            {loading ? t('create.creating') : (pollType === 'rank' ? t('create.createRanking') : t('create.createPoll'))}
+            {loading ? t('create.creating') : (isEdit ? t('poll.save') : (pollType === 'rank' ? t('create.createRanking') : t('create.createPoll')))}
           </button>
         </div>
         

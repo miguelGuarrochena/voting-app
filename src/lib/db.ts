@@ -86,23 +86,30 @@ export async function createPoll(
   title: string,
   createdBy: string,
   expiresAt: Date,
-  options: any[]
+  options: any[],
+  extras?: { description?: string; coverImage?: string }
 ): Promise<string | null> {
   try {
     const token = generateToken()
 
+    // description / cover_image están disponibles desde la migración
+    // supabase/content-v3.sql. Solo las mandamos si el usuario las cargó.
+    const payload: Record<string, any> = {
+      token,
+      type,
+      title,
+      created_by: createdBy,
+      expires_at: expiresAt.toISOString(),
+      options,
+    }
+    const desc = extras?.description?.trim()
+    if (desc) payload.description = desc
+    const cover = extras?.coverImage?.trim()
+    if (cover) payload.cover_image = cover
+
     // No usamos .select() acá: con RLS bloqueando SELECT directo,
     // el RETURNING no funciona. El token ya lo tenemos nosotros.
-    const { error } = await supabase
-      .from('polls')
-      .insert({
-        token,
-        type,
-        title,
-        created_by: createdBy,
-        expires_at: expiresAt.toISOString(),
-        options
-      })
+    const { error } = await supabase.from('polls').insert(payload)
 
     if (error) throw error
 
@@ -127,7 +134,10 @@ export async function getPoll(token: string): Promise<any | null> {
     return {
       ...row,
       expiresAt: row.expires_at,
-      createdBy: row.created_by
+      createdBy: row.created_by,
+      // alias camelCase para campos opcionales (pueden no existir si la
+      // migración content-v3.sql no fue aplicada todavía).
+      coverImage: row.cover_image ?? null,
     }
   } catch (error) {
     toast.error(logSupabaseError('getPoll', error))
@@ -258,6 +268,54 @@ export async function updatePollTitle(token: string, title: string): Promise<boo
   }
 }
 
+/**
+ * Actualiza un poll completo (título, descripción, imagen, opciones).
+ * Solo permitido si el creador aún no votó.
+ */
+export async function updatePoll(
+  token: string,
+  data: {
+    title: string
+    description?: string
+    coverImage?: string
+    options?: any[]
+  }
+): Promise<boolean> {
+  try {
+    const payload: Record<string, any> = {
+      title: data.title.trim(),
+    }
+
+    // options es opcional — si no se manda, no tocamos las opciones existentes
+    // (ratings edit sólo edita metadata, no items)
+    if (data.options !== undefined) {
+      payload.options = data.options
+    }
+
+    if (data.description !== undefined) {
+      payload.description = data.description.trim() || null
+    }
+
+    if (data.coverImage !== undefined) {
+      payload.cover_image = data.coverImage.trim() || null
+    }
+
+    // eslint-disable-next-line no-console
+    console.log('[updatePoll] Updating poll with token:', token, 'payload:', payload)
+
+    const { error } = await supabase
+      .from('polls')
+      .update(payload)
+      .eq('token', token)
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    toast.error(logSupabaseError('updatePoll', error))
+    return false
+  }
+}
+
 // ============ TOURNAMENTS ============
 
 export async function createTournament(
@@ -266,22 +324,27 @@ export async function createTournament(
   expiresAt: Date,
   options: any[],
   votesToWin: number,
-  bracket: any
+  bracket: any,
+  extras?: { description?: string; coverImage?: string }
 ): Promise<string | null> {
   try {
     const token = generateToken()
 
-    const { error } = await supabase
-      .from('tournaments')
-      .insert({
-        token,
-        title,
-        created_by: createdBy,
-        expires_at: expiresAt.toISOString(),
-        options,
-        votes_to_win: votesToWin,
-        bracket
-      })
+    const payload: Record<string, any> = {
+      token,
+      title,
+      created_by: createdBy,
+      expires_at: expiresAt.toISOString(),
+      options,
+      votes_to_win: votesToWin,
+      bracket,
+    }
+    const desc = extras?.description?.trim()
+    if (desc) payload.description = desc
+    const cover = extras?.coverImage?.trim()
+    if (cover) payload.cover_image = cover
+
+    const { error } = await supabase.from('tournaments').insert(payload)
 
     if (error) throw error
 
@@ -306,7 +369,8 @@ export async function getTournament(token: string): Promise<any | null> {
       ...row,
       expiresAt: row.expires_at,
       createdBy: row.created_by,
-      votesToWin: row.votes_to_win
+      votesToWin: row.votes_to_win,
+      coverImage: row.cover_image ?? null,
     }
   } catch (error) {
     toast.error(logSupabaseError('getTournament', error))

@@ -40,5 +40,17 @@
   "closeNowTitle": "Close this poll?",
   "closeNowConfirm": "No more votes will be accepted. Results will be visible but the poll is locked.",
   "closeNowConfirmBtn": "Close now",
-  "closedToast": "Poll closed"
+  "closedToast": "Poll closed",
+  "edit": "Edit",
+  "editVote": "Edit Vote",
+  "editRanking": "Edit Ranking",
+  "editRating": "Edit Rating",
+  "updated": "Poll updated successfully",
+  "updateFailed": "Failed to update poll",
+  "notCreator": "You are not the creator",
+  "notCreatorDesc": "Only the creator can edit this poll",
+  "expired": "Poll has expired",
+  "expiredEditDesc": "You cannot edit a poll that has already expired",
+  "editRatingHint": "You can update the title, description and cover image. The rated items cannot be edited from here.",
+  "editRatingItemsNote": "To change the items, create a new rating or delete this one and start over."
 }
