@@ -458,7 +458,7 @@ export const SpinWheel = () => {
                     <button
                       onClick={spin}
                       disabled={!canSpin}
-                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 ${
+                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 px-6 lg:px-0 ${
                         canSpin
                           ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white'
                           : 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed opacity-50'
@@ -782,7 +782,7 @@ export const SpinWheel = () => {
                       <button
                         onClick={spin}
                         disabled={!canSpin}
-                        className="w-full py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white font-bold text-base rounded-2xl shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 px-6 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white font-bold text-base rounded-2xl shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSpinning ? t('spin.spinning') : showResult ? t('spin.spinAgain') : t('spin.spin')}
                       </button>

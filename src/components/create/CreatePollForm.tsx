@@ -10,6 +10,7 @@ import { generateShareLink } from '@/lib/token';
 import { createPoll } from '@/lib/db';
 import { addMyPoll } from '@/lib/mypolls';
 import { Trash2 } from 'lucide-react';
+import { PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 
@@ -84,9 +85,20 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
       }
     };
 
+    const handleBackdropClick = (event: MouseEvent) => {
+      // Close when clicking on the backdrop (outside the picker content)
+      if ((event.target as HTMLElement).classList.contains('fixed')) {
+        setOpenEmojiPicker(null);
+      }
+    };
+
     if (openEmojiPicker) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', handleBackdropClick);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('mousedown', handleBackdropClick);
+      };
     }
   }, [openEmojiPicker]);
 
@@ -393,9 +405,9 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                   placeholder={pollType === 'rank' ? t('form.whatsRankingAbout') : t('form.whatsPollAbout')}
                   maxLength={100}
                 />
-                
+
                 {/* Title Image Upload */}
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="mt-2 space-y-2">
                   <input
                     ref={titleFileInputRef}
                     type="file"
@@ -409,50 +421,52 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                       }
                     }}
                   />
-                  <button
-                    type="button"
-                    onClick={() => titleFileInputRef.current?.click()}
-                    className="text-sm px-4 py-2 bg-[var(--primary-light)] text-[var(--primary)] rounded-full hover:bg-[var(--primary)] hover:text-white transition-colors font-medium border border-[var(--primary)]"
-                  >
-                    📎 {t('form.chooseFile')}
-                  </button>
+                  <div className="flex flex-col lg:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={() => titleFileInputRef.current?.click()}
+                      className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                    >
+                      <CloudArrowUpIcon className="w-4 h-4" />
+                      {t('ratings.upload')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openImagePicker('title')}
+                      className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                    >
+                      <PhotoIcon className="w-4 h-4" />
+                      {t('ratings.gallery')}
+                    </button>
+                  </div>
                   <span className="text-sm text-[var(--text-muted)]">
                     {titleFileName || t('form.noFileChosen')}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => openImagePicker('title')}
-                    className="text-sm px-4 py-2 bg-gray-100 dark:bg-gray-800 text-[var(--primary)] rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium border border-[var(--primary)]"
-                  >
-                    {t('form.searchStockImages')}
-                  </button>
-                  {titleImage && (
-                    <div className="relative group">
-                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
-                        <img 
-                          src={titleImage} 
-                          alt={t('form.titleImagePreview')} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={removeTitleImage}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  )}
-                  {errors.titleImage && (
+                </div>
+                {titleImage && (
+                  <div className="relative">
+                    <img
+                      src={titleImage}
+                      alt={t('form.titleImagePreview')}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeTitleImage}
+                      className="absolute top-2 right-2 w-8 h-8 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+                {errors.titleImage && (
                     <p className="text-xs text-red-600">{errors.titleImage}</p>
                   )}
-                </div>
-              </div>
               {errors.title && (
                 <p className="mt-2 text-sm text-red-600">{errors.title}</p>
               )}
               <p className="text-xs text-gray-500 dark:text-gray-400">{title.length}/100 {t('form.characters')}</p>
+              </div>
             </div>
 
             <div>
@@ -489,7 +503,6 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{getContextLabel(t('create.autoCloseDuration'))}</p>
             </div>
           </div>
-          
           {errors.options && (
             <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
               <p className="text-sm text-red-600 dark:text-red-400">{errors.options}</p>
@@ -513,13 +526,13 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                       type="text"
                       value={option.text}
                       onChange={(e) => updateOption(option.id, { text: e.target.value })}
-                      className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                      className="flex-1 px-4 h-12 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                       placeholder={t('create.optionPlaceholder').replace('{n}', String(index + 1))}
                       maxLength={50}
                     />
                     <div className="relative" ref={openEmojiPicker === option.id ? emojiPickerRef : null}>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('create.emojiOptional')}</span>
+                        <span className="hidden text-xs text-gray-500 dark:text-gray-400 mb-1">{t('create.emojiOptional')}</span>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
@@ -528,47 +541,63 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                           >
                             {option.emoji || '😶'}
                           </button>
-                          {option.emoji && (
-                            <button
-                              type="button"
-                              onClick={() => updateOption(option.id, { emoji: '' })}
-                              className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-700 rounded-full hover:bg-red-50 transition-colors"
-                              title="Clear emoji"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          )}
                         </div>
                       </div>
                       {openEmojiPicker === option.id && (
-                        <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg p-3 w-64">
-                          <div className="space-y-2">
-                            {Object.entries(emojiCategories).map(([category, emojis]) => (
-                              <div key={category}>
-                                <div className="text-xs text-[var(--text-muted)] capitalize mb-1">{category}</div>
-                                <div className="grid grid-cols-5 gap-1">
-                                  {emojis.map((emoji) => (
-                                    <button
-                                      key={emoji}
-                                      type="button"
-                                      onClick={() => {
-                                        updateOption(option.id, { emoji });
-                                        setOpenEmojiPicker(null);
-                                      }}
-                                      className="w-10 h-10 text-xl hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors flex items-center justify-center"
-                                    >
-                                      {emoji}
-                                    </button>
-                                  ))}
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:absolute lg:inset-auto lg:top-full lg:left-0 lg:mt-2 lg:p-0 lg:flex lg:items-start lg:justify-start">
+                          <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg p-3 w-full max-w-sm lg:w-64 max-h-[80vh] overflow-y-auto relative">
+                            <button
+                              type="button"
+                              onClick={() => setOpenEmojiPicker(null)}
+                              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                            <div className="space-y-2 mt-4">
+                              {Object.entries(emojiCategories).map(([category, emojis]) => (
+                                <div key={category}>
+                                  <div className="text-xs text-[var(--text-muted)] capitalize mb-1">{category}</div>
+                                  <div className="grid grid-cols-5 gap-1">
+                                    {emojis.map((emoji) => (
+                                      <button
+                                        key={emoji}
+                                        type="button"
+                                        onClick={() => {
+                                          updateOption(option.id, { emoji });
+                                          setOpenEmojiPicker(null);
+                                        }}
+                                        className="w-10 h-10 text-xl hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors flex items-center justify-center"
+                                      >
+                                        {emoji}
+                                      </button>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                              {option.emoji && (
+                                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      updateOption(option.id, { emoji: '' });
+                                      setOpenEmojiPicker(null);
+                                    }}
+                                    className="w-full py-2 px-3 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center justify-center gap-2"
+                                  >
+                                    <Trash2 size={16} />
+                                    {t('create.removeEmoji')}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="mt-2 space-y-2">
                     <input
                       ref={(el) => {
                         if (el) optionFileInputRefs.current[option.id] = el;
@@ -584,39 +613,40 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                         }
                       }}
                     />
-                    <button
-                      type="button"
-                      onClick={() => optionFileInputRefs.current[option.id]?.click()}
-                      className="text-sm px-4 py-2 bg-[var(--primary-light)] text-[var(--primary)] rounded-full hover:bg-[var(--primary)] hover:text-white transition-colors font-medium border border-[var(--primary)]"
-                    >
-                      📎 {t('form.chooseFile')}
-                    </button>
+                    <div className="flex flex-col lg:flex-row gap-2">
+                      <button
+                        type="button"
+                        onClick={() => optionFileInputRefs.current[option.id]?.click()}
+                        className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                      >
+                        <CloudArrowUpIcon className="w-4 h-4" />
+                        {t('ratings.upload')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openImagePicker('option', option.id)}
+                        className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                      >
+                        <PhotoIcon className="w-4 h-4" />
+                        {t('ratings.gallery')}
+                      </button>
+                    </div>
                     <span className="text-sm text-[var(--text-muted)]">
                       {optionFileNames[option.id] || t('form.noFileChosen')}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => openImagePicker('option', option.id)}
-                      className="text-sm px-4 py-2 bg-gray-100 dark:bg-gray-800 text-[var(--primary)] rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium border border-[var(--primary)]"
-                    >
-                      📷 {t('create.stockImages')}
-                    </button>
                     {option.image && (
-                      <div className="relative group">
-                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                          <img 
-                            src={option.image} 
-                            alt={t('create.optionPreview')} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                      <div className="relative">
+                        <img
+                          src={option.image}
+                          alt={t('create.optionPreview')}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
                         <button
                           type="button"
                           onClick={() => removeImage(option.id)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                          title="Remove image"
+                          className="absolute top-2 right-2 w-8 h-8 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-colors"
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     )}
@@ -628,7 +658,7 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
                 <button
                   type="button"
                   onClick={() => removeOption(option.id)}
-                  className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                  className="w-10 h-10 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
                   disabled={options.length <= 2}
                   title={options.length <= 2 ? t('create.needAtLeast2Options') : t('create.removeOption')}
                 >
@@ -638,13 +668,15 @@ export default function CreatePollForm({ defaultType }: CreatePollFormProps) {
             ))}
           </div>
 
-          <button
-            type="button"
-            onClick={addOption}
-            className="mt-6 px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors font-medium"
-          >
-            {t('create.addOption')}
-          </button>
+          <div className="lg:flex lg:justify-end">
+            <button
+              type="button"
+              onClick={addOption}
+              className="mt-6 px-6 py-3 bg-[var(--primary-light)] text-[var(--primary)] rounded-md hover:bg-[var(--primary)] hover:text-white transition-colors font-medium w-full lg:w-auto"
+            >
+              {t('create.addOption')}
+            </button>
+          </div>
         </div>
 
         {/* Submit Button */}
