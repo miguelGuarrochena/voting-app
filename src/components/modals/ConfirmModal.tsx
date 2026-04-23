@@ -2,6 +2,8 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 
+export type ConfirmModalVariant = 'danger' | 'warning' | 'primary';
+
 interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -10,7 +12,15 @@ interface ConfirmModalProps {
   subtitle: string;
   cancelText: string;
   confirmText: string;
+  /** Estilo del botón de confirmación. Default = 'danger' (rojo) para mantener retrocompat. */
+  variant?: ConfirmModalVariant;
 }
+
+const confirmBtnClasses: Record<ConfirmModalVariant, string> = {
+  danger: 'bg-red-500 text-white hover:bg-red-600',
+  warning: 'bg-amber-500 text-white hover:bg-amber-600',
+  primary: 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]',
+};
 
 const ConfirmModal = ({
   isOpen,
@@ -20,6 +30,7 @@ const ConfirmModal = ({
   subtitle,
   cancelText,
   confirmText,
+  variant = 'danger',
 }: ConfirmModalProps) => {
   if (!isOpen) return null;
 
@@ -31,11 +42,11 @@ const ConfirmModal = ({
         exit={{ opacity: 0 }}
         className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black bg-opacity-75 z-[9999] flex items-center justify-center"
         onClick={onClose}
-        style={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
           bottom: 0,
           width: '100vw',
           height: '100vh',
@@ -69,7 +80,7 @@ const ConfirmModal = ({
                 onConfirm();
                 onClose();
               }}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+              className={`px-4 py-2 rounded-lg transition-colors font-medium ${confirmBtnClasses[variant]}`}
             >
               {confirmText}
             </button>

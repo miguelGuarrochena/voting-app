@@ -18,15 +18,3 @@ if (!url || !key) {
 }
 
 export const supabase = createClient(url!, key!)
-
-// ------------------------------------------------------------
-// DIAGNÓSTICO TEMPORAL — borrar cuando se resuelva el 42501
-// Corre whoami() al boot y dumpea a consola. Nos dice qué rol
-// ve Postgres cuando la app hace requests.
-// ------------------------------------------------------------
-if (typeof window !== 'undefined') {
-  supabase.rpc('whoami').then(({ data, error }) => {
-    // eslint-disable-next-line no-console
-    console.log('[whoami]', { data, error })
-  })
-}

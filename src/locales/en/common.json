@@ -30,5 +30,6 @@
   "copyFail": "Could not copy link",
   "results": "Results",
   "liveResults": "Live results",
-  "seeResultsBelow": "See results below"
+  "seeResultsBelow": "See results below",
+  "actions": "Actions"
 }

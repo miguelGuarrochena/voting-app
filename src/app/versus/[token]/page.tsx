@@ -5,8 +5,8 @@ import html2canvas from 'html2canvas';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { isExpired } from '@/lib/token';
-import { getTournament, updateTournamentBracket, submitDuelVote, getDuelVotes, hasVotedInDuel, deleteTournament } from '@/lib/db';
-import { addMyPoll } from '@/lib/mypolls';
+import { getTournament, updateTournamentBracket, submitDuelVote, getDuelVotes, hasVotedInDuel, deleteTournament, closeTournament, updateTournamentTitle } from '@/lib/db';
+import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
 import { generateBracket } from '@/lib/bracket';
 import { VersusTournament, VersusOption } from '@/types/versus';
@@ -21,6 +21,9 @@ import { Swords, Clock, AlertTriangle, Share2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import EditTitleModal from '@/components/modals/EditTitleModal';
 
 interface PageProps {
   params: Promise<{
@@ -40,6 +43,10 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [userBracket, setUserBracket] = useState<any>(null); // User's current selections
   const [shareResultText, setShareResultText] = useState(t('versus.shareResult'));
+  const [isCreator, setIsCreator] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const bracketRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const justCreated = searchParams.get('created') === 'true';
@@ -71,6 +78,9 @@ export default function VersusTournamentPage({ params }: PageProps) {
         createdBy: data.createdBy,
         expiresAt: data.expiresAt,
       });
+
+      const my = findMyPoll(token);
+      setIsCreator(my?.role === 'creator');
 
       // Calculate time remaining
       const expiresAt = new Date(data.expiresAt);
@@ -224,11 +234,44 @@ export default function VersusTournamentPage({ params }: PageProps) {
   const handleShare = async () => {
     const url = window.location.href;
     try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: tournament?.title, url });
+        return;
+      }
+    } catch {
+      /* cancelado por el user */
+    }
+    try {
       await navigator.clipboard.writeText(url);
       toast(t('versus.copied'));
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  };
+
+  const handleDelete = async () => {
+    const ok = await deleteTournament(token);
+    if (!ok) return;
+    removeMyPoll(token);
+    toast.success(t('common.removed'));
+    router.push('/versus');
+  };
+
+  const handleCloseNow = async () => {
+    const ok = await closeTournament(token);
+    if (!ok) return;
+    toast.success(t('poll.closedToast'));
+    // Refrescamos el tournament para reflejar status=expired
+    const updated = await getTournament(token);
+    if (updated) setTournament(updated);
+  };
+
+  const handleEditTitle = async (newTitle: string): Promise<boolean> => {
+    const ok = await updateTournamentTitle(token, newTitle);
+    if (!ok) return false;
+    toast.success(t('poll.titleUpdated'));
+    setTournament((prev) => prev ? { ...prev, title: newTitle } : prev);
+    return true;
   };
 
   const handleShareResult = async () => {
@@ -372,29 +415,34 @@ export default function VersusTournamentPage({ params }: PageProps) {
   return (
     <PageLayout>
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => safeBack(router, '/versus')}
-              className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
-              <span className="text-sm text-[var(--text-muted)]">{t('common.back')}</span>
-            </button>
-            <Swords className="w-5 h-5 text-[var(--primary)] flex-shrink-0" />
+        {/* Breadcrumb */}
+        <button
+          onClick={() => safeBack(router, '/versus')}
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-3"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>{t('versus.title')}</span>
+        </button>
+
+        {/* Header: título + acciones */}
+        <div className="flex items-start justify-between gap-3 mb-4 sm:mb-6">
+          <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+            <Swords className="w-5 h-5 text-[var(--primary)] flex-shrink-0 mt-1" />
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold text-[var(--text)] truncate">{tournament.title}</h1>
-              <p className="text-xs text-[var(--text-muted)]">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text)] break-words">
+                {tournament.title}
+              </h1>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">
                 {t('versus.by')} {tournament.createdBy} • {tournament.options.length} {t('versus.options')}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 flex-shrink-0">
             {/* Status Chip */}
             {statusInfo && (
               <div
-                className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${
                   statusInfo.showIcon ? 'animate-pulse' : ''
                 }`}
                 style={{
@@ -412,11 +460,11 @@ export default function VersusTournamentPage({ params }: PageProps) {
             {userBracket && displayBracket.champion && (
               <button
                 onClick={handleShareResult}
-                className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+                className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 transition-colors rounded-full sm:rounded-lg font-medium text-sm"
+                aria-label={shareResultText}
               >
                 <Share2 size={14} />
-                <span className="hidden sm:inline">{shareResultText}</span>
-                <span className="sm:hidden">Resultado</span>
+                <span className="hidden sm:inline ml-1.5">{shareResultText}</span>
               </button>
             )}
 
@@ -424,11 +472,11 @@ export default function VersusTournamentPage({ params }: PageProps) {
             {!displayBracket.champion && (
               <button
                 onClick={handleShare}
-                className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+                className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] transition-colors rounded-full sm:rounded-lg font-medium text-sm"
+                aria-label={t('versus.share')}
               >
                 <Share2 size={14} />
-                <span className="hidden sm:inline">{t('versus.share')}</span>
-                <span className="sm:hidden">{t('versus.comp')}</span>
+                <span className="hidden sm:inline ml-1.5">{t('versus.share')}</span>
               </button>
             )}
 
@@ -436,11 +484,25 @@ export default function VersusTournamentPage({ params }: PageProps) {
             {!userBracket && progress > 0 && progress === 100 && (
               <button
                 onClick={handleSubmitBracket}
-                className="flex items-center gap-1.5 px-2 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm flex-shrink-0"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors font-medium text-xs sm:text-sm"
               >
                 <span className="hidden sm:inline">{t('versus.submitBracket')}</span>
                 <span className="sm:hidden">{t('versus.submit')}</span>
               </button>
+            )}
+
+            {/* Owner menu */}
+            {isCreator && (
+              <OwnerMenu
+                ariaLabel={t('common.actions') || 'Acciones'}
+                items={buildOwnerItems({
+                  expired: isExpired(new Date(tournament.expiresAt)),
+                  t,
+                  onEdit: () => setShowEditModal(true),
+                  onClose: () => setShowCloseModal(true),
+                  onDelete: () => setShowDeleteModal(true),
+                })}
+              />
             )}
           </div>
         </div>
@@ -483,6 +545,65 @@ export default function VersusTournamentPage({ params }: PageProps) {
           onShareResult={handleShareResult}
         />
       )}
+
+      {/* Delete confirmation */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title={t('poll.deletePoll')}
+        subtitle={t('poll.deleteConfirm')}
+        cancelText={t('poll.cancel')}
+        confirmText={t('poll.delete')}
+      />
+
+      {/* Close-now confirmation */}
+      <ConfirmModal
+        isOpen={showCloseModal}
+        onClose={() => setShowCloseModal(false)}
+        onConfirm={handleCloseNow}
+        title={t('poll.closeNowTitle')}
+        subtitle={t('poll.closeNowConfirm')}
+        cancelText={t('poll.cancel')}
+        confirmText={t('poll.closeNowConfirmBtn')}
+        variant="warning"
+      />
+
+      {/* Edit title */}
+      <EditTitleModal
+        isOpen={showEditModal}
+        initialTitle={tournament?.title || ''}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleEditTitle}
+        title={t('poll.editTitle')}
+        subtitle={t('poll.editTitleSubtitle')}
+        cancelText={t('poll.cancel')}
+        saveText={t('poll.save')}
+        placeholder={t('poll.titlePlaceholder')}
+      />
     </PageLayout>
   );
+}
+
+function buildOwnerItems({
+  expired,
+  t,
+  onEdit,
+  onClose,
+  onDelete,
+}: {
+  expired: boolean;
+  t: (k: string) => string;
+  onEdit: () => void;
+  onClose: () => void;
+  onDelete: () => void;
+}): OwnerMenuItem[] {
+  const items: OwnerMenuItem[] = [
+    { label: t('poll.editTitle'), onClick: onEdit, variant: 'default' },
+  ];
+  if (!expired) {
+    items.push({ label: t('poll.closeNow'), onClick: onClose, variant: 'warning' });
+  }
+  items.push({ label: t('poll.deletePoll'), onClick: onDelete, variant: 'danger', divider: true });
+  return items;
 }

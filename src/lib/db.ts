@@ -210,6 +210,54 @@ export async function deletePoll(token: string): Promise<boolean> {
   }
 }
 
+// ------------------------------------------------------------
+//  closePoll / updatePollTitle
+//  Requieren la migración supabase/features-v2.sql:
+//    - policy polls_update (permite UPDATE sobre polls)
+//    - ajuste en get_poll_by_token (no filtrar expirados)
+//  Ver docs/SUPABASE_PENDING.md
+// ------------------------------------------------------------
+
+/**
+ * Cierra un poll inmediatamente seteando expires_at = now().
+ * La UI ya sabe manejar el estado "expired" (banner, bloqueo de voto, etc.).
+ */
+export async function closePoll(token: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('polls')
+      .update({ expires_at: new Date().toISOString() })
+      .eq('token', token)
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    toast.error(logSupabaseError('closePoll', error))
+    return false
+  }
+}
+
+/**
+ * Actualiza el título de un poll.
+ */
+export async function updatePollTitle(token: string, title: string): Promise<boolean> {
+  try {
+    const clean = title.trim()
+    if (!clean) return false
+
+    const { error } = await supabase
+      .from('polls')
+      .update({ title: clean })
+      .eq('token', token)
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    toast.error(logSupabaseError('updatePollTitle', error))
+    return false
+  }
+}
+
 // ============ TOURNAMENTS ============
 
 export async function createTournament(
@@ -368,6 +416,54 @@ export async function deleteTournament(token: string): Promise<boolean> {
     return true
   } catch (error) {
     toast.error(logSupabaseError('deleteTournament', error))
+    return false
+  }
+}
+
+// ------------------------------------------------------------
+//  closeTournament / updateTournamentTitle
+//  Usan la policy tourn_update ya existente — no hace falta
+//  tocar RLS para versus. Ver docs/SUPABASE_PENDING.md
+// ------------------------------------------------------------
+
+/**
+ * Cierra un torneo inmediatamente: setea expires_at = now() y status='expired'.
+ */
+export async function closeTournament(token: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('tournaments')
+      .update({
+        expires_at: new Date().toISOString(),
+        status: 'expired',
+      })
+      .eq('token', token)
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    toast.error(logSupabaseError('closeTournament', error))
+    return false
+  }
+}
+
+/**
+ * Actualiza el título de un torneo.
+ */
+export async function updateTournamentTitle(token: string, title: string): Promise<boolean> {
+  try {
+    const clean = title.trim()
+    if (!clean) return false
+
+    const { error } = await supabase
+      .from('tournaments')
+      .update({ title: clean })
+      .eq('token', token)
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    toast.error(logSupabaseError('updateTournamentTitle', error))
     return false
   }
 }

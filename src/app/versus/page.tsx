@@ -205,13 +205,13 @@ function VersusCard({
     <div className="relative group">
       <Link
         href={`/versus/${entry.token}`}
-        className="block h-full bg-[var(--surface)] rounded-2xl border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-xl hover:-translate-y-0.5 transition-all p-5 min-w-0"
+        className="block h-full bg-[var(--surface)] rounded-2xl border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-xl hover:-translate-y-0.5 transition-all p-4 sm:p-5 min-w-0"
       >
         <div className="flex items-start gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] flex items-center justify-center text-white flex-shrink-0">
             <Swords className="w-5 h-5" />
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-8">
             <h3 className="font-bold text-[var(--text)] truncate">{entry.title}</h3>
             {entry.createdBy && entry.role === 'participant' && (
               <p className="text-xs text-[var(--text-muted)] truncate">

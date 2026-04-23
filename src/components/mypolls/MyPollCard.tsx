@@ -42,11 +42,11 @@ export function MyPollCard({ entry, href, onRemove, meta }: MyPollCardProps) {
     <div className="relative group">
       <Link
         href={href}
-        className="block bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-lg transition-all p-5 min-w-0"
+        className="block bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-lg transition-all p-4 sm:p-5 min-w-0"
       >
         <div className="flex items-start justify-between gap-3 min-w-0">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-[var(--text)] mb-1 truncate">
+            <h3 className={`text-base sm:text-lg font-bold text-[var(--text)] mb-1 truncate ${onRemove ? 'pr-8' : ''}`}>
               {entry.title}
             </h3>
             <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-muted)]">

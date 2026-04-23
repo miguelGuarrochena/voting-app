@@ -7,14 +7,17 @@ import toast from 'react-hot-toast';
 import { Share2, ArrowLeft, GripVertical, Check } from 'lucide-react';
 
 import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
-import { getPoll, submitResponse, getPollResponses } from '@/lib/db';
-import { addMyPoll } from '@/lib/mypolls';
+import { getPoll, submitResponse, getPollResponses, deletePoll, closePoll, updatePollTitle } from '@/lib/db';
+import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
 import { supabase } from '@/lib/supabase';
 
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import EditTitleModal from '@/components/modals/EditTitleModal';
 
 // ------------------------------------------------------------
 //  RANKING — Detalle por token
@@ -41,6 +44,10 @@ export default function RankingTokenPage() {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [expired, setExpired] = useState(false);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  const [isCreator, setIsCreator] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -69,6 +76,9 @@ export default function RankingTokenPage() {
         createdBy: data.createdBy,
         expiresAt: data.expiresAt,
       });
+
+      const my = findMyPoll(token);
+      setIsCreator(my?.role === 'creator');
 
       const responses = await getPollResponses(token);
       setResponses(responses);
@@ -171,6 +181,31 @@ export default function RankingTokenPage() {
     }
   };
 
+  const handleDelete = async () => {
+    const ok = await deletePoll(token);
+    if (!ok) return;
+    removeMyPoll(token);
+    toast.success(t('common.removed'));
+    router.push('/ranking');
+  };
+
+  const handleCloseNow = async () => {
+    const ok = await closePoll(token);
+    if (!ok) return;
+    toast.success(t('poll.closedToast'));
+    setExpired(true);
+    setTimeRemaining(0);
+    setPollData((prev: any) => prev ? { ...prev, expiresAt: new Date().toISOString() } : prev);
+  };
+
+  const handleEditTitle = async (newTitle: string): Promise<boolean> => {
+    const ok = await updatePollTitle(token, newTitle);
+    if (!ok) return false;
+    toast.success(t('poll.titleUpdated'));
+    setPollData((prev: any) => prev ? { ...prev, title: newTitle } : prev);
+    return true;
+  };
+
   if (loading) return <FullPageSpinner />;
 
   if (error === 'not_found') {
@@ -194,28 +229,42 @@ export default function RankingTokenPage() {
   return (
     <PageLayout className="pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
-        {/* Header */}
+        {/* Breadcrumb */}
+        <button
+          onClick={() => safeBack(router, '/ranking')}
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-3"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>{t('ranking.title')}</span>
+        </button>
+
+        {/* Header: título + acciones */}
         <div className="flex items-start justify-between gap-3 mb-4 sm:mb-6">
-          <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text)] break-words min-w-0 flex-1">
+            {pollData.title}
+          </h1>
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              onClick={() => safeBack(router, '/ranking')}
-              className="hidden sm:flex p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors flex-shrink-0"
-              aria-label={t('common.back')}
+              onClick={handleShare}
+              className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] transition-colors rounded-full sm:rounded-lg font-medium"
+              aria-label={t('common.share')}
             >
-              <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
+              <Share2 size={18} />
+              <span className="hidden sm:inline ml-2 text-sm">{t('common.share')}</span>
             </button>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text)] break-words">
-              {pollData.title}
-            </h1>
+            {isCreator && (
+              <OwnerMenu
+                ariaLabel={t('common.actions') || 'Acciones'}
+                items={buildOwnerItems({
+                  expired,
+                  t,
+                  onEdit: () => setShowEditModal(true),
+                  onClose: () => setShowCloseModal(true),
+                  onDelete: () => setShowDeleteModal(true),
+                })}
+              />
+            )}
           </div>
-          <button
-            onClick={handleShare}
-            className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] transition-colors rounded-full sm:rounded-lg font-medium flex-shrink-0"
-            aria-label={t('common.share')}
-          >
-            <Share2 size={18} />
-            <span className="hidden sm:inline ml-2 text-sm">{t('common.share')}</span>
-          </button>
         </div>
 
         {/* Countdown */}
@@ -325,8 +374,64 @@ export default function RankingTokenPage() {
           </Link>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title={t('poll.deletePoll')}
+        subtitle={t('poll.deleteConfirm')}
+        cancelText={t('poll.cancel')}
+        confirmText={t('poll.delete')}
+      />
+
+      <ConfirmModal
+        isOpen={showCloseModal}
+        onClose={() => setShowCloseModal(false)}
+        onConfirm={handleCloseNow}
+        title={t('poll.closeNowTitle')}
+        subtitle={t('poll.closeNowConfirm')}
+        cancelText={t('poll.cancel')}
+        confirmText={t('poll.closeNowConfirmBtn')}
+        variant="warning"
+      />
+
+      <EditTitleModal
+        isOpen={showEditModal}
+        initialTitle={pollData?.title || ''}
+        onClose={() => setShowEditModal(false)}
+        onSave={handleEditTitle}
+        title={t('poll.editTitle')}
+        subtitle={t('poll.editTitleSubtitle')}
+        cancelText={t('poll.cancel')}
+        saveText={t('poll.save')}
+        placeholder={t('poll.titlePlaceholder')}
+      />
     </PageLayout>
   );
+}
+
+function buildOwnerItems({
+  expired,
+  t,
+  onEdit,
+  onClose,
+  onDelete,
+}: {
+  expired: boolean;
+  t: (k: string) => string;
+  onEdit: () => void;
+  onClose: () => void;
+  onDelete: () => void;
+}): OwnerMenuItem[] {
+  const items: OwnerMenuItem[] = [
+    { label: t('poll.editTitle'), onClick: onEdit, variant: 'default' },
+  ];
+  if (!expired) {
+    items.push({ label: t('poll.closeNow'), onClick: onClose, variant: 'warning' });
+  }
+  items.push({ label: t('poll.deletePoll'), onClick: onDelete, variant: 'danger', divider: true });
+  return items;
 }
 
 // ============================================================

@@ -258,7 +258,7 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
             </button>
             <div className="flex-1">
-              <h1 className="font-display text-2xl md:text-3xl font-bold text-[var(--text)] mb-2">
+              <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text)] mb-2 break-words">
                 {poll.title}
               </h1>
               {poll.description && (
@@ -270,11 +270,11 @@ const PollDetail = ({ pollId }: PollDetailProps) => {
           </div>
 
           {/* Share Button - Icon only on mobile, full button on desktop */}
-          <button onClick={handleShare} className="flex items-center justify-center w-10 h-10 md:w-auto md:px-5 md:py-2.5 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white hover:shadow-lg transition-all rounded-full font-medium flex-shrink-0">
+          <button onClick={handleShare} className="flex items-center justify-center w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white hover:shadow-lg transition-all rounded-full font-medium flex-shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            <span className="hidden md:inline text-sm font-medium ml-2">{shareCopied ? t('poll.copied') : t('poll.share')}</span>
+            <span className="hidden sm:inline text-sm font-medium ml-2">{shareCopied ? t('poll.copied') : t('poll.share')}</span>
           </button>
         </div>
 

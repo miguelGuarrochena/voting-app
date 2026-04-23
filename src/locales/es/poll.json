@@ -30,5 +30,15 @@
   "results": "Resultados",
   "dangerZone": "Zona de peligro",
   "closingIn": "Cierra en",
-  "votes": "votos"
+  "votes": "votos",
+  "editTitle": "Editar título",
+  "editTitleSubtitle": "Cambiá el título de esta encuesta",
+  "titlePlaceholder": "Título de la encuesta",
+  "save": "Guardar",
+  "titleUpdated": "Título actualizado",
+  "closeNow": "Cerrar ahora",
+  "closeNowTitle": "¿Cerrar esta encuesta?",
+  "closeNowConfirm": "No se van a aceptar más votos. Los resultados quedan visibles pero la encuesta se bloquea.",
+  "closeNowConfirmBtn": "Cerrar ahora",
+  "closedToast": "Encuesta cerrada"
 }

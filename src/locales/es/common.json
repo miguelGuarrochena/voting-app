@@ -30,5 +30,6 @@
   "copyFail": "No se pudo copiar el link",
   "results": "Resultados",
   "liveResults": "Resultados en vivo",
-  "seeResultsBelow": "Mira los resultados debajo"
+  "seeResultsBelow": "Mira los resultados debajo",
+  "actions": "Acciones"
 }

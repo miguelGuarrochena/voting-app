@@ -30,5 +30,15 @@
   "results": "Results",
   "dangerZone": "Danger zone",
   "closingIn": "Closing in",
-  "votes": "votes"
+  "votes": "votes",
+  "editTitle": "Edit title",
+  "editTitleSubtitle": "Change the title of this poll",
+  "titlePlaceholder": "Poll title",
+  "save": "Save",
+  "titleUpdated": "Title updated",
+  "closeNow": "Close now",
+  "closeNowTitle": "Close this poll?",
+  "closeNowConfirm": "No more votes will be accepted. Results will be visible but the poll is locked.",
+  "closeNowConfirmBtn": "Close now",
+  "closedToast": "Poll closed"
 }
