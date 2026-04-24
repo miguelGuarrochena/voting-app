@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -24,7 +24,7 @@ import { supabase } from '@/lib/supabase';
 //  En cualquier caso: redirigimos a `/` cuando terminamos.
 // ------------------------------------------------------------
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
@@ -115,5 +115,26 @@ export default function AuthCallbackPage() {
         </div>
       </div>
     </PageLayout>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <PageLayout className="pb-24 md:pb-8">
+        <div className="max-w-md mx-auto px-4 sm:px-6 pt-10">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 sm:p-8 text-center">
+            <div className="flex justify-center mb-3">
+              <div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+            </div>
+            <p className="text-sm text-[var(--text-muted)]">
+              Cargando...
+            </p>
+          </div>
+        </div>
+      </PageLayout>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
