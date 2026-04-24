@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Share2, ArrowLeft, GripVertical, Check, Eye, ChevronUp, ChevronDown } from 'lucide-react';
+import { Share2, ArrowLeft, GripVertical, Check, Eye, ChevronUp, ChevronDown, Lock } from 'lucide-react';
 
-import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { isTerminal, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses, deletePoll, closePoll, updatePollTitle } from '@/lib/db';
 import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
@@ -70,7 +70,7 @@ export default function RankingTokenPage() {
       }
 
       setPollData(data);
-      setExpired(isExpired(new Date(data.expiresAt)));
+      setExpired(isTerminal(new Date(data.expiresAt), data.closedAt));
       setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
       setLoading(false);
 
@@ -227,7 +227,9 @@ export default function RankingTokenPage() {
     toast.success(t('poll.closedToast'));
     setExpired(true);
     setTimeRemaining(0);
-    setPollData((prev: any) => prev ? { ...prev, expiresAt: new Date().toISOString() } : prev);
+    setPollData((prev: any) =>
+      prev ? { ...prev, closedAt: new Date().toISOString() } : prev
+    );
   };
 
   const handleEditTitle = async (newTitle: string): Promise<boolean> => {
@@ -327,19 +329,27 @@ export default function RankingTokenPage() {
           </button>
         )}
 
-        {/* Countdown */}
-        <div
-          className={`rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border ${
-            expired
-              ? 'bg-[var(--badge-neutral-bg)] border-[var(--border)]'
-              : 'bg-[var(--primary-light)]/40 border-[var(--primary-light)]'
-          }`}
-        >
-          <p className="text-xs text-[var(--text-muted)] mb-1">{t('votes.timeRemaining')}</p>
-          <p className="text-lg sm:text-xl font-bold text-[var(--primary)]">
-            {expired ? t('common.expired') : formatTimeRemaining(timeRemaining)}
-          </p>
-        </div>
+        {/* Countdown / closed banner */}
+        {expired ? (
+          <div className="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border bg-[var(--badge-neutral-bg)] border-[var(--border)]">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <Lock className="w-4 h-4 text-[var(--text-muted)]" />
+              <p className="text-lg sm:text-xl font-bold text-[var(--text)]">
+                {t('poll.closedLabel')}
+              </p>
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">
+              {pollData.closedAt ? t('poll.closedByCreator') : t('poll.closedByTime')}
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border bg-[var(--primary-light)]/40 border-[var(--primary-light)]">
+            <p className="text-xs text-[var(--text-muted)] mb-1">{t('votes.timeRemaining')}</p>
+            <p className="text-lg sm:text-xl font-bold text-[var(--primary)]">
+              {formatTimeRemaining(timeRemaining)}
+            </p>
+          </div>
+        )}
 
         {hasVotedState && !expired && (
           <div className="flex items-center gap-2 bg-[var(--badge-success-bg)] text-[var(--badge-success-text)] rounded-xl px-4 py-3 mb-4 sm:mb-6 text-sm">

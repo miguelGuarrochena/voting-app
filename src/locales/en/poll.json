@@ -53,6 +53,10 @@
   "expiredEditDesc": "You cannot edit a poll that has already expired",
   "hasResponses": "Votes already received",
   "hasResponsesDesc": "You cannot edit the options of a poll that has already received responses. You can close it and create a new one.",
+  "closedLabel": "Closed",
+  "closedByCreator": "Closed by creator",
+  "closedByTime": "Time ended",
+  "closedHint": "This poll is no longer accepting responses.",
   "editRatingHint": "You can update the title, description and cover image. The rated items cannot be edited from here.",
   "editRatingItemsNote": "To change the items, create a new rating or delete this one and start over."
 }

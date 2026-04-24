@@ -7,7 +7,8 @@ import toast from 'react-hot-toast';
 import { Share2, ArrowLeft, Check, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { isExpired, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { isTerminal, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
+import { Lock } from 'lucide-react';
 import { getPoll, submitResponse, getPollResponses, deletePoll, closePoll, updatePollTitle } from '@/lib/db';
 import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
@@ -73,7 +74,7 @@ export default function VoteTokenPage() {
       }
 
       setPollData(data);
-      setExpired(isExpired(new Date(data.expiresAt)));
+      setExpired(isTerminal(new Date(data.expiresAt), data.closedAt));
       setTimeRemaining(getTimeRemaining(new Date(data.expiresAt)));
       setLoading(false);
 
@@ -185,7 +186,9 @@ export default function VoteTokenPage() {
     toast.success(t('poll.closedToast'));
     setExpired(true);
     setTimeRemaining(0);
-    setPollData((prev: any) => prev ? { ...prev, expiresAt: new Date().toISOString() } : prev);
+    setPollData((prev: any) =>
+      prev ? { ...prev, closedAt: new Date().toISOString() } : prev
+    );
   };
 
   const handleEditTitle = async (newTitle: string): Promise<boolean> => {
@@ -309,19 +312,27 @@ export default function VoteTokenPage() {
           </button>
         )}
 
-        {/* Countdown / expired banner */}
-        <div
-          className={`rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border ${
-            expired
-              ? 'bg-[var(--badge-neutral-bg)] border-[var(--border)]'
-              : 'bg-[var(--primary-light)]/40 border-[var(--primary-light)]'
-          }`}
-        >
-          <p className="text-xs text-[var(--text-muted)] mb-1">{t('votes.timeRemaining')}</p>
-          <p className="text-lg sm:text-xl font-bold text-[var(--primary)]">
-            {expired ? t('common.expired') : formatTimeRemaining(timeRemaining)}
-          </p>
-        </div>
+        {/* Countdown / closed banner */}
+        {expired ? (
+          <div className="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border bg-[var(--badge-neutral-bg)] border-[var(--border)]">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <Lock className="w-4 h-4 text-[var(--text-muted)]" />
+              <p className="text-lg sm:text-xl font-bold text-[var(--text)]">
+                {t('poll.closedLabel')}
+              </p>
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">
+              {pollData.closedAt ? t('poll.closedByCreator') : t('poll.closedByTime')}
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border bg-[var(--primary-light)]/40 border-[var(--primary-light)]">
+            <p className="text-xs text-[var(--text-muted)] mb-1">{t('votes.timeRemaining')}</p>
+            <p className="text-lg sm:text-xl font-bold text-[var(--primary)]">
+              {formatTimeRemaining(timeRemaining)}
+            </p>
+          </div>
+        )}
 
         {/* Banner después de votar */}
         {hasVotedState && !expired && (

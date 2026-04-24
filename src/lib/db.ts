@@ -134,6 +134,7 @@ export async function getPoll(token: string): Promise<any | null> {
     return {
       ...row,
       expiresAt: row.expires_at,
+      closedAt: row.closed_at ?? null,
       createdBy: row.created_by,
       // alias camelCase para campos opcionales (pueden no existir si la
       // migración content-v3.sql no fue aplicada todavía).
@@ -152,37 +153,32 @@ export async function submitResponse(
 ): Promise<boolean> {
   try {
     // ------------------------------------------------------------
-    //  Workaround de upsert:
-    //  .upsert() de supabase-js manda Prefer: return=representation,
-    //  que fuerza un RETURNING y requiere policy de SELECT. Como el
-    //  diseño privacy-first NO tiene policy de SELECT (todas las
-    //  lecturas van por RPC), el upsert rompe con 42501.
-    //
-    //  Reemplazo: INSERT plano (return=minimal, no requiere SELECT).
-    //  Si choca la UNIQUE (23505) → caemos a UPDATE.
+    //  Usa la RPC submit_response_rpc (SECURITY DEFINER), que:
+    //   1) valida que la encuesta exista y no esté en estado terminal
+    //      (closed_at IS NULL AND expires_at > now()),
+    //   2) hace upsert por (poll_token, username).
+    //  Si la encuesta está cerrada, el RPC tira 'poll_closed' y le
+    //  mostramos un toast específico al usuario.
     // ------------------------------------------------------------
-    const insertRes = await supabase
-      .from('poll_responses')
-      .insert({
-        poll_token: pollToken,
-        username,
-        response
-      })
+    const { error } = await supabase.rpc('submit_response_rpc', {
+      p_token: pollToken,
+      p_username: username,
+      p_response: response,
+    })
 
-    // 23505 = unique_violation → ya existe una fila del mismo usuario
-    // para este poll. Actualizamos la response.
-    if (insertRes.error && insertRes.error.code === '23505') {
-      const updateRes = await supabase
-        .from('poll_responses')
-        .update({ response })
-        .eq('poll_token', pollToken)
-        .eq('username', username)
-
-      if (updateRes.error) throw updateRes.error
-      return true
+    if (error) {
+      // Mensaje específico cuando la encuesta está cerrada
+      if (error.message?.includes('poll_closed')) {
+        toast.error('La encuesta está cerrada, no se aceptan más respuestas.')
+        return false
+      }
+      if (error.message?.includes('poll_not_found')) {
+        toast.error('Encuesta no encontrada.')
+        return false
+      }
+      throw error
     }
 
-    if (insertRes.error) throw insertRes.error
     return true
   } catch (error) {
     toast.error(logSupabaseError('submitResponse', error))
@@ -229,18 +225,18 @@ export async function deletePoll(token: string): Promise<boolean> {
 // ------------------------------------------------------------
 
 /**
- * Cierra un poll inmediatamente seteando expires_at = now().
- * La UI ya sabe manejar el estado "expired" (banner, bloqueo de voto, etc.).
+ * Cierra un poll inmediatamente seteando closed_at = now().
+ * Usa la RPC close_poll_rpc (SECURITY DEFINER) para saltar RLS.
+ * La UI ya sabe manejar el estado "terminal" (banner, bloqueo de voto, etc.).
  */
 export async function closePoll(token: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('polls')
-      .update({ expires_at: new Date().toISOString() })
-      .eq('token', token)
+    const { data, error } = await supabase.rpc('close_poll_rpc', {
+      p_token: token,
+    })
 
     if (error) throw error
-    return true
+    return data === true
   } catch (error) {
     toast.error(logSupabaseError('closePoll', error))
     return false
@@ -248,19 +244,25 @@ export async function closePoll(token: string): Promise<boolean> {
 }
 
 /**
- * Actualiza el título de un poll.
+ * Actualiza el título de un poll via RPC (valida que no esté cerrada).
  */
 export async function updatePollTitle(token: string, title: string): Promise<boolean> {
   try {
     const clean = title.trim()
     if (!clean) return false
 
-    const { error } = await supabase
-      .from('polls')
-      .update({ title: clean })
-      .eq('token', token)
+    const { error } = await supabase.rpc('update_poll_title_rpc', {
+      p_token: token,
+      p_title: clean,
+    })
 
-    if (error) throw error
+    if (error) {
+      if (error.message?.includes('poll_closed')) {
+        toast.error('La encuesta está cerrada, no se puede editar.')
+        return false
+      }
+      throw error
+    }
     return true
   } catch (error) {
     toast.error(logSupabaseError('updatePollTitle', error))
@@ -269,8 +271,8 @@ export async function updatePollTitle(token: string, title: string): Promise<boo
 }
 
 /**
- * Actualiza un poll completo (título, descripción, imagen, opciones).
- * Solo permitido si el creador aún no votó.
+ * Actualiza un poll completo (título, descripción, imagen, opciones) via RPC.
+ * El RPC rechaza con 'poll_closed' si la encuesta está terminal.
  */
 export async function updatePoll(
   token: string,
@@ -282,30 +284,26 @@ export async function updatePoll(
   }
 ): Promise<boolean> {
   try {
-    const payload: Record<string, any> = {
-      title: data.title.trim(),
+    const trimmedDesc = data.description?.trim()
+    const trimmedCover = data.coverImage?.trim()
+
+    const { error } = await supabase.rpc('update_poll_rpc', {
+      p_token: token,
+      p_title: data.title.trim(),
+      p_description: data.description !== undefined ? (trimmedDesc || null) : null,
+      p_cover: data.coverImage !== undefined ? (trimmedCover || null) : null,
+      p_options: data.options !== undefined ? data.options : null,
+      p_clear_desc: data.description !== undefined && !trimmedDesc,
+      p_clear_cover: data.coverImage !== undefined && !trimmedCover,
+    })
+
+    if (error) {
+      if (error.message?.includes('poll_closed')) {
+        toast.error('La encuesta está cerrada, no se puede editar.')
+        return false
+      }
+      throw error
     }
-
-    // options es opcional — si no se manda, no tocamos las opciones existentes
-    // (ratings edit sólo edita metadata, no items)
-    if (data.options !== undefined) {
-      payload.options = data.options
-    }
-
-    if (data.description !== undefined) {
-      payload.description = data.description.trim() || null
-    }
-
-    if (data.coverImage !== undefined) {
-      payload.cover_image = data.coverImage.trim() || null
-    }
-
-    const { error } = await supabase
-      .from('polls')
-      .update(payload)
-      .eq('token', token)
-
-    if (error) throw error
     return true
   } catch (error) {
     toast.error(logSupabaseError('updatePoll', error))
