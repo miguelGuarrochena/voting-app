@@ -18,6 +18,7 @@ import versusEn from '@/locales/en/versus.json';
 import footerEn from '@/locales/en/footer.json';
 import rankingEn from '@/locales/en/ranking.json';
 import ratingsEn from '@/locales/en/ratings.json';
+import authEn from '@/locales/en/auth.json';
 
 import commonEs from '@/locales/es/common.json';
 import navEs from '@/locales/es/nav.json';
@@ -34,6 +35,7 @@ import versusEs from '@/locales/es/versus.json';
 import footerEs from '@/locales/es/footer.json';
 import rankingEs from '@/locales/es/ranking.json';
 import ratingsEs from '@/locales/es/ratings.json';
+import authEs from '@/locales/es/auth.json';
 
 type Language = 'en' | 'es';
 
@@ -77,7 +79,8 @@ const translations = {
     ...flattenObject(versusEn, 'versus'),
     ...flattenObject(footerEn, 'footer'),
     ...flattenObject(rankingEn, 'ranking'),
-    ...flattenObject(ratingsEn, 'ratings')
+    ...flattenObject(ratingsEn, 'ratings'),
+    ...flattenObject(authEn, 'auth')
   },
   es: {
     ...flattenObject(commonEs, 'common'),
@@ -94,7 +97,8 @@ const translations = {
     ...flattenObject(versusEs, 'versus'),
     ...flattenObject(footerEs, 'footer'),
     ...flattenObject(rankingEs, 'ranking'),
-    ...flattenObject(ratingsEs, 'ratings')
+    ...flattenObject(ratingsEs, 'ratings'),
+    ...flattenObject(authEs, 'auth')
   }
 };
 

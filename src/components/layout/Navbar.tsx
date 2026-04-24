@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { useUsername } from '@/context/UsernameContext';
+import { useAuth } from '@/context/AuthContext';
+import { signOut } from '@/lib/auth';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
@@ -12,7 +14,7 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe, Swords } from 'lucide-react';
+import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe, Swords, LogIn, LogOut } from 'lucide-react';
 import ThemeLanguageSwitcher from '@/components/layout/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 import { safeBack } from '@/lib/navigation';
@@ -21,6 +23,7 @@ import { FEATURES } from '@/lib/features';
 const Navbar = () => {
   const { t, language, toggleLanguage } = useLanguage();
   const { username, setUsername } = useUsername();
+  const { user: authUser, email: authEmail } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
@@ -53,8 +56,33 @@ const Navbar = () => {
     }
   };
 
-  const handleDeleteUsername = () => {
+  // Logout unificado: si hay sesión de auth la cierra, y siempre limpia el
+  // username local + reload. Esto evita el doble "Cerrar sesión" que
+  // confundía (uno era signOut y el otro borrar username).
+  const handleLogout = async () => {
+    setShowMobileMenu(false);
+    setShowUsernameMenu(false);
+    if (authUser) {
+      try {
+        await signOut();
+      } catch {
+        // si falla signOut, seguimos con el clear local igual
+      }
+    }
     localStorage.removeItem('pickly_username');
+    // Limpiar dismiss del modal anon — sessionStorage sobrevive reloads
+    // y si el user retoma creación sin cuenta queremos que vuelva a
+    // aparecer (bug: entraba al /create con draft y sin disclaimer).
+    try {
+      const toRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i);
+        if (k && k.startsWith('pickly_anon_modal_dismissed:')) toRemove.push(k);
+      }
+      toRemove.forEach((k) => sessionStorage.removeItem(k));
+    } catch {
+      /* ignore */
+    }
     window.location.reload();
   };
 
@@ -213,16 +241,33 @@ const Navbar = () => {
                 </div>
               )}
 
-              {username && (
-                <>
-                  <div className="border-t border-[var(--border)] my-2"></div>
-                  <button
-                    onClick={handleDeleteUsername}
-                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  >
-                    <span>{t('nav.logout')}</span>
-                  </button>
-                </>
+              {/* Auth / logout section unificada */}
+              <div className="border-t border-[var(--border)] my-2"></div>
+              {authUser && authEmail && (
+                <div className="px-4 py-2">
+                  <p className="text-xs text-[var(--text-muted)] truncate">
+                    {authEmail}
+                  </p>
+                </div>
+              )}
+              {!authUser && (
+                <Link
+                  href="/auth/login"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                >
+                  <LogIn className="w-5 h-5" />
+                  <span>{t('auth.navSignIn')}</span>
+                </Link>
+              )}
+              {(username || authUser) && (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>{t('nav.logout')}</span>
+                </button>
               )}
             </div>
           </div>
@@ -543,7 +588,14 @@ const Navbar = () => {
                       </div>
                     </button>
                     {showUsernameMenu && (
-                      <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl shadow-[var(--primary)]/10 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl shadow-[var(--primary)]/10 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                        {authUser && authEmail && (
+                          <div className="px-4 py-2 border-b border-[var(--border)] mb-1">
+                            <p className="text-xs text-[var(--text-muted)] truncate">
+                              {authEmail}
+                            </p>
+                          </div>
+                        )}
                         <button
                           onClick={() => {
                             setShowChangeUsernameModal(true);
@@ -554,11 +606,21 @@ const Navbar = () => {
                           <span>✏️</span>
                           <span>{t('nav.changeName')}</span>
                         </button>
+                        {!authUser && (
+                          <Link
+                            href="/auth/login"
+                            onClick={() => setShowUsernameMenu(false)}
+                            className="w-full px-4 py-2.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2"
+                          >
+                            <LogIn className="w-4 h-4" />
+                            <span>{t('auth.navSignIn')}</span>
+                          </Link>
+                        )}
                         <button
-                          onClick={handleDeleteUsername}
+                          onClick={handleLogout}
                           className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
                         >
-                          <span>🚪</span>
+                          <LogOut className="w-4 h-4" />
                           <span>{t('nav.logout')}</span>
                         </button>
                       </div>

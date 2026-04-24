@@ -6,29 +6,32 @@ import toast from 'react-hot-toast';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { MyPollCard } from '@/components/mypolls/MyPollCard';
 import { ListingEmptyState } from '@/components/mypolls/ListingEmptyState';
 import {
-  getMyPolls,
   removeMyPoll,
   pruneExpiredMyPolls,
   type MyPollEntry,
 } from '@/lib/mypolls';
+import { getMyPollsHybrid } from '@/lib/mypollsHybrid';
 
 export default function VotesPage() {
   const { t } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [entries, setEntries] = useState<MyPollEntry[]>([]);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     pruneExpiredMyPolls();
-    setEntries(getMyPolls('vote'));
-  }, []);
+    const list = await getMyPollsHybrid('vote', !!user);
+    setEntries(list);
+  }, [user]);
 
   useEffect(() => {
     setMounted(true);
-    refresh();
-  }, [refresh]);
+    if (!authLoading) refresh();
+  }, [refresh, authLoading]);
 
   const handleRemove = (token: string) => {
     removeMyPoll(token);

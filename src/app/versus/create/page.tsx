@@ -15,6 +15,7 @@ import { generateBracket } from '@/lib/bracket';
 import { VersusTournament, VersusOption } from '@/types/versus';
 import { FEATURES } from '@/lib/features';
 import { VersusComingSoon } from '@/components/versus/ComingSoon';
+import { AnonCreateModal } from '@/components/auth/AnonCreateModal';
 
 type OptionForm = {
   id: string;
@@ -182,6 +183,8 @@ function CreateVersusPageInner() {
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">{t('versus.createTournament')}</h1>
+
+        <AnonCreateModal />
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}

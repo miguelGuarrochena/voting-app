@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { BarChart2, Trophy, RefreshCw, Star, Swords } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
+import { ClaimBanner } from '@/components/auth/ClaimBanner';
 import { useLanguage } from '@/context/LanguageContext';
 import { FEATURES } from '@/lib/features';
 
@@ -70,6 +71,11 @@ export default function Home() {
 
   return (
     <PageLayout className="pb-24 md:pb-8">
+        {/* Claim flow banner (solo si hay user logueado con polls locales) */}
+        <div className="pt-4">
+          <ClaimBanner />
+        </div>
+
         {/* Hero Section */}
         <div className="text-center pb-16 sm:pb-20 lg:pb-24">
           <motion.div

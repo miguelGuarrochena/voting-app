@@ -73,14 +73,14 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_found boolean;
+  v_rows int;
 BEGIN
   UPDATE public.polls
      SET closed_at = COALESCE(closed_at, now())
    WHERE token = p_token;
 
-  GET DIAGNOSTICS v_found = ROW_COUNT;
-  RETURN v_found > 0;
+  GET DIAGNOSTICS v_rows = ROW_COUNT;
+  RETURN v_rows > 0;
 END;
 $$;
 

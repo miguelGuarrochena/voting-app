@@ -5,6 +5,7 @@ import Navbar from '@/components/layout/Navbar';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { UsernameProvider } from '@/context/UsernameContext';
+import { AuthProvider } from '@/context/AuthContext';
 import StoreProvider from '@/providers/StoreProvider';
 import { ErrorBoundary } from '@/components/states/ErrorBoundary';
 import Footer from '@/components/layout/Footer';
@@ -23,23 +24,48 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Polls - Create and Share Polls",
-  description: "Create and share polls with your community. Social voting made fun and easy.",
-  manifest: "/manifest.json",
+  metadataBase: new URL('https://letspicky.com'),
+  title: {
+    default: 'Pickly — Crea y comparte encuestas en segundos',
+    template: '%s · Pickly',
+  },
+  description:
+    'Pickly es la forma más simple de crear encuestas, rankings, ratings y torneos para compartir con amigos. Sin registro obligatorio, sin complicaciones.',
+  applicationName: 'Pickly',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "Polls",
+    statusBarStyle: 'default',
+    title: 'Pickly',
   },
   openGraph: {
-    title: "Polls - Create and Share Polls",
-    description: "Create and share polls with your community. Social voting made fun and easy.",
-    type: "website",
+    title: 'Pickly — Crea y comparte encuestas en segundos',
+    description:
+      'Crea encuestas, rankings, ratings y torneos 1-vs-1. Compartí el link y votá en segundos, sin registro.',
+    url: 'https://letspicky.com',
+    siteName: 'Pickly',
+    type: 'website',
+    locale: 'es_AR',
+    images: [
+      {
+        url: '/icon-512.png',
+        width: 512,
+        height: 512,
+        alt: 'Pickly',
+      },
+    ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Polls - Create and Share Polls",
-    description: "Create and share polls with your community. Social voting made fun and easy.",
+    card: 'summary_large_image',
+    title: 'Pickly — Crea y comparte encuestas en segundos',
+    description:
+      'Encuestas, rankings, ratings y torneos. Compartí el link y votá en segundos, sin registro.',
+    images: ['/icon-512.png'],
   },
 };
 
@@ -52,23 +78,25 @@ const RootLayout = ({
     <html lang="en" className="h-full">
       <body className={`${inter.className} flex flex-col min-h-screen`}>
         <ErrorBoundary>
-          <UsernameProvider>
-            <ThemeProvider>
-              <LanguageProvider>
-                <StoreProvider>
-                  <CleanupEffect />
-                  <OnboardingScreen />
-                  <Navbar />
-                  <main className="flex-grow flex flex-col">
-                    <ErrorBoundary>
-                      {children}
-                    </ErrorBoundary>
-                  </main>
-                  <Footer />
-                </StoreProvider>
-              </LanguageProvider>
-            </ThemeProvider>
-          </UsernameProvider>
+          <AuthProvider>
+            <UsernameProvider>
+              <ThemeProvider>
+                <LanguageProvider>
+                  <StoreProvider>
+                    <CleanupEffect />
+                    <OnboardingScreen />
+                    <Navbar />
+                    <main className="flex-grow flex flex-col">
+                      <ErrorBoundary>
+                        {children}
+                      </ErrorBoundary>
+                    </main>
+                    <Footer />
+                  </StoreProvider>
+                </LanguageProvider>
+              </ThemeProvider>
+            </UsernameProvider>
+          </AuthProvider>
         </ErrorBoundary>
         <Toaster position="bottom-center" toastOptions={{
           duration: 3000,

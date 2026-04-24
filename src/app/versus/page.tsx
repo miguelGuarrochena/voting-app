@@ -7,13 +7,14 @@ import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Swords, Trophy, Clock, Users } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { ListingEmptyState } from '@/components/mypolls/ListingEmptyState';
 import {
-  getMyPolls,
   removeMyPoll,
   pruneExpiredMyPolls,
   type MyPollEntry,
 } from '@/lib/mypolls';
+import { getMyPollsHybrid } from '@/lib/mypollsHybrid';
 import { formatTimeRemaining, getTimeRemaining } from '@/lib/token';
 import { FEATURES } from '@/lib/features';
 import { VersusComingSoon } from '@/components/versus/ComingSoon';
@@ -30,18 +31,20 @@ export default function VersusPage() {
 
 function VersusPageInner() {
   const { t } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [entries, setEntries] = useState<MyPollEntry[]>([]);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     pruneExpiredMyPolls();
-    setEntries(getMyPolls('versus'));
-  }, []);
+    const list = await getMyPollsHybrid('versus', !!user);
+    setEntries(list);
+  }, [user]);
 
   useEffect(() => {
     setMounted(true);
-    refresh();
-  }, [refresh]);
+    if (!authLoading) refresh();
+  }, [refresh, authLoading]);
 
   const handleRemove = (token: string) => {
     removeMyPoll(token);

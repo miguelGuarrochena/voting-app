@@ -14,6 +14,7 @@ import { generateShareLink } from '@/lib/token';
 import { createPoll } from '@/lib/db';
 import { addMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
+import { AnonCreateModal } from '@/components/auth/AnonCreateModal';
 
 type RatingItemForm = {
   id: string;
@@ -207,6 +208,8 @@ export default function CreateRatingPage() {
             </div>
 
             <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">{t('ratings.createRating')}</h1>
+
+            <AnonCreateModal />
 
             <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}

@@ -12,6 +12,7 @@ import { addMyPoll } from '@/lib/mypolls';
 import { Trash2 } from 'lucide-react';
 import { PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { AnonCreateModal } from '@/components/auth/AnonCreateModal';
 
 
 type FormPollOption = {
@@ -367,6 +368,7 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      {!isEdit && <AnonCreateModal />}
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Poll Basics Section */}
         <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
