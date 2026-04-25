@@ -57,24 +57,21 @@ const Navbar = () => {
   };
 
   // Logout unificado: si hay sesión de auth la cierra, y siempre limpia el
-  // username local. Redirige a / (no reload) para evitar volver a una
-  // página de creación donde dispararía AnonCreateModal de inmediato.
-  const handleLogout = async () => {
+  // username local. Redirige a / con reload duro para limpiar todo.
+  //
+  // Orden importante: PRIMERO limpiamos local + redirigimos, DESPUÉS firamos
+  // el signOut() en background. Antes hacíamos await signOut() ANTES del
+  // redirect, lo que en redes lentas dejaba al user ~2s sin feedback visual
+  // ("nada pasa" cuando clickea logout). Ahora la UI responde instantáneo.
+  const handleLogout = () => {
     setShowMobileMenu(false);
     setShowUsernameMenu(false);
     setShowCreateMenu(false);
-    if (authUser) {
-      try {
-        await signOut();
-      } catch {
-        // si falla signOut, seguimos con el clear local igual
-      }
-    }
-    localStorage.removeItem('pickly_username');
-    // Limpiar dismiss del modal anon — sessionStorage sobrevive navegación
-    // y si el user retoma creación sin cuenta queremos que vuelva a
-    // aparecer (bug: entraba al /create con draft y sin disclaimer).
+
+    // 1) Limpiar local INMEDIATO (antes del redirect, garantiza que el next
+    //    page load no vea estado stale).
     try {
+      localStorage.removeItem('pickly_username');
       const toRemove: string[] = [];
       for (let i = 0; i < sessionStorage.length; i++) {
         const k = sessionStorage.key(i);
@@ -84,9 +81,19 @@ const Navbar = () => {
     } catch {
       /* ignore */
     }
-    // Forzar navegación con reload duro a / — limpia state, mata el modal
-    // del create flow si estábamos ahí, y refresca AuthContext.
-    window.location.href = '/';
+
+    // 2) Fire-and-forget signOut. La request a supabase.auth.signOut() se
+    //    sigue mandando, pero NO bloquea el redirect. El cookie/token
+    //    server-side se revoca en background; el client lo limpia ya.
+    if (authUser) {
+      void signOut().catch(() => {
+        /* la sesión local ya se va a limpiar con el reload */
+      });
+    }
+
+    // 3) Redirect duro (reload). Reemplaza la URL actual en el history,
+    //    así "back" no vuelve a la página privada en la que estaba.
+    window.location.replace('/');
   };
 
   // Handle mobile detection
