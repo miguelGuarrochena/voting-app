@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusIcon, Trash2, ArrowLeft, GripVertical, ChevronUp, ChevronDown, ArrowLeftRight } from 'lucide-react';
+import { PlusIcon, Trash2, ArrowLeft, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import toast from 'react-hot-toast';
 import { useUsername } from '@/context/UsernameContext';
@@ -62,7 +62,7 @@ function CreateVersusPageInner() {
     },
   };
 
-  const { errors, validateForm: validateFormHook, validateField, clearErrors, registerField } = useFormValidation(validationRules, {
+  const { errors, validateField, clearErrors, registerField } = useFormValidation(validationRules, {
     showToast: true,
     toastMessage: t('versus.completeRequiredFields'),
     scrollToFirstError: true,
@@ -110,22 +110,6 @@ function CreateVersusPageInner() {
       const next = [...current];
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
-      return next;
-    });
-  };
-
-  /**
-   * Intercambia los dos players de un mismo par (i*2 con i*2+1).
-   * Útil para que el user invierta quién es A y quién es B en un match
-   * sin tener que arrastrar.
-   */
-  const swapPair = (pairIndex: number) => {
-    const a = pairIndex * 2;
-    const b = pairIndex * 2 + 1;
-    setPlayers((current) => {
-      if (b >= current.length) return current;
-      const next = [...current];
-      [next[a], next[b]] = [next[b], next[a]];
       return next;
     });
   };
@@ -208,6 +192,17 @@ function CreateVersusPageInner() {
       return;
     }
 
+    // Bloquear nombres repetidos. Recalculamos acá (no leemos el derivado
+    // duplicatePlayerIds del render) para defensa en profundidad: si hubiera
+    // un race entre el último onChange y el submit, esto agarra el estado real.
+    const namesNormalized = players
+      .map((p) => p.name.trim().toLowerCase())
+      .filter((n) => n !== '');
+    if (new Set(namesNormalized).size !== namesNormalized.length) {
+      toast.error(t('versus.errDuplicatePlayers'));
+      return;
+    }
+
     if (mode === 'bracket') {
       if (bracketSize === 2 && validPlayersCount !== 2) {
         toast.error(t('versus.errExactly2'));
@@ -273,8 +268,11 @@ function CreateVersusPageInner() {
       expiresAt: expiresAt.toISOString(),
     });
 
-    // Redirect directly to detail page with success flag
-    router.push(`/versus/${token}?created=true`);
+    // Redirect directly to detail page with success flag.
+    // Usamos replace (no push) para que el back desde /versus/[token]
+    // no traiga al user de nuevo al formulario de creación: el flujo natural
+    // post-creación es volver al listado /versus.
+    router.replace(`/versus/${token}?created=true`);
   };
 
   // Check if form can be submitted
@@ -282,7 +280,30 @@ function CreateVersusPageInner() {
   const titleValid = title.trim().length >= 3;
   const hasEnoughPlayers = validPlayers.length >= 2;
 
-  const canSubmit = titleValid && hasEnoughPlayers;
+  // Set de ids de inputs cuyo nombre (normalizado) aparece más de una vez
+  // en el formulario. Lo usamos para:
+  //   1) bloquear submit con toast
+  //   2) marcar el borde de los inputs duplicados en rojo
+  // Normalización: trim + toLowerCase para que "Juan", " juan" y "JUAN"
+  // cuenten como el mismo nombre.
+  const duplicatePlayerIds: Set<string> = (() => {
+    const counts = new Map<string, string[]>();
+    for (const p of players) {
+      const norm = p.name.trim().toLowerCase();
+      if (norm === '') continue;
+      const ids = counts.get(norm) ?? [];
+      ids.push(p.id);
+      counts.set(norm, ids);
+    }
+    const dupIds = new Set<string>();
+    counts.forEach((ids) => {
+      if (ids.length > 1) ids.forEach((id) => dupIds.add(id));
+    });
+    return dupIds;
+  })();
+  const hasDuplicates = duplicatePlayerIds.size > 0;
+
+  const canSubmit = titleValid && hasEnoughPlayers && !hasDuplicates;
 
   // Nota: el bracketSize ahora controla la cantidad de inputs (handleBracketSizeChange).
   // No hay sync en sentido inverso — antes había un effect que pisaba la elección del user.
@@ -422,25 +443,16 @@ function CreateVersusPageInner() {
                       key={`pair-${pairIdx}`}
                       className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-3 sm:p-4"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                          {t('versus.matchupsMatchN').replace('{n}', String(pairIdx + 1))}
-                        </p>
-                        {playerB && (
-                          <button
-                            type="button"
-                            onClick={() => swapPair(pairIdx)}
-                            className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors px-2 py-1 rounded"
-                            title={t('versus.matchupsSwapPair')}
-                          >
-                            <ArrowLeftRight size={14} />
-                            <span className="hidden sm:inline">{t('versus.matchupsSwapPair')}</span>
-                          </button>
-                        )}
-                      </div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2">
+                        {t('versus.matchupsMatchN').replace('{n}', String(pairIdx + 1))}
+                      </p>
 
                       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                        {/* Slot A */}
+                        {/* Slot A.
+                            En mobile (sm:) sacamos el drag handle: alcanza con
+                            borrar y reescribir el nombre, o usar Intercambiar.
+                            En desktop (sm:+) el drag-drop sigue activo. El input
+                            usa pr-8 sólo en desktop para hacer espacio al handle. */}
                         <div
                           onDragOver={onDragOver(idxA)}
                           onDragLeave={onDragLeave}
@@ -455,17 +467,21 @@ function CreateVersusPageInner() {
                             type="text"
                             value={playerA.name}
                             onChange={(e) => updatePlayer(playerA.id, e.target.value)}
-                            className="w-full px-3 py-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 text-sm"
+                            className={`w-full px-3 py-3 sm:pr-8 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 text-sm ${
+                              duplicatePlayerIds.has(playerA.id)
+                                ? 'border-red-500'
+                                : 'border-gray-300 dark:border-gray-700'
+                            }`}
                             placeholder={t('versus.playerPlaceholder').replace('{n}', String(idxA + 1))}
                             maxLength={50}
                           />
-                          {/* Drag handle absolute para no quitar espacio del input */}
+                          {/* Drag handle solo desktop */}
                           <button
                             type="button"
                             draggable
                             onDragStart={onDragStart(idxA)}
                             onDragEnd={onDragEnd}
-                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
+                            className="hidden sm:flex absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
                             title={t('versus.movePlayerUp')}
                             aria-label={t('versus.movePlayerUp')}
                           >
@@ -478,7 +494,7 @@ function CreateVersusPageInner() {
                           VS
                         </span>
 
-                        {/* Slot B */}
+                        {/* Slot B (mismo criterio: drag handle solo desktop) */}
                         {playerB ? (
                           <div
                             onDragOver={onDragOver(idxB)}
@@ -494,7 +510,11 @@ function CreateVersusPageInner() {
                               type="text"
                               value={playerB.name}
                               onChange={(e) => updatePlayer(playerB.id, e.target.value)}
-                              className="w-full px-3 py-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 text-sm"
+                              className={`w-full px-3 py-3 sm:pr-8 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 text-sm ${
+                                duplicatePlayerIds.has(playerB.id)
+                                  ? 'border-red-500'
+                                  : 'border-gray-300 dark:border-gray-700'
+                              }`}
                               placeholder={t('versus.playerPlaceholder').replace('{n}', String(idxB + 1))}
                               maxLength={50}
                             />
@@ -503,7 +523,7 @@ function CreateVersusPageInner() {
                               draggable
                               onDragStart={onDragStart(idxB)}
                               onDragEnd={onDragEnd}
-                              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
+                              className="hidden sm:flex absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
                               title={t('versus.movePlayerUp')}
                               aria-label={t('versus.movePlayerUp')}
                             >
@@ -560,7 +580,11 @@ function CreateVersusPageInner() {
                           type="text"
                           value={player.name}
                           onChange={(e) => updatePlayer(player.id, e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                          className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
+                            duplicatePlayerIds.has(player.id)
+                              ? 'border-red-500'
+                              : 'border-gray-300 dark:border-gray-700'
+                          }`}
                           placeholder={t('versus.playerPlaceholder').replace('{n}', String(index + 1))}
                           maxLength={50}
                         />
@@ -629,6 +653,11 @@ function CreateVersusPageInner() {
             {matchupMode === 'manual' && mode === 'bracket' && (
               <p className="mt-1 text-xs text-[var(--primary)]">
                 {t('versus.matchupsBracketHint')}
+              </p>
+            )}
+            {hasDuplicates && (
+              <p className="mt-1 text-xs text-red-600">
+                {t('versus.errDuplicatePlayers')}
               </p>
             )}
           </div>

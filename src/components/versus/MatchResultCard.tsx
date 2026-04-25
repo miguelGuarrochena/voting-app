@@ -35,11 +35,23 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
   const buttonMinWidth = getMinWidth();
 
   const handleScoreSubmit = () => {
-    const numScoreA = parseInt(scoreA) || 0;
-    const numScoreB = parseInt(scoreB) || 0;
-    if (numScoreA < 0 || numScoreB < 0) return;
-    const result: ScoreResult = { type: 'score', scoreA: numScoreA, scoreB: numScoreB };
+    const numScoreA = parseInt(scoreA, 10);
+    const numScoreB = parseInt(scoreB, 10);
+    const safeA = Number.isFinite(numScoreA) ? numScoreA : 0;
+    const safeB = Number.isFinite(numScoreB) ? numScoreB : 0;
+    if (safeA < 0 || safeB < 0) return;
+    const result: ScoreResult = { type: 'score', scoreA: safeA, scoreB: safeB };
     onSaveResult(match.id, result);
+  };
+
+  // Solo permitir dígitos. Usamos type="text" + inputMode numérico para que
+  // funcione bien en mobile (teclado numérico) y permita borrar/escribir a
+  // mano sin las quirks de type="number" (rueda del mouse, leading zeros, etc.)
+  const handleScoreChange = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    // Strip non-digits
+    const digits = raw.replace(/\D/g, '');
+    setter(digits);
   };
 
   const handleWinnerSelect = (selectedWinner: 'A' | 'B' | 'draw') => {
@@ -112,10 +124,13 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
           <div className="flex items-center gap-2 flex-1">
             <p className="font-medium text-[var(--text)] truncate">{match.playerA.name}</p>
             <input
-              type="number"
-              min="0"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={3}
               value={scoreA}
-              onChange={(e) => setScoreA(e.target.value)}
+              onChange={handleScoreChange(setScoreA)}
+              placeholder="0"
               className="w-16 px-2 py-1 border border-[var(--border)] rounded bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
           </div>
@@ -128,10 +143,13 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
           {/* Player B */}
           <div className="flex items-center gap-2 flex-1 justify-end">
             <input
-              type="number"
-              min="0"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={3}
               value={scoreB}
-              onChange={(e) => setScoreB(e.target.value)}
+              onChange={handleScoreChange(setScoreB)}
+              placeholder="0"
               className="w-16 px-2 py-1 border border-[var(--border)] rounded bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
             <p className="font-medium text-[var(--text)] truncate">{match.playerB.name}</p>

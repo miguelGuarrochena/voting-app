@@ -189,8 +189,10 @@ export default function CreateRatingPage() {
       expiresAt: expiresAt.toISOString(),
     });
 
-    // Redirect directly to detail page with success flag
-    router.push(`/ratings/${token}?created=true`);
+    // Redirect directly to detail page with success flag.
+    // Usamos replace (no push) para que el back desde /ratings/[token]
+    // no traiga al user de nuevo al formulario de creación.
+    router.replace(`/ratings/${token}?created=true`);
   };
 
   return (

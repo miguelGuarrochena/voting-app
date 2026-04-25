@@ -289,9 +289,14 @@ function VersusTournamentPageInner({ params }: PageProps) {
       : getLeagueChampion(calculateLeagueStandings(tournament.players, tournament.matches as LeagueMatch[]), tournament.matches as LeagueMatch[])
   ) : null;
 
-  // Show celebration when tournament is finished
+  // Show celebration when there's a champion. Para bracket es cuando se
+  // jugó la final; para liga es cuando todos los matches están completos.
+  // No esperamos a que tournament.status sea 'finished' porque en liga
+  // el status no cambia automático (el creador tendría que cerrar a mano).
+  // Mantenemos tournament?.status en deps para no cambiar el tamaño del
+  // array entre renders (causa error en HMR de Next/React).
   useEffect(() => {
-    if (champion && tournament?.status === 'finished' && !showCelebration) {
+    if (champion && !showCelebration) {
       setShowCelebration(true);
     }
   }, [champion, tournament?.status, showCelebration]);
@@ -385,8 +390,24 @@ function VersusTournamentPageInner({ params }: PageProps) {
               </div>
             )}
 
-            {/* Share Result Button (when finished) */}
-            {tournament.status === 'finished' && (
+            {/* Share Tournament Button (link con token) — siempre visible.
+                Compartir el torneo = link, compartir el resultado = imagen.
+                Los dos conceptos son distintos. */}
+            <button
+              onClick={handleShare}
+              className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] transition-colors rounded-full sm:rounded-lg font-medium text-sm"
+              aria-label={t('versus.share')}
+            >
+              <Share2 size={14} />
+              <span className="hidden sm:inline ml-1.5">{t('versus.share')}</span>
+            </button>
+
+            {/* Share Result Button (imagen del bracket o tabla de la liga) —
+                aparece cuando hay campeón, sin esperar a que el status cambie
+                a 'finished'. Cubre bracket (final jugada) y liga (todos los
+                matches completos). La card del campeón se comparte desde el
+                modal de celebración. */}
+            {(tournament.status === 'finished' || champion) && (
               <button
                 onClick={handleShareResult}
                 className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 transition-colors rounded-full sm:rounded-lg font-medium text-sm"
@@ -394,18 +415,6 @@ function VersusTournamentPageInner({ params }: PageProps) {
               >
                 <Share2 size={14} />
                 <span className="hidden sm:inline ml-1.5">{shareResultText}</span>
-              </button>
-            )}
-
-            {/* Share Button */}
-            {tournament.status !== 'finished' && (
-              <button
-                onClick={handleShare}
-                className="flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] transition-colors rounded-full sm:rounded-lg font-medium text-sm"
-                aria-label={t('versus.share')}
-              >
-                <Share2 size={14} />
-                <span className="hidden sm:inline ml-1.5">{t('versus.share')}</span>
               </button>
             )}
 
@@ -477,6 +486,7 @@ function VersusTournamentPageInner({ params }: PageProps) {
           champion={champion}
           tournamentTitle={tournament.title}
           onShareResult={handleShareResult}
+          onClose={() => setShowCelebration(false)}
         />
       )}
 

@@ -64,6 +64,10 @@ export const BracketResultView = ({
 
   const canAdvanceCurrentRound = isRoundComplete(currentRound) && currentRound < totalRounds;
 
+  // Match de la final (último round). Lo necesitamos para mostrar el
+  // resultado en el centro junto con el card del campeón.
+  const finalMatch = matches.find(m => m.round === totalRounds && m.status === 'completed') ?? null;
+
   // Mobile stepper view
   if (isMobile) {
     const roundMatches = getRoundMatches(viewRound);
@@ -108,28 +112,45 @@ export const BracketResultView = ({
           </button>
         </div>
 
-        {/* Champion display */}
+        {/* Champion display + final match result */}
         {champion && (
-          <motion.div
-            initial={{ scale: 0, rotate: -10 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', damping: 15 }}
-            className="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] rounded-2xl p-4 sm:p-6 shadow-2xl border-4 border-[var(--primary-light)] relative mb-4"
-          >
+          <>
+            {finalMatch && (
+              <div className="mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 text-center">
+                  {t('versus.bracketRoundFinal')}
+                </h3>
+                <MatchResultCard
+                  match={finalMatch}
+                  hasScore={hasScore}
+                  isEditable={false}
+                  onSaveResult={onSaveResult}
+                  totalRounds={totalRounds}
+                  isBracket={true}
+                />
+              </div>
+            )}
             <motion.div
-              className="absolute inset-0 bg-[var(--primary)] rounded-2xl blur-xl opacity-50"
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.5, 0.7, 0.5],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <div className="relative z-10 text-center">
-              <Trophy className="w-12 h-12 text-white mx-auto mb-2" />
-              <p className="text-xs font-bold text-white/90 mb-1">{t('versus.championBadge')}</p>
-              <p className="text-lg font-bold text-white">{champion.name}</p>
-            </div>
-          </motion.div>
+              initial={{ scale: 0, rotate: -10 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', damping: 15 }}
+              className="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] rounded-2xl p-4 sm:p-6 shadow-2xl border-4 border-[var(--primary-light)] relative mb-4"
+            >
+              <motion.div
+                className="absolute inset-0 bg-[var(--primary)] rounded-2xl blur-xl opacity-50"
+                animate={{
+                  scale: [1, 1.1, 1],
+                  opacity: [0.5, 0.7, 0.5],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <div className="relative z-10 text-center">
+                <Trophy className="w-12 h-12 text-white mx-auto mb-2" />
+                <p className="text-xs font-bold text-white/90 mb-1">{t('versus.championBadge')}</p>
+                <p className="text-lg font-bold text-white">{champion.name}</p>
+              </div>
+            </motion.div>
+          </>
         )}
 
         {/* Matches for current round */}
@@ -266,30 +287,48 @@ export const BracketResultView = ({
         </div>
 
         {/* Center - Champion/Final */}
-        <div className={`flex flex-col items-center justify-center px-2 ${centerWidth} flex-shrink-0`}>
+        <div className={`flex flex-col items-center justify-center px-2 ${centerWidth} flex-shrink-0 gap-3`}>
           {champion ? (
-            <motion.div
-              initial={{ scale: 0, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', damping: 15 }}
-              className="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] rounded-2xl p-6 shadow-2xl border-4 border-[var(--primary-light)] relative w-full"
-            >
-              <motion.div
-                className="absolute inset-0 bg-[var(--primary)] rounded-2xl blur-xl opacity-50"
-                animate={{
-                  scale: [1, 1.1, 1],
-                  opacity: [0.5, 0.7, 0.5],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <div className="relative z-10">
-                <Trophy className="w-12 h-12 text-white mx-auto mb-2" />
-                <div className="text-center">
-                  <p className="text-xs font-bold text-white/90 mb-1">{t('versus.championBadge')}</p>
-                  <p className="text-lg font-bold text-white break-words">{champion.name}</p>
+            <>
+              {/* Final match result (read-only) */}
+              {finalMatch && (
+                <div className="w-full">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1 text-center">
+                    {t('versus.bracketRoundFinal')}
+                  </h3>
+                  <MatchResultCard
+                    match={finalMatch}
+                    hasScore={hasScore}
+                    isEditable={false}
+                    onSaveResult={onSaveResult}
+                    totalRounds={totalRounds}
+                    isBracket={true}
+                  />
                 </div>
-              </div>
-            </motion.div>
+              )}
+              <motion.div
+                initial={{ scale: 0, rotate: -10 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', damping: 15 }}
+                className="bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] rounded-2xl p-6 shadow-2xl border-4 border-[var(--primary-light)] relative w-full"
+              >
+                <motion.div
+                  className="absolute inset-0 bg-[var(--primary)] rounded-2xl blur-xl opacity-50"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    opacity: [0.5, 0.7, 0.5],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                <div className="relative z-10">
+                  <Trophy className="w-12 h-12 text-white mx-auto mb-2" />
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-white/90 mb-1">{t('versus.championBadge')}</p>
+                    <p className="text-lg font-bold text-white break-words">{champion.name}</p>
+                  </div>
+                </div>
+              </motion.div>
+            </>
           ) : (
             <div className="flex flex-col items-center w-full">
               <h3 className="text-sm font-bold text-[var(--primary)] mb-3 uppercase tracking-wider">{t('versus.bracketRoundFinal')}</h3>

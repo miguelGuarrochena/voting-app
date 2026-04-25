@@ -361,17 +361,30 @@ export function isRoundComplete(matches: Match[], roundNumber: number): boolean 
 
 /**
  * Gets the current round number for a bracket tournament
- * (the first incomplete round, or the last round if all complete)
+ * (the first incomplete round, or the last round if all complete).
+ *
+ * Caveat importante: si la primer ronda incompleta tiene jugadores TBD
+ * (placeholders, porque todavía no se llamó a advance_bracket_round_rpc),
+ * devolvemos la ronda anterior. Eso evita que la UI marque como editable
+ * un match TBD vs TBD — el usuario primero tiene que apretar "Avanzar a
+ * la siguiente ronda" para que se llenen los winners.
  */
 export function getCurrentBracketRound(matches: BracketMatch[]): number {
   const maxRound = Math.max(...matches.map(m => m.round));
-  
+
   for (let round = 1; round <= maxRound; round++) {
     if (!isRoundComplete(matches, round)) {
+      const roundMatches = matches.filter(m => m.round === round);
+      const hasPlaceholders = roundMatches.some(
+        m => !m.playerA?.id || !m.playerB?.id
+      );
+      if (hasPlaceholders && round > 1) {
+        return round - 1;
+      }
       return round;
     }
   }
-  
+
   return maxRound; // All rounds complete
 }
 
