@@ -223,11 +223,9 @@ function VersusCard({
           </div>
           <div className="flex-1 min-w-0 pr-8">
             <h3 className="font-bold text-[var(--text)] truncate">{entry.title}</h3>
-            {entry.createdBy && entry.role === 'participant' && (
-              <p className="text-xs text-[var(--text-muted)] truncate">
-                {t('versus.by')} {entry.createdBy}
-              </p>
-            )}
+            <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">
+              {t('versus.by')} {entry.createdBy}
+            </p>
           </div>
         </div>
 

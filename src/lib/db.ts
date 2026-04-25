@@ -350,10 +350,11 @@ export async function updatePoll(
 export async function createTournament(
   title: string,
   createdBy: string,
+  mode: 'bracket' | 'league',
+  hasScore: boolean,
+  players: any[],
+  matches: any[],
   expiresAt: Date,
-  options: any[],
-  votesToWin: number,
-  bracket: any,
   extras?: { description?: string; coverImage?: string }
 ): Promise<string | null> {
   try {
@@ -363,10 +364,12 @@ export async function createTournament(
       token,
       title,
       created_by: createdBy,
+      mode,
+      has_score: hasScore,
+      players,
+      matches,
       expires_at: expiresAt.toISOString(),
-      options,
-      votes_to_win: votesToWin,
-      bracket,
+      status: 'active',
     }
     const desc = extras?.description?.trim()
     if (desc) payload.description = desc
@@ -375,7 +378,44 @@ export async function createTournament(
 
     const { error } = await supabase.from('tournaments').insert(payload)
 
-    if (error) throw error
+    if (error) {
+      // Diagnóstico extremo: el browser estaba mostrando '{}' vacío. Forzamos
+      // que cada propiedad salga como argumento separado a console.error
+      // (los browsers nunca colapsan args sueltos) + un toast visible.
+      const e = error as any
+      const dumpStr = (() => {
+        try {
+          return JSON.stringify(e, Object.getOwnPropertyNames(e), 2)
+        } catch {
+          return String(e)
+        }
+      })()
+
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] type:', typeof e, '| isError:', e instanceof Error, '| ctor:', e?.constructor?.name)
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] message:', e?.message)
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] code:', e?.code)
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] details:', e?.details)
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] hint:', e?.hint)
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] String(error):', String(e))
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] keys:', Object.keys(e ?? {}))
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] ownProps:', Object.getOwnPropertyNames(e ?? {}))
+      // eslint-disable-next-line no-console
+      console.error('[createTournament] dumpStr:', dumpStr)
+
+      // Toast visible con el mensaje real (truncado a 300 chars)
+      const visible = e?.message || dumpStr || String(e)
+      toast.error(`DB error: ${String(visible).slice(0, 300)}`)
+
+      throw error
+    }
 
     return token
   } catch (error) {
@@ -398,7 +438,11 @@ export async function getTournament(token: string): Promise<any | null> {
       ...row,
       expiresAt: row.expires_at,
       createdBy: row.created_by,
-      votesToWin: row.votes_to_win,
+      mode: row.mode,
+      hasScore: row.has_score,
+      players: row.players,
+      matches: row.matches,
+      status: row.status,
       coverImage: row.cover_image ?? null,
     }
   } catch (error) {
@@ -407,123 +451,76 @@ export async function getTournament(token: string): Promise<any | null> {
   }
 }
 
-export async function updateTournamentBracket(
+export async function updateMatchResult(
   token: string,
-  bracket: any,
-  status?: 'active' | 'finished' | 'expired'
+  matchId: string,
+  result: any
 ): Promise<boolean> {
   try {
-    const updateData: any = { bracket }
-    if (status) {
-      updateData.status = status
-    }
-
-    const { error } = await supabase
-      .from('tournaments')
-      .update(updateData)
-      .eq('token', token)
-
-    if (error) throw error
-
-    return true
-  } catch (error) {
-    toast.error(logSupabaseError('updateTournamentBracket', error))
-    return false
-  }
-}
-
-export async function submitDuelVote(
-  tournamentToken: string,
-  duelId: string,
-  username: string,
-  optionId: string,
-  captchaToken: string | null = null
-): Promise<boolean> {
-  try {
-    // ------------------------------------------------------------
-    //  Antes hacíamos supabase.from('duel_votes').upsert(...) con la
-    //  policy abierta duel_insert/duel_update. La migración anti-fraud-v6
-    //  cerró esas policies y movió todo a la RPC submit_duel_vote_rpc.
-    //  El edge route /api/submit/duel-vote orquesta Turnstile + IP hash
-    //  + RPC, idéntico al patrón de submitResponse.
-    // ------------------------------------------------------------
-    const res = await fetch('/api/submit/duel-vote', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tournamentToken,
-        duelId,
-        username,
-        optionId,
-        captchaToken,
-      }),
+    const { data, error } = await supabase.rpc('update_match_result_rpc', {
+      p_token: token,
+      p_match_id: matchId,
+      p_result: result,
     })
 
-    if (res.ok) return true
-
-    let errCode = 'internal'
-    try {
-      const data = await res.json()
-      if (typeof data?.error === 'string') errCode = data.error
-    } catch {
-      // body no JSON
+    if (error) {
+      if (error.message?.includes('rate_limited')) {
+        toast.error('Demasiadas actualizaciones. Esperá un momento.')
+        return false
+      }
+      if (error.message?.includes('tournament_finished')) {
+        toast.error('El torneo ya terminó, no se pueden ingresar más resultados.')
+        return false
+      }
+      if (error.message?.includes('tournament_expired')) {
+        toast.error('El torneo expiró.')
+        return false
+      }
+      if (error.message?.includes('match_not_ready')) {
+        toast.error('Falta cargar el resultado de la ronda anterior.')
+        return false
+      }
+      if (error.message?.includes('match_not_found')) {
+        toast.error('No encontramos ese partido.')
+        return false
+      }
+      throw error
     }
-
-    if (res.status === 429 || errCode === 'rate_limited') {
-      toast.error('Demasiados votos desde esta red. Probá de nuevo en unos minutos.')
-      return false
-    }
-    if (res.status === 403 || errCode === 'captcha_failed') {
-      toast.error('No pudimos verificar que no seas un bot. Recargá y probá de nuevo.')
-      return false
-    }
-    if (errCode === 'tournament_not_found') {
-      toast.error('Torneo no encontrado.')
-      return false
-    }
-
-    toast.error('No pudimos enviar tu voto. Intentá de nuevo.')
-    return false
+    return data === true
   } catch (error) {
-    toast.error(logSupabaseError('submitDuelVote', error))
+    toast.error(logSupabaseError('updateMatchResult', error))
     return false
   }
 }
 
-export async function getDuelVotes(tournamentToken: string): Promise<any[]> {
-  try {
-    const { data, error } = await supabase
-      .rpc('get_duel_votes_by_token', { p_token: tournamentToken })
-
-    if (error) throw error
-
-    return data || []
-  } catch (error) {
-    toast.error(logSupabaseError('getDuelVotes', error))
-    return []
-  }
-}
-
-export async function hasVotedInDuel(
-  tournamentToken: string,
-  duelId: string,
-  username: string
+export async function advanceBracketRound(
+  token: string,
+  roundNumber: number
 ): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .rpc('has_voted_in_duel', {
-        p_token: tournamentToken,
-        p_duel_id: duelId,
-        p_username: username
-      })
+    const { data, error } = await supabase.rpc('advance_bracket_round_rpc', {
+      p_token: token,
+      p_round_number: roundNumber,
+    })
 
-    if (error) throw error
-
-    return Boolean(data)
+    if (error) {
+      if (error.message?.includes('tournament_finished')) {
+        toast.error('El torneo ya terminó.')
+        return false
+      }
+      if (error.message?.includes('round_not_complete')) {
+        toast.error('Completá todos los partidos de esta ronda antes de avanzar.')
+        return false
+      }
+      if (error.message?.includes('draw_not_allowed_in_bracket')) {
+        toast.error('En llaves no puede haber empates: corregí el resultado para definir un ganador.')
+        return false
+      }
+      throw error
+    }
+    return data === true
   } catch (error) {
-    // Esta función se llama muchas veces al renderizar — no toasteamos
-    // eslint-disable-next-line no-console
-    console.error('[hasVotedInDuel]', error)
+    toast.error(logSupabaseError('advanceBracketRound', error))
     return false
   }
 }
@@ -556,7 +553,13 @@ export async function deleteTournament(token: string): Promise<boolean> {
 // ------------------------------------------------------------
 
 /**
- * Cierra un torneo inmediatamente: setea expires_at = now() y status='expired'.
+ * Cierra un torneo inmediatamente: setea expires_at = now() y status='finished'.
+ *
+ * NOTA: usamos 'finished' (no 'expired') porque:
+ *  - El CHECK constraint de tournaments incluye 'active' | 'finished' | 'expired',
+ *    pero la UI filtra por 'finished' para mostrar el banner de campeón.
+ *  - Coherente con cuando el bracket termina solo (advance_bracket_round_rpc
+ *    también marca 'finished').
  */
 export async function closeTournament(token: string): Promise<boolean> {
   try {
@@ -564,7 +567,7 @@ export async function closeTournament(token: string): Promise<boolean> {
       .from('tournaments')
       .update({
         expires_at: new Date().toISOString(),
-        status: 'expired',
+        status: 'finished',
       })
       .eq('token', token)
 

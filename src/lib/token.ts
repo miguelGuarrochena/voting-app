@@ -106,30 +106,6 @@ export function markAsVoted(token: string, type: 'vote' | 'ranking' | 'rating' |
 }
 
 /**
- * Checks if user has voted in a specific duel (for versus tournaments)
- */
-export function hasVotedInDuel(token: string, duelId: string, username: string): boolean {
-  const duelVoteKey = `pickly_versus_duel_${token}_${duelId}_${username}`;
-  return localStorage.getItem(duelVoteKey) !== null;
-}
-
-/**
- * Marks that user has voted in a specific duel
- */
-export function markDuelVote(token: string, duelId: string, username: string, optionId: string): void {
-  const duelVoteKey = `pickly_versus_duel_${token}_${duelId}_${username}`;
-  localStorage.setItem(duelVoteKey, optionId);
-}
-
-/**
- * Gets which option a user voted for in a duel
- */
-export function getDuelVote(token: string, duelId: string, username: string): string | null {
-  const duelVoteKey = `pickly_versus_duel_${token}_${duelId}_${username}`;
-  return localStorage.getItem(duelVoteKey);
-}
-
-/**
  * Deletes tournament data from localStorage
  */
 export function deleteTournamentData(token: string): void {
@@ -138,7 +114,7 @@ export function deleteTournamentData(token: string): void {
 }
 
 /**
- * Cleans up all localStorage keys related to polls, votes, rankings, ratings, tournaments, and duel votes.
+ * Cleans up all localStorage keys related to polls, votes, rankings, ratings, and tournaments.
  * Only keeps pickly_username.
  */
 export function cleanupLocalStorage(): void {

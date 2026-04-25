@@ -1,0 +1,68 @@
+-- ============================================================
+-- PICKLY — Hotfix #3 del rediseño v7 (Versus)
+-- Ejecutar en Supabase SQL Editor (una sola vez).
+-- Idempotente: se puede correr N veces sin romper nada.
+--
+-- MOTIVACIÓN:
+--   La migración v7 (tournament-redesign-v7.sql) agregó
+--   `mode`, `has_score`, `matches`, `status` — pero NUNCA agregó
+--   la columna `players` jsonb. El cliente
+--   (src/lib/db.ts → createTournament) hace:
+--
+--     INSERT INTO tournaments (token, title, created_by, mode,
+--                              has_score, players, matches, ...)
+--                                              ^^^^^^^
+--                                              esta columna
+--                                              no existe.
+--
+--   PostgreSQL responde con:
+--     "column 'players' of relation 'tournaments' does not exist"
+--
+--   El cliente Supabase serializa ese PostgrestError con todas
+--   sus props no-enumerables, así que en consola sale '{}' vacío
+--   (mismo síntoma que el hotfix anterior, distinta causa).
+--
+--   Después de hotfix-2 (drop options), la INSERT seguía fallando
+--   porque `players` tampoco existía como columna.
+--
+-- CAMBIO:
+--   ADD COLUMN IF NOT EXISTS players jsonb NOT NULL DEFAULT '[]'::jsonb
+--
+--   - jsonb: array de { id, name } generado en el cliente.
+--   - NOT NULL con default '[]' para que filas existentes (si las
+--     hay) no rompan, y filas nuevas obliguen a pasar el array.
+-- ============================================================
+
+ALTER TABLE public.tournaments
+  ADD COLUMN IF NOT EXISTS players jsonb NOT NULL DEFAULT '[]'::jsonb;
+
+-- ============================================================
+-- SMOKE TESTS (correr de a uno):
+--
+-- 1) Confirmar que players existe:
+-- SELECT column_name, data_type, is_nullable, column_default
+--   FROM information_schema.columns
+--  WHERE table_schema = 'public'
+--    AND table_name   = 'tournaments'
+--    AND column_name  = 'players';
+-- Esperado: 1 fila. data_type=jsonb, is_nullable=NO, default='[]'::jsonb.
+--
+-- 2) Listar TODAS las columnas NOT NULL sin default (potenciales
+--    futuros bloqueos de INSERT):
+-- SELECT column_name, data_type
+--   FROM information_schema.columns
+--  WHERE table_schema = 'public'
+--    AND table_name   = 'tournaments'
+--    AND is_nullable  = 'NO'
+--    AND column_default IS NULL;
+-- Esperado: solo columnas que el cliente pasa siempre
+-- (token, title, created_by, expires_at).
+--
+-- 3) Verificar que las legacy columns ya no están:
+-- SELECT column_name
+--   FROM information_schema.columns
+--  WHERE table_schema = 'public'
+--    AND table_name   = 'tournaments'
+--    AND column_name IN ('options', 'bracket', 'votes_to_win');
+-- Esperado: 0 filas.
+-- ============================================================

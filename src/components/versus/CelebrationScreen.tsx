@@ -1,13 +1,13 @@
 'use client';
 
-import { VersusOption } from '@/types/versus';
+import { Player } from '@/types/versus';
 import { motion } from 'framer-motion';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface CelebrationScreenProps {
-  champion: VersusOption;
+  champion: Player;
   tournamentTitle: string;
   onShareResult: () => void;
 }
@@ -17,7 +17,7 @@ export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult }: 
   const { t } = useLanguage();
 
   const handleCopyResult = async () => {
-    const resultText = `${champion.title} ${t('versus.wonTournament')} '${tournamentTitle}' ${t('versus.inPickly')} 🏆`;
+    const resultText = `${champion.name} ${t('versus.wonTournament')} '${tournamentTitle}' ${t('versus.inPickly')} 🏆`;
     try {
       await navigator.clipboard.writeText(resultText);
       setCopied(true);
@@ -45,14 +45,15 @@ export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult }: 
         </motion.div>
 
         {/* Champion */}
-        <motion.h2
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="text-3xl font-bold text-[var(--text)] mb-2"
         >
-          {champion.title}
-        </motion.h2>
+          <h2 className="text-3xl font-bold text-[var(--text)] mb-2">
+            {champion.name}
+          </h2>
+        </motion.div>
 
         <motion.p
           initial={{ y: 20, opacity: 0 }}

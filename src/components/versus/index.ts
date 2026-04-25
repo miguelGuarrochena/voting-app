@@ -1,4 +1,6 @@
 // Versus tournament components
-export { BracketView } from './BracketView';
+export { BracketResultView } from './BracketResultView';
+export { LeagueStandingsView } from './LeagueStandingsView';
+export { MatchResultCard } from './MatchResultCard';
 export { CelebrationScreen } from './CelebrationScreen';
 export { ExpiredTournament } from './ExpiredTournament';

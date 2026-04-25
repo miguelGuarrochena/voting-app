@@ -1,28 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusIcon, Trash2, ArrowLeft } from 'lucide-react';
+import { PlusIcon, Trash2, ArrowLeft, GripVertical, ChevronUp, ChevronDown, ArrowLeftRight } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import toast from 'react-hot-toast';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { generateShareLink } from '@/lib/token';
 import { createTournament } from '@/lib/db';
 import { addMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
-import { generateBracket } from '@/lib/bracket';
-import { VersusTournament, VersusOption } from '@/types/versus';
+import { generateBracketMatches, generateLeagueMatches } from '@/lib/tournament';
+import { Player, TournamentMode } from '@/types/versus';
 import { FEATURES } from '@/lib/features';
 import { VersusComingSoon } from '@/components/versus/ComingSoon';
 import { AnonCreateModal } from '@/components/auth/AnonCreateModal';
 
-type OptionForm = {
+type PlayerForm = {
   id: string;
-  title: string;
+  name: string;
 };
 
-type BracketSize = 4 | 8 | 16;
+type BracketSize = 2 | 4 | 8 | 16;
 
 export default function CreateVersusPage() {
   if (!FEATURES.versus) return <VersusComingSoon />;
@@ -34,47 +33,147 @@ function CreateVersusPageInner() {
   const { username } = useUsername();
   const { t } = useLanguage();
   const [title, setTitle] = useState('');
-  const [options, setOptions] = useState<OptionForm[]>([
-    { id: crypto.randomUUID(), title: '' },
-    { id: crypto.randomUUID(), title: '' },
-  ]);
+  const [mode, setMode] = useState<TournamentMode>('bracket');
+  // El default es bracket de 8 → arrancamos con 8 inputs vacíos. Si el user
+  // cambia a otro tamaño o a liga, handleBracketSizeChange/handleModeChange
+  // ajustan la lista. Antes arrancábamos con 2 inputs y quedaba inconsistente
+  // con el default seleccionado.
+  const [players, setPlayers] = useState<PlayerForm[]>(() =>
+    Array.from({ length: 8 }, () => ({ id: crypto.randomUUID(), name: '' }))
+  );
   const [selectedDuration, setSelectedDuration] = useState('3');
   const [bracketSize, setBracketSize] = useState<BracketSize>(8);
+  const [hasScore, setHasScore] = useState(true);
+  // matchupMode: 'auto' = Pickly random, 'manual' = orden de la lista
+  const [matchupMode, setMatchupMode] = useState<'auto' | 'manual'>('auto');
+  const [homeAndAway, setHomeAndAway] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Duration options (days)
+  // Drag-drop state (desktop): índice del item agarrado
+  const dragIndexRef = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Duration options (days). Cap a 7 días: el plan free de Supabase
+  // tiene 500MB y los torneos no son chiquitos (matches JSON puede crecer).
+  // Si más adelante migramos a un plan pago, descomentamos 14 días.
   const durationOptions = [
     { value: '1', label: t('versus.1day'), days: 1 },
     { value: '3', label: t('versus.3days'), days: 3 },
     { value: '7', label: t('versus.7days'), days: 7 },
-    { value: '14', label: t('versus.14days'), days: 14 },
   ];
 
   // Bracket size options with preview icons
   const bracketSizeOptions: { value: BracketSize; label: string; icon: string }[] = [
-    { value: 4, label: t('versus.4options'), icon: '🥊' },
-    { value: 8, label: t('versus.8options'), icon: '⚔️' },
-    { value: 16, label: t('versus.16options'), icon: '🏆' },
+    { value: 2, label: `2 ${t('versus.playersLabel').toLowerCase()}`, icon: '🥊' },
+    { value: 4, label: `4 ${t('versus.playersLabel').toLowerCase()}`, icon: '⚔️' },
+    { value: 8, label: `8 ${t('versus.playersLabel').toLowerCase()}`, icon: '🏆' },
+    { value: 16, label: `16 ${t('versus.playersLabel').toLowerCase()}`, icon: '👑' },
   ];
 
-  const addOptionPair = () => {
-    const maxOptions = bracketSize;
-    if (options.length >= maxOptions) return;
-    setOptions([
-      ...options,
-      { id: crypto.randomUUID(), title: '' },
-      { id: crypto.randomUUID(), title: '' },
-    ]);
+  const addPlayer = () => {
+    setPlayers([...players, { id: crypto.randomUUID(), name: '' }]);
   };
 
-  const removeOptionPair = (index: number) => {
-    if (options.length <= 4) return;
-    const pairStartIndex = index * 2;
-    setOptions(options.filter((_, i) => i !== pairStartIndex && i !== pairStartIndex + 1));
+  const removePlayer = (id: string) => {
+    if (players.length <= 2) return;
+    setPlayers(players.filter(p => p.id !== id));
   };
 
-  const updateOption = (id: string, title: string) => {
-    setOptions(options.map(option => (option.id === id ? { ...option, title } : option)));
+  const updatePlayer = (id: string, name: string) => {
+    setPlayers(players.map(player => (player.id === id ? { ...player, name } : player)));
+  };
+
+  /**
+   * Reordena players moviendo el item en `from` a la posición `to`.
+   * Si las posiciones son iguales o inválidas, no hace nada.
+   */
+  const reorderPlayers = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0) return;
+    setPlayers((current) => {
+      if (from >= current.length || to >= current.length) return current;
+      const next = [...current];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
+  /**
+   * Intercambia los dos players de un mismo par (i*2 con i*2+1).
+   * Útil para que el user invierta quién es A y quién es B en un match
+   * sin tener que arrastrar.
+   */
+  const swapPair = (pairIndex: number) => {
+    const a = pairIndex * 2;
+    const b = pairIndex * 2 + 1;
+    setPlayers((current) => {
+      if (b >= current.length) return current;
+      const next = [...current];
+      [next[a], next[b]] = [next[b], next[a]];
+      return next;
+    });
+  };
+
+  // ----- Drag-drop handlers (desktop) -----
+  // Usamos HTML5 drag-and-drop nativo para no agregar dependencias.
+  // dragIndexRef guarda el índice de origen entre eventos (los datos
+  // del drag los maneja el browser; el ref evita serialización innecesaria).
+  const onDragStart = (index: number) => (e: React.DragEvent) => {
+    dragIndexRef.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+    // Necesario en Firefox para que el drag arranque
+    try { e.dataTransfer.setData('text/plain', String(index)); } catch {}
+  };
+  const onDragOver = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) setDragOverIndex(index);
+  };
+  const onDragLeave = () => setDragOverIndex(null);
+  const onDrop = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const from = dragIndexRef.current;
+    setDragOverIndex(null);
+    dragIndexRef.current = null;
+    if (from === null) return;
+    reorderPlayers(from, index);
+  };
+  const onDragEnd = () => {
+    dragIndexRef.current = null;
+    setDragOverIndex(null);
+  };
+
+  /**
+   * Cuando el user elige un tamaño de bracket, ajustamos la lista de inputs
+   * para tener exactamente N entradas. Conservamos los nombres ya cargados.
+   */
+  const handleBracketSizeChange = (size: BracketSize) => {
+    setBracketSize(size);
+    setPlayers((current) => {
+      if (current.length === size) return current;
+      if (current.length < size) {
+        // Agregar inputs vacíos hasta llegar a size
+        const toAdd = size - current.length;
+        const extras = Array.from({ length: toAdd }, () => ({
+          id: crypto.randomUUID(),
+          name: '',
+        }));
+        return [...current, ...extras];
+      }
+      // Recortar al tamaño elegido (preserva los primeros N)
+      return current.slice(0, size);
+    });
+  };
+
+  /**
+   * Cuando cambia el modo: si paso a bracket, sincronizo los inputs al bracketSize.
+   * Si paso a liga, dejo lo que haya (el user puede agregar/quitar libremente).
+   */
+  const handleModeChange = (newMode: TournamentMode) => {
+    setMode(newMode);
+    if (newMode === 'bracket') {
+      handleBracketSizeChange(bracketSize);
+    }
   };
 
   const validateForm = () => {
@@ -86,13 +185,18 @@ function CreateVersusPageInner() {
       newErrors.title = t('versus.titleMinLength');
     }
 
-    const validOptions = options.filter(option => option.title.trim() !== '');
-    if (validOptions.length % 2 !== 0) {
-      newErrors.options = t('versus.optionsMustBeEven');
-    } else if (validOptions.length < 4) {
-      newErrors.options = t('versus.min4OptionsRequired');
-    } else if (validOptions.length > bracketSize) {
-      newErrors.options = t('versus.maxOptionsForBracket').replace('{max}', String(bracketSize));
+    const validPlayers = players.filter(p => p.name.trim() !== '');
+    if (validPlayers.length < 2) {
+      newErrors.players = t('versus.errMinPlayers');
+    }
+
+    if (mode === 'bracket') {
+      if (bracketSize === 2 && validPlayers.length !== 2) {
+        newErrors.players = t('versus.errExactly2');
+      }
+      if (bracketSize !== 2 && validPlayers.length !== bracketSize) {
+        newErrors.players = t('versus.errExactlyN').replace('{n}', String(bracketSize));
+      }
     }
 
     setErrors(newErrors);
@@ -108,33 +212,37 @@ function CreateVersusPageInner() {
     const durationMs = (selectedOption?.days || 3) * 24 * 60 * 60 * 1000;
     const expiresAt = new Date(Date.now() + durationMs);
 
-    // Prepare options - fill with TBD if needed to reach bracket size
-    const validOptions = options
-      .filter(option => option.title.trim() !== '')
-      .map(option => ({
+    // Prepare players
+    const validPlayers: Player[] = players
+      .filter(p => p.name.trim() !== '')
+      .map(p => ({
         id: crypto.randomUUID(),
-        title: option.title.trim(),
+        name: p.name.trim(),
       }));
 
-    // Fill remaining slots with TBD if needed
-    while (validOptions.length < bracketSize) {
-      validOptions.push({
-        id: crypto.randomUUID(),
-        title: 'TBD',
-      });
+    // Generate matches based on mode.
+    // matchupMode === 'auto'   → Pickly arma random (shuffle = true).
+    // matchupMode === 'manual' → respeta el orden de la lista (shuffle = false).
+    const randomize = matchupMode === 'auto';
+
+    let matches;
+    if (mode === 'bracket') {
+      // homeAndAway solo aplica a 2 jugadores
+      const useHomeAway = bracketSize === 2 && homeAndAway;
+      matches = generateBracketMatches(validPlayers, randomize, useHomeAway);
+    } else {
+      matches = generateLeagueMatches(validPlayers, randomize);
     }
 
-    // Generate bracket
-    const bracket = generateBracket(validOptions);
-
-    // Create tournament via Supabase
+    // Create tournament via Supabase (con la duración elegida)
     const token = await createTournament(
       title.trim(),
       username || 'Anónimo',
-      expiresAt,
-      validOptions,
-      1, // votesToWin
-      bracket
+      mode,
+      hasScore,
+      validPlayers,
+      matches,
+      expiresAt
     );
 
     if (!token) {
@@ -157,17 +265,11 @@ function CreateVersusPageInner() {
   };
 
   // Check if form can be submitted
-  const validOptions = options.filter(option => option.title.trim() !== '');
-  const canSubmit = validOptions.length >= 4 && validOptions.length % 2 === 0 && validOptions.length <= bracketSize;
+  const validPlayers = players.filter(p => p.name.trim() !== '');
+  const canSubmit = validPlayers.length >= 2;
 
-  // Auto-adjust bracket size based on option count
-  useEffect(() => {
-    if (validOptions.length > 8 && bracketSize < 16) {
-      setBracketSize(16);
-    } else if (validOptions.length > 4 && validOptions.length <= 8 && bracketSize < 8) {
-      setBracketSize(8);
-    }
-  }, [validOptions.length, bracketSize]);
+  // Nota: el bracketSize ahora controla la cantidad de inputs (handleBracketSizeChange).
+  // No hay sync en sentido inverso — antes había un effect que pisaba la elección del user.
 
   return (
     <PageLayout className="pb-24 md:pb-8">
@@ -205,108 +307,379 @@ function CreateVersusPageInner() {
             {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
           </div>
 
-          {/* Bracket Size */}
+          {/* Mode Selection */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              {t('versus.bracketSizeLabel')}
+              {t('versus.modeLabel')}
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {bracketSizeOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setBracketSize(option.value);
-                    // Adjust options to match new bracket size
-                    const currentValidOptions = options.filter(o => o.title.trim());
-                    if (currentValidOptions.length > option.value) {
-                      setOptions(options.slice(0, option.value));
-                    }
-                  }}
-                  className={`px-3 py-3 rounded-lg border-2 transition-all text-sm font-medium flex flex-col items-center gap-1 ${
-                    bracketSize === option.value
-                      ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
-                      : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
-                  }`}
-                >
-                  <span className="text-2xl">{option.icon}</span>
-                  <span>{option.label}</span>
-                </button>
-              ))}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleModeChange('bracket')}
+                className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                  mode === 'bracket'
+                    ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                    : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                }`}
+              >
+                🏆 {t('versus.modeBracket')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleModeChange('league')}
+                className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                  mode === 'league'
+                    ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                    : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                }`}
+              >
+                📊 {t('versus.modeLeague')}
+              </button>
             </div>
           </div>
 
-          {/* Options */}
+          {/* Bracket Size (only for bracket mode) */}
+          {mode === 'bracket' && (
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)] mb-2">
+                {t('versus.playerCountLabel')}
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {bracketSizeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleBracketSizeChange(option.value)}
+                    className={`px-3 py-3 rounded-lg border-2 transition-all text-sm font-medium flex flex-col items-center gap-1 ${
+                      bracketSize === option.value
+                        ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                        : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                    }`}
+                  >
+                    <span className="text-2xl">{option.icon}</span>
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Home and away for 2 players */}
+              {bracketSize === 2 && (
+                <div className="mt-3 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="homeAndAway"
+                    checked={homeAndAway}
+                    onChange={(e) => setHomeAndAway(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
+                  />
+                  <label htmlFor="homeAndAway" className="text-sm text-[var(--text)]">
+                    {t('versus.homeAndAway')}
+                  </label>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Players */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-3">
-              {t('versus.optionsLabel')}
+              {t('versus.playersLabel')}
             </label>
-            <div className="space-y-4">
-              {Array.from({ length: Math.ceil(options.length / 2) }).map((_, pairIndex) => {
-                const optionA = options[pairIndex * 2];
-                const optionB = options[pairIndex * 2 + 1];
-                if (!optionA) return null;
 
-                return (
-                  <div key={pairIndex} className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={optionA.title}
-                        onChange={(e) => updateOption(optionA.id, e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                        placeholder={t('versus.optionPlaceholder').replace('{n}', String(pairIndex * 2 + 1))}
-                        maxLength={50}
-                      />
-                    </div>
-                    <div className="text-[var(--text-muted)] font-bold px-2">{t('versus.vs')}</div>
-                    {optionB ? (
-                      <>
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            value={optionB.title}
-                            onChange={(e) => updateOption(optionB.id, e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                            placeholder={t('versus.optionPlaceholder').replace('{n}', String(pairIndex * 2 + 2))}
-                            maxLength={50}
-                          />
-                        </div>
-                        {options.length > 4 && (
+            {/* Render condicional:
+                - manual + bracket → pares con "vs" explícito (Match #1: A vs B)
+                - resto (auto, o liga) → lista plana
+                Cuando manual + liga el orden importa así que mantenemos
+                la lista con drag handles. Cuando auto, no hay drag (random server-side). */}
+            {matchupMode === 'manual' && mode === 'bracket' ? (
+              <div className="space-y-3">
+                {Array.from({ length: Math.ceil(players.length / 2) }, (_, pairIdx) => {
+                  const idxA = pairIdx * 2;
+                  const idxB = pairIdx * 2 + 1;
+                  const playerA = players[idxA];
+                  const playerB = players[idxB];
+                  if (!playerA) return null;
+                  return (
+                    <div
+                      key={`pair-${pairIdx}`}
+                      className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-3 sm:p-4"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                          {t('versus.matchupsMatchN').replace('{n}', String(pairIdx + 1))}
+                        </p>
+                        {playerB && (
                           <button
                             type="button"
-                            onClick={() => removeOptionPair(pairIndex)}
-                            className="p-2 text-red-500 hover:text-red-700"
-                            title={t('versus.removePair')}
+                            onClick={() => swapPair(pairIdx)}
+                            className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors px-2 py-1 rounded"
+                            title={t('versus.matchupsSwapPair')}
                           >
-                            <Trash2 size={18} />
+                            <ArrowLeftRight size={14} />
+                            <span className="hidden sm:inline">{t('versus.matchupsSwapPair')}</span>
                           </button>
                         )}
-                      </>
-                    ) : (
-                      <div className="flex-1 opacity-30">
-                        <div className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400">
-                          {t('versus.optionPlaceholder').replace('{n}', String(pairIndex * 2 + 2))}
-                        </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={addOptionPair}
-              disabled={options.length >= bracketSize}
-              className="mt-3 px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface)] transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <PlusIcon className="w-4 h-4" />
-              {t('versus.addPair')}
-            </button>
-            {errors.options && <p className="mt-1 text-sm text-red-600">{errors.options}</p>}
+
+                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                        {/* Slot A */}
+                        <div
+                          onDragOver={onDragOver(idxA)}
+                          onDragLeave={onDragLeave}
+                          onDrop={onDrop(idxA)}
+                          className={`relative rounded-lg transition-all ${
+                            dragOverIndex === idxA
+                              ? 'ring-2 ring-[var(--primary)] bg-[var(--primary-light)]/30'
+                              : ''
+                          }`}
+                        >
+                          <input
+                            type="text"
+                            value={playerA.name}
+                            onChange={(e) => updatePlayer(playerA.id, e.target.value)}
+                            className="w-full px-3 py-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 text-sm"
+                            placeholder={t('versus.playerPlaceholder').replace('{n}', String(idxA + 1))}
+                            maxLength={50}
+                          />
+                          {/* Drag handle absolute para no quitar espacio del input */}
+                          <button
+                            type="button"
+                            draggable
+                            onDragStart={onDragStart(idxA)}
+                            onDragEnd={onDragEnd}
+                            className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
+                            title={t('versus.movePlayerUp')}
+                            aria-label={t('versus.movePlayerUp')}
+                          >
+                            <GripVertical size={16} />
+                          </button>
+                        </div>
+
+                        {/* VS divider */}
+                        <span className="text-xs sm:text-sm font-extrabold text-[var(--primary)] px-1 sm:px-2 select-none">
+                          VS
+                        </span>
+
+                        {/* Slot B */}
+                        {playerB ? (
+                          <div
+                            onDragOver={onDragOver(idxB)}
+                            onDragLeave={onDragLeave}
+                            onDrop={onDrop(idxB)}
+                            className={`relative rounded-lg transition-all ${
+                              dragOverIndex === idxB
+                                ? 'ring-2 ring-[var(--primary)] bg-[var(--primary-light)]/30'
+                                : ''
+                            }`}
+                          >
+                            <input
+                              type="text"
+                              value={playerB.name}
+                              onChange={(e) => updatePlayer(playerB.id, e.target.value)}
+                              className="w-full px-3 py-3 pr-8 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 text-sm"
+                              placeholder={t('versus.playerPlaceholder').replace('{n}', String(idxB + 1))}
+                              maxLength={50}
+                            />
+                            <button
+                              type="button"
+                              draggable
+                              onDragStart={onDragStart(idxB)}
+                              onDragEnd={onDragEnd}
+                              className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
+                              title={t('versus.movePlayerUp')}
+                              aria-label={t('versus.movePlayerUp')}
+                            >
+                              <GripVertical size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="px-3 py-3 border border-dashed border-[var(--border)] rounded-lg text-xs text-[var(--text-muted)] text-center">—</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {players.map((player, index) => {
+                  const isManual = matchupMode === 'manual';
+                  const isDragOver = dragOverIndex === index;
+                  return (
+                    <div
+                      key={player.id}
+                      onDragOver={isManual ? onDragOver(index) : undefined}
+                      onDragLeave={isManual ? onDragLeave : undefined}
+                      onDrop={isManual ? onDrop(index) : undefined}
+                      className={`flex items-center gap-2 rounded-lg transition-colors ${
+                        isDragOver ? 'bg-[var(--primary-light)]/30 ring-2 ring-[var(--primary)]' : ''
+                      }`}
+                    >
+                      {/* Drag handle (desktop only, visible cuando manual) */}
+                      {isManual && (
+                        <button
+                          type="button"
+                          draggable
+                          onDragStart={onDragStart(index)}
+                          onDragEnd={onDragEnd}
+                          className="hidden sm:flex p-2 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
+                          title={t('versus.movePlayerUp')}
+                          aria-label={t('versus.movePlayerUp')}
+                        >
+                          <GripVertical size={18} />
+                        </button>
+                      )}
+
+                      {/* Number badge para que se vea claro el orden cuando manual */}
+                      {isManual && (
+                        <span className="hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--surface-2)] text-xs font-bold text-[var(--text-muted)] flex-shrink-0">
+                          {index + 1}
+                        </span>
+                      )}
+
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={player.name}
+                          onChange={(e) => updatePlayer(player.id, e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                          placeholder={t('versus.playerPlaceholder').replace('{n}', String(index + 1))}
+                          maxLength={50}
+                        />
+                      </div>
+
+                      {/* Up/down buttons (mobile manual + accesibilidad teclado) */}
+                      {isManual && (
+                        <div className="flex sm:hidden flex-col gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => reorderPlayers(index, index - 1)}
+                            disabled={index === 0}
+                            className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--primary)] disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label={t('versus.movePlayerUp')}
+                          >
+                            <ChevronUp size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => reorderPlayers(index, index + 1)}
+                            disabled={index === players.length - 1}
+                            className="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--primary)] disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label={t('versus.movePlayerDown')}
+                          >
+                            <ChevronDown size={16} />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Sólo en liga el user puede borrar players manualmente.
+                          En bracket, el size lo controla el segmented control de arriba. */}
+                      {mode === 'league' && players.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => removePlayer(player.id)}
+                          className="p-2 text-red-500 hover:text-red-700"
+                          title={t('versus.removePlayer')}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {mode === 'league' && (
+              <button
+                type="button"
+                onClick={addPlayer}
+                className="mt-3 px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface)] transition-colors font-medium flex items-center gap-2"
+              >
+                <PlusIcon className="w-4 h-4" />
+                {t('versus.addPlayer')}
+              </button>
+            )}
+            {errors.players && <p className="mt-1 text-sm text-red-600">{errors.players}</p>}
             <p className="mt-2 text-xs text-[var(--text-muted)]">
-              {t('versus.currentOptions').replace('{count}', String(validOptions.length)).replace('{max}', String(bracketSize))}
+              {mode === 'bracket'
+                ? t('versus.currentPlayersBracket')
+                    .replace('{n}', String(validPlayers.length))
+                    .replace('{req}', String(bracketSize))
+                : t('versus.currentPlayersLeague').replace('{n}', String(validPlayers.length))}
             </p>
+            {matchupMode === 'manual' && (
+              <p className="mt-1 text-xs text-[var(--primary)]">
+                {mode === 'bracket' ? t('versus.matchupsBracketHint') : t('versus.matchupsLeagueHint')}
+              </p>
+            )}
+          </div>
+
+          {/* Matchups: ¿quién arma los partidos? (auto random o manual) */}
+          <div>
+            <label className="block text-sm font-medium text-[var(--text)] mb-2">
+              {t('versus.matchupsLabel')}
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setMatchupMode('auto')}
+                className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium text-left ${
+                  matchupMode === 'auto'
+                    ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                    : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                }`}
+              >
+                <div className="font-semibold">{t('versus.matchupsAuto')}</div>
+                <div className="text-xs opacity-70 mt-0.5">{t('versus.matchupsAutoDesc')}</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMatchupMode('manual')}
+                className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium text-left ${
+                  matchupMode === 'manual'
+                    ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                    : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                }`}
+              >
+                <div className="font-semibold">{t('versus.matchupsManual')}</div>
+                <div className="text-xs opacity-70 mt-0.5">{t('versus.matchupsManualDesc')}</div>
+              </button>
+            </div>
+
+            {/* Antes había un preview de pares acá. Lo sacamos porque ahora los pares
+                se ven directamente en el listado de inputs (con "VS" entre cada par)
+                cuando matchupMode === 'manual' && mode === 'bracket'. */}
+          </div>
+
+          {/* Score Type */}
+          <div>
+            <label className="block text-sm font-medium text-[var(--text)] mb-2">
+              {t('versus.scoreTypeLabel')}
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setHasScore(true)}
+                className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                  hasScore
+                    ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                    : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                }`}
+              >
+                {t('versus.scoreTypeWithScore')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setHasScore(false)}
+                className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                  !hasScore
+                    ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                    : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                }`}
+              >
+                {t('versus.scoreTypeNoScore')}
+              </button>
+            </div>
           </div>
 
           {/* Duration */}

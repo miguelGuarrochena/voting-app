@@ -1,41 +1,75 @@
-export interface VersusOption {
+export type TournamentMode = 'bracket' | 'league';
+export type TournamentStatus = 'active' | 'finished';
+
+export interface Player {
   id: string;
-  title: string;
+  name: string;
 }
 
-export interface Duel {
+// Result with score (e.g., FIFA, basketball)
+export interface ScoreResult {
+  type: 'score';
+  scoreA: number;
+  scoreB: number;
+}
+
+// Result without score (e.g., Street Fighter, chess)
+export interface WinLossResult {
+  type: 'winloss';
+  winner: 'A' | 'B' | 'draw';
+}
+
+export type MatchResult = ScoreResult | WinLossResult | null;
+
+export interface Match {
   id: string;
-  optionA: VersusOption;
-  optionB: VersusOption;
-  selectedWinner: VersusOption | null; // User's selection for this duel
+  playerA: Player;
+  playerB: Player;
+  result: MatchResult;
   round: number;
+  status: 'pending' | 'completed';
 }
 
-export interface Round {
-  roundNumber: number;
-  duels: Duel[];
+// Bracket-specific match with position info
+export interface BracketMatch extends Match {
+  position: number; // Position in the bracket (0, 1, 2, 3, etc.)
+  nextMatchId: string | null; // ID of the match this winner advances to
+  nextMatchPosition: 'A' | 'B' | null; // Whether winner goes to optionA or optionB of next match
 }
 
-export interface Bracket {
-  rounds: Round[];
-  champion: VersusOption | null;
+// League-specific match
+export interface LeagueMatch extends Match {
+  // No additional fields needed for league
 }
 
-// User's completed bracket
-export interface UserBracket {
-  username: string;
-  bracket: Bracket;
-  champion: VersusOption | null;
-  completedAt: string;
+// League standings row
+export interface LeagueStanding {
+  player: Player;
+  wins: number;
+  draws: number;
+  losses: number;
+  points: number;
 }
 
-export interface VersusTournament {
+// Tournament data structure
+export interface Tournament {
   token: string;
   title: string;
   createdBy: string;
-  options: VersusOption[];
-  expiresAt: string; // ISO string
-  bracket: Bracket; // Template bracket (no selections)
-  userBrackets: Record<string, UserBracket>; // username -> completed bracket
+  mode: TournamentMode;
+  hasScore: boolean; // true if sport has numerical results (FIFA, basketball)
+  players: Player[];
+  matches: Match[];
+  status: TournamentStatus;
   createdAt: string;
+  expiresAt: string; // ISO string - always 24h after creation
+  description?: string;
+  coverImage?: string;
+}
+
+// Helper to determine winner from score result
+export function getScoreWinner(result: ScoreResult): 'A' | 'B' | 'draw' {
+  if (result.scoreA > result.scoreB) return 'A';
+  if (result.scoreB > result.scoreA) return 'B';
+  return 'draw';
 }
