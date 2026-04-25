@@ -14,7 +14,7 @@ import {
   ArrowLeftIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe, Swords, LogIn, LogOut } from 'lucide-react';
+import { Plus, Menu as MenuIcon, X, Moon, Sun, Globe, Swords, LogOut } from 'lucide-react';
 import ThemeLanguageSwitcher from '@/components/layout/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 import { safeBack } from '@/lib/navigation';
@@ -57,11 +57,12 @@ const Navbar = () => {
   };
 
   // Logout unificado: si hay sesión de auth la cierra, y siempre limpia el
-  // username local + reload. Esto evita el doble "Cerrar sesión" que
-  // confundía (uno era signOut y el otro borrar username).
+  // username local. Redirige a / (no reload) para evitar volver a una
+  // página de creación donde dispararía AnonCreateModal de inmediato.
   const handleLogout = async () => {
     setShowMobileMenu(false);
     setShowUsernameMenu(false);
+    setShowCreateMenu(false);
     if (authUser) {
       try {
         await signOut();
@@ -70,7 +71,7 @@ const Navbar = () => {
       }
     }
     localStorage.removeItem('pickly_username');
-    // Limpiar dismiss del modal anon — sessionStorage sobrevive reloads
+    // Limpiar dismiss del modal anon — sessionStorage sobrevive navegación
     // y si el user retoma creación sin cuenta queremos que vuelva a
     // aparecer (bug: entraba al /create con draft y sin disclaimer).
     try {
@@ -83,7 +84,9 @@ const Navbar = () => {
     } catch {
       /* ignore */
     }
-    window.location.reload();
+    // Forzar navegación con reload duro a / — limpia state, mata el modal
+    // del create flow si estábamos ahí, y refresca AuthContext.
+    window.location.href = '/';
   };
 
   // Handle mobile detection
@@ -241,33 +244,25 @@ const Navbar = () => {
                 </div>
               )}
 
-              {/* Auth / logout section unificada */}
-              <div className="border-t border-[var(--border)] my-2"></div>
-              {authUser && authEmail && (
-                <div className="px-4 py-2">
-                  <p className="text-xs text-[var(--text-muted)] truncate">
-                    {authEmail}
-                  </p>
-                </div>
-              )}
-              {!authUser && (
-                <Link
-                  href="/auth/login"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                >
-                  <LogIn className="w-5 h-5" />
-                  <span>{t('auth.navSignIn')}</span>
-                </Link>
-              )}
+              {/* Logout unificado */}
               {(username || authUser) && (
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>{t('nav.logout')}</span>
-                </button>
+                <>
+                  <div className="border-t border-[var(--border)] my-2"></div>
+                  {authUser && authEmail && (
+                    <div className="px-4 py-2">
+                      <p className="text-xs text-[var(--text-muted)] truncate">
+                        {authEmail}
+                      </p>
+                    </div>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>{t('nav.logout')}</span>
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -507,7 +502,10 @@ const Navbar = () => {
                 <>
                   <div className="relative">
                     <button
-                      onClick={() => setShowCreateMenu(!showCreateMenu)}
+                      onClick={() => {
+                        setShowUsernameMenu(false);
+                        setShowCreateMenu((v) => !v);
+                      }}
                       className={`relative group bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white ${isMedium ? 'px-4 py-2.5' : 'px-5 py-2.5'} rounded-full font-medium hover:shadow-lg hover:shadow-[var(--primary)]/30 hover:scale-105 transition-all duration-300 text-sm flex items-center ${isMedium ? 'justify-center' : 'gap-2'}`}
                     >
                       <Plus size={isMedium ? 20 : 16} className="transition-transform group-hover:rotate-90" />
@@ -580,7 +578,10 @@ const Navbar = () => {
 
                   <div className="relative">
                     <button
-                      onClick={() => setShowUsernameMenu(!showUsernameMenu)}
+                      onClick={() => {
+                        setShowCreateMenu(false);
+                        setShowUsernameMenu((v) => !v);
+                      }}
                       className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full hover:bg-[var(--surface)] hover:shadow-md transition-all duration-300 border border-[var(--border)] hover:border-[var(--primary)]"
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] flex items-center justify-center text-white font-bold text-sm shadow-md">
@@ -606,16 +607,6 @@ const Navbar = () => {
                           <span>✏️</span>
                           <span>{t('nav.changeName')}</span>
                         </button>
-                        {!authUser && (
-                          <Link
-                            href="/auth/login"
-                            onClick={() => setShowUsernameMenu(false)}
-                            className="w-full px-4 py-2.5 text-left text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2"
-                          >
-                            <LogIn className="w-4 h-4" />
-                            <span>{t('auth.navSignIn')}</span>
-                          </Link>
-                        )}
                         <button
                           onClick={handleLogout}
                           className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from 'next/script';
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
 import Navbar from '@/components/layout/Navbar';
@@ -107,6 +108,17 @@ const RootLayout = ({
           },
         }} />
         <Analytics />
+        {/*
+          Cloudflare Turnstile loader. Cargado con strategy=afterInteractive
+          para no bloquear el render inicial. El widget invisible se renderiza
+          on-demand desde useTurnstile() — ver src/lib/turnstile.ts.
+          Si NEXT_PUBLIC_TURNSTILE_SITE_KEY no está seteada, el script igual
+          carga pero no se ejecuta nada (el hook degrada a token=null).
+        */}
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

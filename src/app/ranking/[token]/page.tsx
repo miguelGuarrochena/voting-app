@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTurnstile } from '@/hooks/useTurnstile';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
@@ -34,6 +35,7 @@ export default function RankingTokenPage() {
   const searchParams = useSearchParams();
   const { username } = useUsername();
   const { t } = useLanguage();
+  const getCaptchaToken = useTurnstile('ranking_submit');
 
   const token = params.token as string;
   const justCreated = searchParams.get('created') === 'true';
@@ -179,7 +181,8 @@ export default function RankingTokenPage() {
   const handleSubmitRanking = async () => {
     if (!pollData || submitting) return;
     setSubmitting(true);
-    const ok = await submitResponse(token, username || 'Anonymous', { rankings });
+    const captchaToken = await getCaptchaToken();
+    const ok = await submitResponse(token, username || 'Anonymous', { rankings }, captchaToken);
     setSubmitting(false);
 
     if (!ok) return; // db.ts ya toasteó el error real

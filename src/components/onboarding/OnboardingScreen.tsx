@@ -1,10 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useUsername } from '@/context/UsernameContext';
+
+// Lista de rutas donde el username SÍ es requerido inmediato. En home,
+// listados, /auth/*, /privacy/, /terms y /spin no tiene sentido bloquear
+// al user con un onboarding modal — primero que browseé.
+function pathRequiresUsername(pathname: string): boolean {
+  if (
+    pathname === '/create' ||
+    pathname === '/ratings/create' ||
+    pathname === '/versus/create'
+  ) {
+    return true;
+  }
+  // /votes/[token], /ranking/[token], /ratings/[token], /versus/[token]
+  return /^\/(votes|ranking|ratings|versus)\/[^/]+/.test(pathname);
+}
 
 export default function OnboardingScreen() {
   const { username, setUsername, hasOnboarded } = useUsername();
+  const pathname = usePathname();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -13,8 +30,9 @@ export default function OnboardingScreen() {
     setMounted(true);
   }, []);
 
-  // Don't show if user already has a username or not mounted yet
-  if (!mounted || username) {
+  // Don't show if user already has a username, not mounted yet,
+  // o si la ruta no necesita username inmediato (home, listados, etc).
+  if (!mounted || username || !pathRequiresUsername(pathname || '')) {
     return null;
   }
 

@@ -17,6 +17,7 @@ import { supabase } from '@/lib/supabase';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTurnstile } from '@/hooks/useTurnstile';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
@@ -38,6 +39,7 @@ export default function VoteTokenPage() {
   const searchParams = useSearchParams();
   const { username } = useUsername();
   const { t } = useLanguage();
+  const getCaptchaToken = useTurnstile('vote_submit');
 
   const token = params.token as string;
   const justCreated = searchParams.get('created') === 'true';
@@ -156,7 +158,8 @@ export default function VoteTokenPage() {
   const handleVote = async () => {
     if (!selectedOption || !pollData || submitting) return;
     setSubmitting(true);
-    const ok = await submitResponse(token, username || 'Anonymous', { optionId: selectedOption });
+    const captchaToken = await getCaptchaToken();
+    const ok = await submitResponse(token, username || 'Anonymous', { optionId: selectedOption }, captchaToken);
     setSubmitting(false);
 
     if (!ok) return; // db.ts ya mostró el toast con el error real

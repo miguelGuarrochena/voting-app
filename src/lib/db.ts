@@ -149,37 +149,61 @@ export async function getPoll(token: string): Promise<any | null> {
 export async function submitResponse(
   pollToken: string,
   username: string,
-  response: any
+  response: any,
+  captchaToken: string | null = null
 ): Promise<boolean> {
   try {
     // ------------------------------------------------------------
-    //  Usa la RPC submit_response_rpc (SECURITY DEFINER), que:
-    //   1) valida que la encuesta exista y no esté en estado terminal
-    //      (closed_at IS NULL AND expires_at > now()),
-    //   2) hace upsert por (poll_token, username).
-    //  Si la encuesta está cerrada, el RPC tira 'poll_closed' y le
-    //  mostramos un toast específico al usuario.
+    //  Pasa por el edge route /api/submit/poll-response, que valida
+    //  Turnstile + extrae el IP, hashea, y llama a la RPC con guard
+    //  de rate limit. Antes acá llamábamos supabase.rpc('submit_response_rpc')
+    //  directo — sin captcha y sin IP, lo que dejaba la puerta abierta a
+    //  spam de votos.
     // ------------------------------------------------------------
-    const { error } = await supabase.rpc('submit_response_rpc', {
-      p_token: pollToken,
-      p_username: username,
-      p_response: response,
+    const res = await fetch('/api/submit/poll-response', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pollToken,
+        username,
+        response,
+        captchaToken,
+      }),
     })
 
-    if (error) {
-      // Mensaje específico cuando la encuesta está cerrada
-      if (error.message?.includes('poll_closed')) {
-        toast.error('La encuesta está cerrada, no se aceptan más respuestas.')
-        return false
-      }
-      if (error.message?.includes('poll_not_found')) {
-        toast.error('Encuesta no encontrada.')
-        return false
-      }
-      throw error
+    if (res.ok) return true
+
+    let errCode = 'internal'
+    try {
+      const data = await res.json()
+      if (typeof data?.error === 'string') errCode = data.error
+    } catch {
+      // body no JSON — usamos el código por status
     }
 
-    return true
+    if (res.status === 429 || errCode === 'rate_limited') {
+      toast.error('Demasiados votos desde esta red. Probá de nuevo en unos minutos.')
+      return false
+    }
+    if (res.status === 403 || errCode === 'captcha_failed') {
+      toast.error('No pudimos verificar que no seas un bot. Recargá y probá de nuevo.')
+      return false
+    }
+    if (errCode === 'poll_closed') {
+      toast.error('La encuesta está cerrada, no se aceptan más respuestas.')
+      return false
+    }
+    if (errCode === 'poll_not_found') {
+      toast.error('Encuesta no encontrada.')
+      return false
+    }
+    if (errCode === 'empty_username') {
+      toast.error('Ingresá un nombre antes de votar.')
+      return false
+    }
+
+    toast.error('No pudimos enviar tu voto. Intentá de nuevo.')
+    return false
   } catch (error) {
     toast.error(logSupabaseError('submitResponse', error))
     return false
@@ -202,14 +226,24 @@ export async function getPollResponses(pollToken: string): Promise<any[]> {
 
 export async function deletePoll(token: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('polls')
-      .delete()
-      .eq('token', token)
+    // Usa la RPC delete_poll_rpc (SECURITY DEFINER) que valida ownership:
+    //   - polls con user_id => solo el dueño (auth.uid() = user_id)
+    //   - polls anónimos    => cualquiera con el token (mismo modelo
+    //                          que voto/edit anónimo)
+    // Esto reemplaza el .from('polls').delete().eq('token', token) que
+    // dependía de una policy abierta USING (true).
+    const { data, error } = await supabase.rpc('delete_poll_rpc', {
+      p_token: token,
+    })
 
-    if (error) throw error
-
-    return true
+    if (error) {
+      if (error.message?.includes('forbidden')) {
+        toast.error('No tenés permiso para borrar esta encuesta')
+        return false
+      }
+      throw error
+    }
+    return data === true
   } catch (error) {
     toast.error(logSupabaseError('deletePoll', error))
     return false
@@ -402,23 +436,54 @@ export async function submitDuelVote(
   tournamentToken: string,
   duelId: string,
   username: string,
-  optionId: string
+  optionId: string,
+  captchaToken: string | null = null
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('duel_votes')
-      .upsert({
-        tournament_token: tournamentToken,
-        duel_id: duelId,
+    // ------------------------------------------------------------
+    //  Antes hacíamos supabase.from('duel_votes').upsert(...) con la
+    //  policy abierta duel_insert/duel_update. La migración anti-fraud-v6
+    //  cerró esas policies y movió todo a la RPC submit_duel_vote_rpc.
+    //  El edge route /api/submit/duel-vote orquesta Turnstile + IP hash
+    //  + RPC, idéntico al patrón de submitResponse.
+    // ------------------------------------------------------------
+    const res = await fetch('/api/submit/duel-vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tournamentToken,
+        duelId,
         username,
-        option_id: optionId
-      }, {
-        onConflict: 'tournament_token,duel_id,username'
-      })
+        optionId,
+        captchaToken,
+      }),
+    })
 
-    if (error) throw error
+    if (res.ok) return true
 
-    return true
+    let errCode = 'internal'
+    try {
+      const data = await res.json()
+      if (typeof data?.error === 'string') errCode = data.error
+    } catch {
+      // body no JSON
+    }
+
+    if (res.status === 429 || errCode === 'rate_limited') {
+      toast.error('Demasiados votos desde esta red. Probá de nuevo en unos minutos.')
+      return false
+    }
+    if (res.status === 403 || errCode === 'captcha_failed') {
+      toast.error('No pudimos verificar que no seas un bot. Recargá y probá de nuevo.')
+      return false
+    }
+    if (errCode === 'tournament_not_found') {
+      toast.error('Torneo no encontrado.')
+      return false
+    }
+
+    toast.error('No pudimos enviar tu voto. Intentá de nuevo.')
+    return false
   } catch (error) {
     toast.error(logSupabaseError('submitDuelVote', error))
     return false
@@ -465,14 +530,19 @@ export async function hasVotedInDuel(
 
 export async function deleteTournament(token: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('tournaments')
-      .delete()
-      .eq('token', token)
+    // Mismo patrón que deletePoll: RPC con check de ownership.
+    const { data, error } = await supabase.rpc('delete_tournament_rpc', {
+      p_token: token,
+    })
 
-    if (error) throw error
-
-    return true
+    if (error) {
+      if (error.message?.includes('forbidden')) {
+        toast.error('No tenés permiso para borrar este torneo')
+        return false
+      }
+      throw error
+    }
+    return data === true
   } catch (error) {
     toast.error(logSupabaseError('deleteTournament', error))
     return false

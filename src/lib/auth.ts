@@ -1,24 +1,26 @@
 /**
  * Auth helpers sobre Supabase Auth.
  *
- * Modelo de Pickly:
+ * Modelo de Pickly v1:
  *   - Login es OPCIONAL. Cualquiera puede crear/votar sin cuenta.
+ *   - El ÚNICO método de login soportado es Google OAuth — arrancamos así
+ *     para no depender de SMTP propio (email+password y magic link
+ *     requieren mandar emails).
  *   - Los creadores que se logueen ganan:
  *       · "Mis polls" cross-device (desde get_my_polls_rpc)
  *       · Reclamo de polls creadas antes del login (claim_polls_rpc)
  *   - Votar sigue siendo por link/token, sin cuenta.
  *
- * Tres métodos de signIn soportados:
- *   - Google OAuth (redirect)
- *   - Magic Link (email only → user hace click en el link del mail)
- *   - Email + password
+ *   Nota: los helpers de email+password y magic link se removieron en
+ *   esta versión. Si más adelante agregamos SMTP propio (Resend/Brevo)
+ *   se pueden restaurar — viven en el git history.
  */
 
 import toast from 'react-hot-toast'
 import { supabase } from './supabase'
 
 /**
- * Devuelve el redirect absoluto para OAuth/Magic Link callbacks.
+ * Devuelve el redirect absoluto para OAuth callbacks.
  * En SSR no hay window, así que fallback a vacío (no se usa en server).
  */
 function getRedirectUrl(): string {
@@ -27,7 +29,7 @@ function getRedirectUrl(): string {
 }
 
 // ------------------------------------------------------------
-//  Sign-in / sign-up
+//  Sign-in / sign-out (solo Google OAuth)
 // ------------------------------------------------------------
 
 /**
@@ -46,105 +48,6 @@ export async function signInWithGoogle(): Promise<boolean> {
     return true
   } catch (error: any) {
     toast.error(error?.message || 'No se pudo iniciar sesión con Google')
-    return false
-  }
-}
-
-/**
- * Magic Link: manda un email con un link de login. No requiere password.
- */
-export async function signInWithMagicLink(email: string): Promise<boolean> {
-  try {
-    const clean = email.trim().toLowerCase()
-    if (!clean) {
-      toast.error('Ingresá un email válido')
-      return false
-    }
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email: clean,
-      options: {
-        emailRedirectTo: getRedirectUrl(),
-        // Si el user no existe, lo crea automáticamente.
-        shouldCreateUser: true,
-      },
-    })
-    if (error) throw error
-
-    toast.success('Te mandamos un link a tu email para entrar')
-    return true
-  } catch (error: any) {
-    toast.error(error?.message || 'No se pudo enviar el link')
-    return false
-  }
-}
-
-/**
- * Login clásico con email + password. El user ya debe existir.
- */
-export async function signInWithPassword(
-  email: string,
-  password: string
-): Promise<boolean> {
-  try {
-    const clean = email.trim().toLowerCase()
-    if (!clean || !password) {
-      toast.error('Email y contraseña son requeridos')
-      return false
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: clean,
-      password,
-    })
-    if (error) throw error
-
-    return true
-  } catch (error: any) {
-    toast.error(error?.message || 'Email o contraseña incorrectos')
-    return false
-  }
-}
-
-/**
- * Signup con email + password. Si "Enable email confirmations" está ON
- * en Supabase Dashboard, le manda un email de verificación antes de
- * que quede activa la sesión.
- */
-export async function signUpWithPassword(
-  email: string,
-  password: string
-): Promise<boolean> {
-  try {
-    const clean = email.trim().toLowerCase()
-    if (!clean || !password) {
-      toast.error('Email y contraseña son requeridos')
-      return false
-    }
-    if (password.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres')
-      return false
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email: clean,
-      password,
-      options: {
-        emailRedirectTo: getRedirectUrl(),
-      },
-    })
-    if (error) throw error
-
-    // Si email confirmations está activado, data.session viene null
-    // y hay que esperar el link. Si está desactivado, ya quedó logueado.
-    if (!data.session) {
-      toast.success('Cuenta creada. Revisá tu email para confirmar.')
-    } else {
-      toast.success('¡Bienvenido!')
-    }
-    return true
-  } catch (error: any) {
-    toast.error(error?.message || 'No se pudo crear la cuenta')
     return false
   }
 }

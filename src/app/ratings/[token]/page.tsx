@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useTurnstile } from '@/hooks/useTurnstile';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
@@ -34,6 +35,7 @@ export default function RatingTokenPage() {
   const searchParams = useSearchParams();
   const { username } = useUsername();
   const { t } = useLanguage();
+  const getCaptchaToken = useTurnstile('rating_submit');
 
   const token = params.token as string;
   const justCreated = searchParams.get('created') === 'true';
@@ -161,7 +163,8 @@ export default function RatingTokenPage() {
     }
 
     setSubmitting(true);
-    const ok = await submitResponse(token, username || 'Anonymous', { ratings });
+    const captchaToken = await getCaptchaToken();
+    const ok = await submitResponse(token, username || 'Anonymous', { ratings }, captchaToken);
     setSubmitting(false);
 
     if (!ok) return; // error real ya se tosteó desde db.ts
