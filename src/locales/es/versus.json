@@ -103,5 +103,10 @@
   "roundXofY": "Ronda {n} de {total}",
   "playerWins": "{name} gana",
   "drawLabel": "Empate",
-  "reorderMatch": "Reordenar partido"
+  "reorderMatch": "Reordenar partido",
+  "requiredField": "Este campo es obligatorio",
+  "minLength": "Debe tener al menos {n} caracteres",
+  "maxLength": "Debe tener como máximo {n} caracteres",
+  "invalidFormat": "Formato inválido",
+  "completeRequiredFields": "Por favor completa todos los campos obligatorios"
 }

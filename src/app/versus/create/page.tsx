@@ -15,6 +15,7 @@ import { Player, TournamentMode } from '@/types/versus';
 import { FEATURES } from '@/lib/features';
 import { VersusComingSoon } from '@/components/versus/ComingSoon';
 import { AnonCreateModal } from '@/components/auth/AnonCreateModal';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 type PlayerForm = {
   id: string;
@@ -47,11 +48,26 @@ function CreateVersusPageInner() {
   // matchupMode: 'auto' = Pickly random, 'manual' = orden de la lista
   const [matchupMode, setMatchupMode] = useState<'auto' | 'manual'>('auto');
   const [homeAndAway, setHomeAndAway] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Drag-drop state (desktop): índice del item agarrado
   const dragIndexRef = useRef<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Validation rules
+  const validationRules = {
+    title: {
+      required: true,
+      minLength: 3,
+      maxLength: 100,
+    },
+  };
+
+  const { errors, validateForm: validateFormHook, validateField, clearErrors, registerField } = useFormValidation(validationRules, {
+    showToast: true,
+    toastMessage: t('versus.completeRequiredFields'),
+    scrollToFirstError: true,
+    t,
+  });
 
   // Duration options (days). Cap a 7 días: el plan free de Supabase
   // tiene 500MB y los torneos no son chiquitos (matches JSON puede crecer).
@@ -176,36 +192,32 @@ function CreateVersusPageInner() {
     }
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (!title.trim()) {
-      newErrors.title = t('versus.titleRequired');
-    } else if (title.trim().length < 3) {
-      newErrors.title = t('versus.titleMinLength');
+    // Validate form
+    const titleValid = validateField('title', title);
+    if (titleValid) {
+      toast.error(titleValid);
+      return;
     }
 
-    const validPlayers = players.filter(p => p.name.trim() !== '');
-    if (validPlayers.length < 2) {
-      newErrors.players = t('versus.errMinPlayers');
+    const validPlayersCount = players.filter(p => p.name.trim() !== '').length;
+    if (validPlayersCount < 2) {
+      toast.error(t('versus.errMinPlayers'));
+      return;
     }
 
     if (mode === 'bracket') {
-      if (bracketSize === 2 && validPlayers.length !== 2) {
-        newErrors.players = t('versus.errExactly2');
+      if (bracketSize === 2 && validPlayersCount !== 2) {
+        toast.error(t('versus.errExactly2'));
+        return;
       }
-      if (bracketSize !== 2 && validPlayers.length !== bracketSize) {
-        newErrors.players = t('versus.errExactlyN').replace('{n}', String(bracketSize));
+      if (bracketSize !== 2 && validPlayersCount !== bracketSize) {
+        toast.error(t('versus.errExactlyN').replace('{n}', String(bracketSize)));
+        return;
       }
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
 
     // Calculate expiration date
     const selectedOption = durationOptions.find(opt => opt.value === selectedDuration);
@@ -267,7 +279,10 @@ function CreateVersusPageInner() {
 
   // Check if form can be submitted
   const validPlayers = players.filter(p => p.name.trim() !== '');
-  const canSubmit = validPlayers.length >= 2;
+  const titleValid = title.trim().length >= 3;
+  const hasEnoughPlayers = validPlayers.length >= 2;
+
+  const canSubmit = titleValid && hasEnoughPlayers;
 
   // Nota: el bracketSize ahora controla la cantidad de inputs (handleBracketSizeChange).
   // No hay sync en sentido inverso — antes había un effect que pisaba la elección del user.
@@ -296,9 +311,13 @@ function CreateVersusPageInner() {
               {t('versus.tournamentTitleLabel')}
             </label>
             <input
+              ref={(el) => registerField('title', el)}
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) clearErrors();
+              }}
               className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
                 errors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}

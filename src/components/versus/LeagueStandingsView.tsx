@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
 import { LeagueMatch, LeagueStanding, Player } from '@/types/versus';
 import { motion } from 'framer-motion';
 import { MatchResultCard } from './MatchResultCard';
 import { useLanguage } from '@/context/LanguageContext';
-import { GripVertical } from 'lucide-react';
 
 interface LeagueStandingsViewProps {
   matches: LeagueMatch[];
@@ -26,59 +24,9 @@ export const LeagueStandingsView = ({
 }: LeagueStandingsViewProps) => {
   const { t } = useLanguage();
 
-  // Visual order state (purely for display, doesn't affect results)
-  const [visualOrder, setVisualOrder] = useState<string[]>(matches.map(m => m.id));
-
-  // Drag-drop state
-  const dragIndexRef = useRef<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-
-  // Update visual order when matches change (e.g., after reordering)
-  const getMatchesInVisualOrder = () => {
-    const matchMap = new Map(matches.map(m => [m.id, m]));
-    return visualOrder.map(id => matchMap.get(id)).filter((m): m is LeagueMatch => m !== undefined);
-  };
-
-  const completedMatches = getMatchesInVisualOrder().filter(m => m.status === 'completed');
-  const pendingMatches = getMatchesInVisualOrder().filter(m => m.status === 'pending');
+  const completedMatches = matches.filter(m => m.status === 'completed');
+  const pendingMatches = matches.filter(m => m.status === 'pending');
   const isFinished = champion !== null;
-
-  // Reorder matches visually
-  const reorderMatches = (from: number, to: number) => {
-    if (from === to || from < 0 || to < 0) return;
-    setVisualOrder((current) => {
-      if (from >= current.length || to >= current.length) return current;
-      const next = [...current];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
-  };
-
-  // Drag handlers
-  const onDragStart = (index: number) => (e: React.DragEvent) => {
-    dragIndexRef.current = index;
-    e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', String(index)); } catch {}
-  };
-  const onDragOver = (index: number) => (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (dragOverIndex !== index) setDragOverIndex(index);
-  };
-  const onDragLeave = () => setDragOverIndex(null);
-  const onDrop = (index: number) => (e: React.DragEvent) => {
-    e.preventDefault();
-    const from = dragIndexRef.current;
-    setDragOverIndex(null);
-    dragIndexRef.current = null;
-    if (from === null) return;
-    reorderMatches(from, index);
-  };
-  const onDragEnd = () => {
-    dragIndexRef.current = null;
-    setDragOverIndex(null);
-  };
 
   return (
     <div className="space-y-6">
@@ -167,26 +115,7 @@ export const LeagueStandingsView = ({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  onDragOver={onDragOver(index)}
-                  onDragLeave={onDragLeave}
-                  onDrop={onDrop(index)}
-                  className={`relative rounded-lg transition-colors ${
-                    dragOverIndex === index ? 'bg-[var(--primary-light)]/30 ring-2 ring-[var(--primary)]' : ''
-                  }`}
                 >
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3">
-                    <button
-                      type="button"
-                      draggable
-                      onDragStart={onDragStart(index)}
-                      onDragEnd={onDragEnd}
-                      className="p-2 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
-                      title={t('versus.reorderMatch')}
-                      aria-label={t('versus.reorderMatch')}
-                    >
-                      <GripVertical size={18} />
-                    </button>
-                  </div>
                   <MatchResultCard
                     match={match}
                     hasScore={hasScore}
@@ -211,26 +140,7 @@ export const LeagueStandingsView = ({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  onDragOver={onDragOver(index)}
-                  onDragLeave={onDragLeave}
-                  onDrop={onDrop(index)}
-                  className={`relative rounded-lg transition-colors ${
-                    dragOverIndex === index ? 'bg-[var(--primary-light)]/30 ring-2 ring-[var(--primary)]' : ''
-                  }`}
                 >
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3">
-                    <button
-                      type="button"
-                      draggable
-                      onDragStart={onDragStart(index)}
-                      onDragEnd={onDragEnd}
-                      className="p-2 text-[var(--text-muted)] cursor-grab active:cursor-grabbing hover:text-[var(--primary)] touch-none"
-                      title={t('versus.reorderMatch')}
-                      aria-label={t('versus.reorderMatch')}
-                    >
-                      <GripVertical size={18} />
-                    </button>
-                  </div>
                   <MatchResultCard
                     match={match}
                     hasScore={hasScore}

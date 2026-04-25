@@ -16,8 +16,8 @@ interface MatchResultCardProps {
 
 export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, totalRounds, isBracket }: MatchResultCardProps) => {
   const { t } = useLanguage();
-  const [scoreA, setScoreA] = useState(match.result?.type === 'score' ? match.result.scoreA : 0);
-  const [scoreB, setScoreB] = useState(match.result?.type === 'score' ? match.result.scoreB : 0);
+  const [scoreA, setScoreA] = useState<string>('');
+  const [scoreB, setScoreB] = useState<string>('');
   const [winner, setWinner] = useState<WinLossResult['winner'] | null>(
     match.result?.type === 'winloss' ? match.result.winner : null
   );
@@ -35,8 +35,10 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
   const buttonMinWidth = getMinWidth();
 
   const handleScoreSubmit = () => {
-    if (scoreA < 0 || scoreB < 0) return;
-    const result: ScoreResult = { type: 'score', scoreA, scoreB };
+    const numScoreA = parseInt(scoreA) || 0;
+    const numScoreB = parseInt(scoreB) || 0;
+    if (numScoreA < 0 || numScoreB < 0) return;
+    const result: ScoreResult = { type: 'score', scoreA: numScoreA, scoreB: numScoreB };
     onSaveResult(match.id, result);
   };
 
@@ -113,7 +115,7 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
               type="number"
               min="0"
               value={scoreA}
-              onChange={(e) => setScoreA(parseInt(e.target.value) || 0)}
+              onChange={(e) => setScoreA(e.target.value)}
               className="w-16 px-2 py-1 border border-[var(--border)] rounded bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
           </div>
@@ -129,7 +131,7 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
               type="number"
               min="0"
               value={scoreB}
-              onChange={(e) => setScoreB(parseInt(e.target.value) || 0)}
+              onChange={(e) => setScoreB(e.target.value)}
               className="w-16 px-2 py-1 border border-[var(--border)] rounded bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
             <p className="font-medium text-[var(--text)] truncate">{match.playerB.name}</p>
