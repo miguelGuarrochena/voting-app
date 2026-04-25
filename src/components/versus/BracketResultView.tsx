@@ -151,6 +151,8 @@ export const BracketResultView = ({
                 hasScore={hasScore}
                 isEditable={isEditable && match.round === currentRound}
                 onSaveResult={onSaveResult}
+                totalRounds={totalRounds}
+                isBracket={true}
               />
             </motion.div>
           ))}
@@ -189,6 +191,23 @@ export const BracketResultView = ({
   const leftSideRounds = Array.from({ length: totalRounds - 1 }, (_, i) => i + 1);
   const rightSideRounds = [...leftSideRounds].reverse();
 
+  // Calculate dynamic column width based on total rounds
+  const getColumnWidth = () => {
+    if (totalRounds <= 2) return 'w-64 lg:w-72'; // 2-4 players: wider
+    if (totalRounds <= 3) return 'w-52 lg:w-60'; // 5-8 players: medium
+    return 'w-44 lg:w-52'; // 9+ players: default
+  };
+
+  // Calculate dynamic center width based on total rounds
+  const getCenterWidth = () => {
+    if (totalRounds <= 2) return 'w-80 lg:w-96'; // 2-4 players: wider
+    if (totalRounds <= 3) return 'w-64 lg:w-72'; // 5-8 players: medium
+    return 'w-48 lg:w-56'; // 9+ players: default
+  };
+
+  const columnWidth = getColumnWidth();
+  const centerWidth = getCenterWidth();
+
   const getLeftHalfMatches = (roundNumber: number) => {
     const roundMatches = getRoundMatches(roundNumber);
     const mid = Math.ceil(roundMatches.length / 2);
@@ -213,7 +232,7 @@ export const BracketResultView = ({
             const leftMatches = getLeftHalfMatches(roundNumber);
 
             return (
-              <div key={`left-${roundNumber}`} className="flex flex-col justify-around gap-3 w-44 lg:w-52">
+              <div key={`left-${roundNumber}`} className={`flex flex-col justify-around gap-3 ${columnWidth}`}>
                 {/* Round Label */}
                 <div className="text-center pb-1">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] truncate">
@@ -235,6 +254,8 @@ export const BracketResultView = ({
                         hasScore={hasScore}
                         isEditable={isEditable && match.round === currentRound}
                         onSaveResult={onSaveResult}
+                        totalRounds={totalRounds}
+                        isBracket={true}
                       />
                     </motion.div>
                   ))}
@@ -245,7 +266,7 @@ export const BracketResultView = ({
         </div>
 
         {/* Center - Champion/Final */}
-        <div className="flex flex-col items-center justify-center px-2 w-48 lg:w-56 flex-shrink-0">
+        <div className={`flex flex-col items-center justify-center px-2 ${centerWidth} flex-shrink-0`}>
           {champion ? (
             <motion.div
               initial={{ scale: 0, rotate: -10 }}
@@ -279,6 +300,8 @@ export const BracketResultView = ({
                     hasScore={hasScore}
                     isEditable={isEditable && match.round === currentRound}
                     onSaveResult={onSaveResult}
+                    totalRounds={totalRounds}
+                    isBracket={true}
                   />
                 </div>
               ))}
@@ -302,7 +325,7 @@ export const BracketResultView = ({
             const rightMatches = getRightHalfMatches(roundNumber);
 
             return (
-              <div key={`right-${roundNumber}`} className="flex flex-col justify-around gap-3 w-44 lg:w-52">
+              <div key={`right-${roundNumber}`} className={`flex flex-col justify-around gap-3 ${columnWidth}`}>
                 {/* Round Label */}
                 <div className="text-center pb-1">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] truncate">
@@ -324,6 +347,8 @@ export const BracketResultView = ({
                         hasScore={hasScore}
                         isEditable={isEditable && match.round === currentRound}
                         onSaveResult={onSaveResult}
+                        totalRounds={totalRounds}
+                        isBracket={true}
                       />
                     </motion.div>
                   ))}

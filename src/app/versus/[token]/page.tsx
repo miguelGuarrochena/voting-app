@@ -284,9 +284,9 @@ function VersusTournamentPageInner({ params }: PageProps) {
 
   // Calculate champion
   const champion = tournament ? (
-    tournament.mode === 'bracket' 
+    tournament.mode === 'bracket'
       ? getBracketChampion(tournament.matches as BracketMatch[])
-      : getLeagueChampion(calculateLeagueStandings(tournament.players, tournament.matches as LeagueMatch[]))
+      : getLeagueChampion(calculateLeagueStandings(tournament.players, tournament.matches as LeagueMatch[]), tournament.matches as LeagueMatch[])
   ) : null;
 
   // Show celebration when tournament is finished

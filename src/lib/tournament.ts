@@ -337,9 +337,15 @@ export function getBracketChampion(matches: BracketMatch[]): Player | null {
 
 /**
  * Gets the champion of a league tournament
+ * Only returns a champion if ALL matches are completed
  */
-export function getLeagueChampion(standings: LeagueStanding[]): Player | null {
+export function getLeagueChampion(standings: LeagueStanding[], matches: LeagueMatch[]): Player | null {
   if (standings.length === 0) return null;
+
+  // Only declare a champion if ALL matches are completed
+  const allMatchesCompleted = matches.every(m => m.status === 'completed');
+  if (!allMatchesCompleted) return null;
+
   // First in standings is the champion
   return standings[0].player;
 }

@@ -10,9 +10,11 @@ interface MatchResultCardProps {
   hasScore: boolean;
   isEditable: boolean;
   onSaveResult: (matchId: string, result: MatchResult) => void;
+  totalRounds?: number;
+  isBracket?: boolean;
 }
 
-export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult }: MatchResultCardProps) => {
+export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, totalRounds, isBracket }: MatchResultCardProps) => {
   const { t } = useLanguage();
   const [scoreA, setScoreA] = useState(match.result?.type === 'score' ? match.result.scoreA : 0);
   const [scoreB, setScoreB] = useState(match.result?.type === 'score' ? match.result.scoreB : 0);
@@ -21,6 +23,16 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult }: M
   );
 
   const isCompleted = match.status === 'completed';
+
+  // Calculate dynamic minWidth based on total rounds (more rounds = more players = narrower buttons)
+  const getMinWidth = () => {
+    if (!totalRounds) return 'min-w-0';
+    if (totalRounds <= 2) return 'min-w-[100px]'; // 2-4 players: wider
+    if (totalRounds <= 3) return 'min-w-[80px]'; // 5-8 players: medium
+    return 'min-w-[60px]'; // 9+ players: narrower
+  };
+
+  const buttonMinWidth = getMinWidth();
 
   const handleScoreSubmit = () => {
     if (scoreA < 0 || scoreB < 0) return;
@@ -31,6 +43,12 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult }: M
   const handleWinnerSelect = (selectedWinner: 'A' | 'B' | 'draw') => {
     const result: WinLossResult = { type: 'winloss', winner: selectedWinner };
     onSaveResult(match.id, result);
+  };
+
+  // Truncate player name for button text to prevent overflow
+  const truncateName = (name: string, maxLength: number = 10) => {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + '...';
   };
 
   // Display mode
@@ -87,16 +105,16 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult }: M
         animate={{ opacity: 1, y: 0 }}
         className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3 sm:p-4"
       >
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2">
           {/* Player A */}
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-[var(--text)] truncate mb-2">{match.playerA.name}</p>
+          <div className="flex items-center gap-2 flex-1">
+            <p className="font-medium text-[var(--text)] truncate">{match.playerA.name}</p>
             <input
               type="number"
               min="0"
               value={scoreA}
               onChange={(e) => setScoreA(parseInt(e.target.value) || 0)}
-              className="w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              className="w-16 px-2 py-1 border border-[var(--border)] rounded bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
           </div>
 
@@ -106,15 +124,15 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult }: M
           </div>
 
           {/* Player B */}
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-[var(--text)] truncate mb-2 text-right">{match.playerB.name}</p>
+          <div className="flex items-center gap-2 flex-1 justify-end">
             <input
               type="number"
               min="0"
               value={scoreB}
               onChange={(e) => setScoreB(parseInt(e.target.value) || 0)}
-              className="w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+              className="w-16 px-2 py-1 border border-[var(--border)] rounded bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
+            <p className="font-medium text-[var(--text)] truncate">{match.playerB.name}</p>
           </div>
         </div>
 
@@ -137,53 +155,47 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult }: M
       className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3 sm:p-4"
     >
       <div className="flex items-center justify-between gap-3 mb-3">
-        {/* Player A */}
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-[var(--text)] truncate">{match.playerA.name}</p>
-        </div>
+        {/* Player A - clickable to select as winner */}
+        <button
+          onClick={() => handleWinnerSelect('A')}
+          className={`flex-1 ${buttonMinWidth} text-center p-3 rounded-lg cursor-pointer transition-all ${
+            winner === 'A'
+              ? 'bg-[var(--primary)] text-white shadow-md'
+              : 'bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-md'
+          }`}
+        >
+          <p className="font-medium truncate">{match.playerA.name}</p>
+        </button>
 
         {/* VS */}
         <span className="text-sm font-bold text-[var(--text-muted)]">vs</span>
 
-        {/* Player B */}
-        <div className="flex-1 min-w-0 text-right">
-          <p className="font-medium text-[var(--text)] truncate">{match.playerB.name}</p>
-        </div>
-      </div>
-
-      {/* Winner buttons */}
-      <div className="grid grid-cols-3 gap-2">
+        {/* Player B - clickable to select as winner */}
         <button
-          onClick={() => handleWinnerSelect('A')}
-          className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-            winner === 'A'
-              ? 'bg-[var(--primary)] text-white'
-              : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
+          onClick={() => handleWinnerSelect('B')}
+          className={`flex-1 ${buttonMinWidth} text-center p-3 rounded-lg cursor-pointer transition-all ${
+            winner === 'B'
+              ? 'bg-[var(--primary)] text-white shadow-md'
+              : 'bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-md'
           }`}
         >
-          {t('versus.playerWins').replace('{name}', match.playerA.name)}
+          <p className="font-medium truncate">{match.playerB.name}</p>
         </button>
+      </div>
+
+      {/* Draw button only - not shown in brackets */}
+      {!isBracket && (
         <button
           onClick={() => handleWinnerSelect('draw')}
-          className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+          className={`w-full px-4 py-2 rounded-lg font-medium text-sm cursor-pointer transition-all ${
             winner === 'draw'
-              ? 'bg-[var(--primary)] text-white'
-              : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
+              ? 'bg-[var(--primary)] text-white shadow-md'
+              : 'bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] hover:border-[var(--primary)] hover:shadow-md'
           }`}
         >
           {t('versus.drawLabel')}
         </button>
-        <button
-          onClick={() => handleWinnerSelect('B')}
-          className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-            winner === 'B'
-              ? 'bg-[var(--primary)] text-white'
-              : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
-          }`}
-        >
-          {t('versus.playerWins').replace('{name}', match.playerB.name)}
-        </button>
-      </div>
+      )}
     </motion.div>
   );
 };

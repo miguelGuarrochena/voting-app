@@ -102,5 +102,6 @@
   "bracketRoundN": "Round {n}",
   "roundXofY": "Round {n} of {total}",
   "playerWins": "{name} wins",
-  "drawLabel": "Draw"
+  "drawLabel": "Draw",
+  "reorderMatch": "Reorder match"
 }

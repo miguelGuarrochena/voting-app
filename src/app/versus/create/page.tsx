@@ -221,9 +221,9 @@ function CreateVersusPageInner() {
       }));
 
     // Generate matches based on mode.
-    // matchupMode === 'auto'   → Pickly arma random (shuffle = true).
-    // matchupMode === 'manual' → respeta el orden de la lista (shuffle = false).
-    const randomize = matchupMode === 'auto';
+    // Bracket: matchupMode applies (auto random, manual respects order)
+    // League: always random (no option to choose)
+    const randomize = mode === 'league' ? true : matchupMode === 'auto';
 
     let matches;
     if (mode === 'bracket') {
@@ -231,7 +231,8 @@ function CreateVersusPageInner() {
       const useHomeAway = bracketSize === 2 && homeAndAway;
       matches = generateBracketMatches(validPlayers, randomize, useHomeAway);
     } else {
-      matches = generateLeagueMatches(validPlayers, randomize);
+      // League: always random
+      matches = generateLeagueMatches(validPlayers, true);
     }
 
     // Create tournament via Supabase (con la duración elegida)
@@ -388,8 +389,7 @@ function CreateVersusPageInner() {
             {/* Render condicional:
                 - manual + bracket → pares con "vs" explícito (Match #1: A vs B)
                 - resto (auto, o liga) → lista plana
-                Cuando manual + liga el orden importa así que mantenemos
-                la lista con drag handles. Cuando auto, no hay drag (random server-side). */}
+                En liga no hay drag handles porque los partidos siempre son aleatorios */}
             {matchupMode === 'manual' && mode === 'bracket' ? (
               <div className="space-y-3">
                 {Array.from({ length: Math.ceil(players.length / 2) }, (_, pairIdx) => {
@@ -502,7 +502,7 @@ function CreateVersusPageInner() {
             ) : (
               <div className="space-y-2">
                 {players.map((player, index) => {
-                  const isManual = matchupMode === 'manual';
+                  const isManual = matchupMode === 'manual' && mode === 'bracket';
                   const isDragOver = dragOverIndex === index;
                   return (
                     <div
@@ -514,7 +514,7 @@ function CreateVersusPageInner() {
                         isDragOver ? 'bg-[var(--primary-light)]/30 ring-2 ring-[var(--primary)]' : ''
                       }`}
                     >
-                      {/* Drag handle (desktop only, visible cuando manual) */}
+                      {/* Drag handle (desktop only, visible solo en bracket manual) */}
                       {isManual && (
                         <button
                           type="button"
@@ -529,7 +529,7 @@ function CreateVersusPageInner() {
                         </button>
                       )}
 
-                      {/* Number badge para que se vea claro el orden cuando manual */}
+                      {/* Number badge solo en bracket manual */}
                       {isManual && (
                         <span className="hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--surface-2)] text-xs font-bold text-[var(--text-muted)] flex-shrink-0">
                           {index + 1}
@@ -547,7 +547,7 @@ function CreateVersusPageInner() {
                         />
                       </div>
 
-                      {/* Up/down buttons (mobile manual + accesibilidad teclado) */}
+                      {/* Up/down buttons (mobile bracket manual + accesibilidad teclado) */}
                       {isManual && (
                         <div className="flex sm:hidden flex-col gap-0.5">
                           <button
@@ -607,49 +607,51 @@ function CreateVersusPageInner() {
                     .replace('{req}', String(bracketSize))
                 : t('versus.currentPlayersLeague').replace('{n}', String(validPlayers.length))}
             </p>
-            {matchupMode === 'manual' && (
+            {matchupMode === 'manual' && mode === 'bracket' && (
               <p className="mt-1 text-xs text-[var(--primary)]">
-                {mode === 'bracket' ? t('versus.matchupsBracketHint') : t('versus.matchupsLeagueHint')}
+                {t('versus.matchupsBracketHint')}
               </p>
             )}
           </div>
 
-          {/* Matchups: ¿quién arma los partidos? (auto random o manual) */}
-          <div>
-            <label className="block text-sm font-medium text-[var(--text)] mb-2">
-              {t('versus.matchupsLabel')}
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setMatchupMode('auto')}
-                className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium text-left ${
-                  matchupMode === 'auto'
-                    ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
-                    : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
-                }`}
-              >
-                <div className="font-semibold">{t('versus.matchupsAuto')}</div>
-                <div className="text-xs opacity-70 mt-0.5">{t('versus.matchupsAutoDesc')}</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMatchupMode('manual')}
-                className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium text-left ${
-                  matchupMode === 'manual'
-                    ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
-                    : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
-                }`}
-              >
-                <div className="font-semibold">{t('versus.matchupsManual')}</div>
-                <div className="text-xs opacity-70 mt-0.5">{t('versus.matchupsManualDesc')}</div>
-              </button>
-            </div>
+          {/* Matchups: ¿quién arma los partidos? (auto random o manual) - solo para bracket */}
+          {mode === 'bracket' && (
+            <div>
+              <label className="block text-sm font-medium text-[var(--text)] mb-2">
+                {t('versus.matchupsLabel')}
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMatchupMode('auto')}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium text-left ${
+                    matchupMode === 'auto'
+                      ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                      : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                  }`}
+                >
+                  <div className="font-semibold">{t('versus.matchupsAuto')}</div>
+                  <div className="text-xs opacity-70 mt-0.5">{t('versus.matchupsAutoDesc')}</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchupMode('manual')}
+                  className={`px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium text-left ${
+                    matchupMode === 'manual'
+                      ? 'border-[var(--primary)] bg-[var(--primary-light)] dark:bg-[var(--primary-light)/20] text-[var(--primary)]'
+                      : 'border-[var(--border)] hover:border-[var(--primary)] text-[var(--text-muted)]'
+                  }`}
+                >
+                  <div className="font-semibold">{t('versus.matchupsManual')}</div>
+                  <div className="text-xs opacity-70 mt-0.5">{t('versus.matchupsManualDesc')}</div>
+                </button>
+              </div>
 
-            {/* Antes había un preview de pares acá. Lo sacamos porque ahora los pares
-                se ven directamente en el listado de inputs (con "VS" entre cada par)
-                cuando matchupMode === 'manual' && mode === 'bracket'. */}
-          </div>
+              {/* Antes había un preview de pares acá. Lo sacamos porque ahora los pares
+                  se ven directamente en el listado de inputs (con "VS" entre cada par)
+                  cuando matchupMode === 'manual' && mode === 'bracket'. */}
+            </div>
+          )}
 
           {/* Score Type */}
           <div>

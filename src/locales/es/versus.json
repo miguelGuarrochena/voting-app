@@ -102,5 +102,6 @@
   "bracketRoundN": "Ronda {n}",
   "roundXofY": "Ronda {n} de {total}",
   "playerWins": "{name} gana",
-  "drawLabel": "Empate"
+  "drawLabel": "Empate",
+  "reorderMatch": "Reordenar partido"
 }
