@@ -271,6 +271,33 @@ const Navbar = () => {
                   </button>
                 </>
               )}
+
+              {/* Legal links */}
+              <div className="border-t border-[var(--border)] pt-3 mt-3 flex items-center gap-2">
+                <Link
+                  href="/privacy"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="px-3 py-2 text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                >
+                  {t('footer.privacy')}
+                </Link>
+                <span aria-hidden="true" className="opacity-30">·</span>
+                <Link
+                  href="/terms"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="px-3 py-2 text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                >
+                  {t('footer.terms')}
+                </Link>
+                <span aria-hidden="true" className="opacity-30">·</span>
+                <a
+                  href="mailto:hola@letspicky.com"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="px-3 py-2 text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                >
+                  {t('footer.contact')}
+                </a>
+              </div>
             </div>
           </div>
         )}

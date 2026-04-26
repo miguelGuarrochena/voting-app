@@ -35,8 +35,7 @@ export const metadata: Metadata = {
   applicationName: 'Pickly',
   manifest: '/manifest.json',
   icons: {
-    icon: '/icon.svg',
-    shortcut: '/favicon.ico',
+    icon: '/icon-192.png',
     apple: '/apple-touch-icon.png',
   },
   appleWebApp: {
