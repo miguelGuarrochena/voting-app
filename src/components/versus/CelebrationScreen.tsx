@@ -140,9 +140,10 @@ export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult, on
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] p-8 max-w-md w-full text-center"
+        className="relative bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] px-8 pt-12 pb-8 max-w-md w-full text-center"
       >
-        {/* Close button (top right). Permite volver al bracket. */}
+        {/* Close button — pegado al ángulo superior derecho, separado de la
+            card dorada con espacio extra de pt-12 en el modal. */}
         {onClose && (
           <button
             onClick={onClose}
@@ -162,12 +163,14 @@ export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult, on
             background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%)',
           }}
         >
-          {/* Trophy */}
+          {/* Trophy. leading-none + line-height inline para que html2canvas
+              no agregue descender invisible que pegue el cup al "CHAMPION". */}
           <motion.div
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="text-7xl mb-4"
+            className="text-7xl mb-6 leading-none"
+            style={{ lineHeight: 1 }}
           >
             🏆
           </motion.div>
@@ -179,7 +182,7 @@ export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult, on
             transition={{ delay: 0.4 }}
           >
             <div
-              className="uppercase text-xs font-bold tracking-widest mb-2"
+              className="uppercase text-xs font-bold tracking-widest mb-3"
               style={{ color: '#78350f' }}
             >
               {t('versus.championBadge')}

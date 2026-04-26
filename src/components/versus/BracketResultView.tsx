@@ -3,7 +3,7 @@
 import { BracketMatch, Player } from '@/types/versus';
 import { motion } from 'framer-motion';
 import { Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MatchResultCard } from './MatchResultCard';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -50,6 +50,7 @@ export const BracketResultView = ({
     if (roundNumber === totalRounds - 1) return t('versus.bracketRoundSemis');
     if (roundNumber === totalRounds - 2) return t('versus.bracketRoundQuarters');
     if (roundNumber === totalRounds - 3) return t('versus.bracketRoundEighths');
+    if (roundNumber === totalRounds - 4) return t('versus.bracketRoundSixteenths');
     return t('versus.bracketRoundN').replace('{n}', String(roundNumber));
   };
 
@@ -67,6 +68,9 @@ export const BracketResultView = ({
   // Match de la final (último round). Lo necesitamos para mostrar el
   // resultado en el centro junto con el card del campeón.
   const finalMatch = matches.find(m => m.round === totalRounds && m.status === 'completed') ?? null;
+
+  // Move useRef to top level to avoid hooks order violation
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Mobile stepper view
   if (isMobile) {
@@ -212,22 +216,13 @@ export const BracketResultView = ({
   const leftSideRounds = Array.from({ length: totalRounds - 1 }, (_, i) => i + 1);
   const rightSideRounds = [...leftSideRounds].reverse();
 
-  // Calculate dynamic column width based on total rounds
-  const getColumnWidth = () => {
-    if (totalRounds <= 2) return 'w-64 lg:w-72'; // 2-4 players: wider
-    if (totalRounds <= 3) return 'w-52 lg:w-60'; // 5-8 players: medium
-    return 'w-44 lg:w-52'; // 9+ players: default
-  };
-
-  // Calculate dynamic center width based on total rounds
-  const getCenterWidth = () => {
-    if (totalRounds <= 2) return 'w-80 lg:w-96'; // 2-4 players: wider
-    if (totalRounds <= 3) return 'w-64 lg:w-72'; // 5-8 players: medium
-    return 'w-48 lg:w-56'; // 9+ players: default
-  };
-
-  const columnWidth = getColumnWidth();
-  const centerWidth = getCenterWidth();
+  // Ancho fijo de columna en desktop: con el layout stacked (cada equipo
+  // en su fila con el input al lado) este ancho entra cómodo para nombres
+  // típicos. Si el bracket es grande, el wrapper tiene overflow-x-auto
+  // así que el user scrollea horizontal en lugar de cortar info.
+  // El usuario pidió "que sea el mismo tamaño para todos" → un solo width.
+  const columnWidth = 'w-48 lg:w-56';
+  const centerWidth = 'w-48 lg:w-56';
 
   const getLeftHalfMatches = (roundNumber: number) => {
     const roundMatches = getRoundMatches(roundNumber);
@@ -242,18 +237,18 @@ export const BracketResultView = ({
   };
 
   return (
-    // overflow-x-auto: si el bracket no entra (ej. 16 jugadores) hay scroll
-    // horizontal. -mx-4/-mx-6/-mx-8 anula el padding del card padre así el
-    // scroll arranca pegado al borde y no queda un hueco a los costados.
-    <div className="overflow-x-auto -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8 pb-2">
-      <div className="flex items-stretch justify-center gap-3 min-w-max py-4">
+    <div
+      ref={scrollRef}
+      className="w-full overflow-x-auto"
+    >
+      <div className="flex items-stretch gap-3 py-4 w-max">
         {/* Left side of bracket */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-shrink-0">
           {leftSideRounds.map((roundNumber) => {
             const leftMatches = getLeftHalfMatches(roundNumber);
 
             return (
-              <div key={`left-${roundNumber}`} className={`flex flex-col justify-around gap-3 ${columnWidth}`}>
+              <div key={`left-${roundNumber}`} className={`flex flex-col justify-around gap-3 ${columnWidth} flex-shrink-0`}>
                 {/* Round Label */}
                 <div className="text-center pb-1">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] truncate">
@@ -261,7 +256,10 @@ export const BracketResultView = ({
                   </h3>
                 </div>
 
-                {/* Matches in this round (left half) */}
+                {/* Matches in this round (left half).
+                    stacked=true → en desktop usamos layout vertical para que
+                    los nombres entren completos y todos los cards queden
+                    del mismo tamaño. */}
                 <div className="flex flex-col justify-around gap-3 flex-1">
                   {leftMatches.map((match, index) => (
                     <motion.div
@@ -277,6 +275,7 @@ export const BracketResultView = ({
                         onSaveResult={onSaveResult}
                         totalRounds={totalRounds}
                         isBracket={true}
+                        stacked={true}
                       />
                     </motion.div>
                   ))}
@@ -303,6 +302,7 @@ export const BracketResultView = ({
                     onSaveResult={onSaveResult}
                     totalRounds={totalRounds}
                     isBracket={true}
+                    stacked={true}
                   />
                 </div>
               )}
@@ -341,6 +341,7 @@ export const BracketResultView = ({
                     onSaveResult={onSaveResult}
                     totalRounds={totalRounds}
                     isBracket={true}
+                    stacked={true}
                   />
                 </div>
               ))}
@@ -359,12 +360,12 @@ export const BracketResultView = ({
         </div>
 
         {/* Right side of bracket */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-shrink-0">
           {rightSideRounds.map((roundNumber) => {
             const rightMatches = getRightHalfMatches(roundNumber);
 
             return (
-              <div key={`right-${roundNumber}`} className={`flex flex-col justify-around gap-3 ${columnWidth}`}>
+              <div key={`right-${roundNumber}`} className={`flex flex-col justify-around gap-3 ${columnWidth} flex-shrink-0`}>
                 {/* Round Label */}
                 <div className="text-center pb-1">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] truncate">
@@ -388,6 +389,7 @@ export const BracketResultView = ({
                         onSaveResult={onSaveResult}
                         totalRounds={totalRounds}
                         isBracket={true}
+                        stacked={true}
                       />
                     </motion.div>
                   ))}

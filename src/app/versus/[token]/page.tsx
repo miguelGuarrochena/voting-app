@@ -53,6 +53,10 @@ function VersusTournamentPageInner({ params }: PageProps) {
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const bracketRef = useRef<HTMLDivElement>(null);
+  // Tracks qué champion id ya disparó la celebración. Sin esto, el effect
+  // re-abre el modal apenas el usuario lo cierra (porque champion sigue
+  // existiendo y showCelebration vuelve a false).
+  const celebratedChampionId = useRef<string | null>(null);
   const searchParams = useSearchParams();
   const justCreated = searchParams.get('created') === 'true';
 
@@ -129,6 +133,7 @@ function VersusTournamentPageInner({ params }: PageProps) {
 
     return () => clearInterval(interval);
   }, [tournament]);
+
 
   const handleSaveResult = async (matchId: string, result: MatchResult) => {
     const success = await updateMatchResult(token, matchId, result);
@@ -289,14 +294,15 @@ function VersusTournamentPageInner({ params }: PageProps) {
       : getLeagueChampion(calculateLeagueStandings(tournament.players, tournament.matches as LeagueMatch[]), tournament.matches as LeagueMatch[])
   ) : null;
 
-  // Show celebration when there's a champion. Para bracket es cuando se
-  // jugó la final; para liga es cuando todos los matches están completos.
-  // No esperamos a que tournament.status sea 'finished' porque en liga
-  // el status no cambia automático (el creador tendría que cerrar a mano).
+  // Show celebration ONCE per champion. Trackeamos por id del champion en
+  // un ref para que, una vez que el usuario cierra el modal, no se vuelva
+  // a abrir solo (ya que champion sigue existiendo). Si por algún motivo
+  // el champion cambia (raro pero posible al re-jugar), se vuelve a abrir.
   // Mantenemos tournament?.status en deps para no cambiar el tamaño del
   // array entre renders (causa error en HMR de Next/React).
   useEffect(() => {
-    if (champion && !showCelebration) {
+    if (champion && celebratedChampionId.current !== champion.id) {
+      celebratedChampionId.current = champion.id;
       setShowCelebration(true);
     }
   }, [champion, tournament?.status, showCelebration]);
@@ -342,13 +348,9 @@ function VersusTournamentPageInner({ params }: PageProps) {
   const statusInfo = getStatusInfo();
   const isEditable = tournament.status === 'active' && !isExpired(new Date(tournament.expiresAt));
 
-  // Bracket necesita más ancho en desktop para mostrar todas las rondas
-  // sin scroll horizontal en torneos chicos. Liga se queda compacto.
-  const wrapperMaxW = tournament.mode === 'bracket' ? 'max-w-5xl' : 'max-w-2xl';
-
   return (
-    <PageLayout>
-      <div className={`${wrapperMaxW} mx-auto`}>
+    <PageLayout fullWidth={true}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <button
           onClick={() => safeBack(router, '/versus')}
@@ -444,8 +446,16 @@ function VersusTournamentPageInner({ params }: PageProps) {
           </div>
         )}
 
-        {/* Main Card */}
-        <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-4 sm:p-6 md:p-8">
+      </div>
+
+      {/* Main Card — full width for bracket (capped a 100vw para que el scroll
+          horizontal del bracket funcione: la cadena body→main→PageLayout son
+          flex containers con min-width:auto, sin un cap explícito acá los
+          descendientes con w-max harían crecer al wrapper más allá del viewport
+          y el overflow-x-auto del scroll container nunca se dispararía).
+          League keeps the standard centered layout. */}
+      <div className={`${tournament.mode === 'bracket' ? 'px-4 sm:px-6 lg:px-8 max-w-[100vw] overflow-x-hidden' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}`}>
+        <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-4 sm:p-6 md:p-8 mb-12">
           <div ref={bracketRef}>
             {/* Header for image (hidden on mobile) */}
             <div className="hidden md:block text-center mb-6 pb-4 border-b border-[var(--border)]">
