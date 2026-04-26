@@ -25,13 +25,15 @@ const ImagePickerModal = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadImages = useCallback(async () => {
     setLoading(true);
+    setPage(1);
     try {
       // Load curated photos as default
-      const stockImages = await imageService.searchImages('', 20);
+      const stockImages = await imageService.searchImages('', 20, 1);
       setImages(stockImages);
     } catch (error) {
       console.error('Error loading images:', error);
@@ -43,8 +45,9 @@ const ImagePickerModal = ({
 
   const handleSearch = useCallback(async (query: string) => {
     setLoading(true);
+    setPage(1);
     try {
-      const searchResults = await imageService.searchImages(query, 20);
+      const searchResults = await imageService.searchImages(query, 20, 1);
       setImages(searchResults);
     } catch (error) {
       console.error('Error searching images:', error);
@@ -127,9 +130,15 @@ const ImagePickerModal = ({
   const handleLoadMore = async () => {
     setLoading(true);
     try {
+      const nextPage = page + 1;
+      setPage(nextPage);
       // Load more curated photos
-      const newImages = await imageService.searchImages('', 20);
-      setImages(prev => [...prev, ...newImages]);
+      const newImages = await imageService.searchImages('', 20, nextPage);
+      setImages(prev => {
+        const existingIds = new Set(prev.map(img => img.id));
+        const newUnique = newImages.filter(img => !existingIds.has(img.id));
+        return [...prev, ...newUnique];
+      });
     } catch (error) {
       console.error('Error loading more images:', error);
     } finally {

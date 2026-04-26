@@ -12,6 +12,12 @@ class ImageService {
   private readonly UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
   private readonly PEXELS_API_KEY = process.env.NEXT_PUBLIC_PEXELS_API_KEY;
 
+  // Query overrides for ambiguous terms
+  private readonly queryOverrides: Record<string, string> = {
+    'leon': 'lion animal',
+    'leon animal': 'lion animal',
+  };
+
   // Lorem Picsum - No API key required, simplest option
   async getPicsumImages(count: number = 20, query?: string): Promise<StockImage[]> {
     const images: StockImage[] = [];
@@ -80,7 +86,7 @@ class ImageService {
   }
 
   // Pexels - Good quality images, requires API key
-  async getPexelsImages(query: string = 'nature', count: number = 20): Promise<StockImage[]> {
+  async getPexelsImages(query: string = 'nature', count: number = 20, page: number = 1): Promise<StockImage[]> {
     if (!this.PEXELS_API_KEY) {
       console.warn('Pexels API key not found, falling back to Picsum');
       return this.getPicsumImages(count, query);
@@ -88,7 +94,7 @@ class ImageService {
 
     try {
       const response = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape`,
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&page=${page}&orientation=landscape`,
         {
           headers: {
             'Authorization': this.PEXELS_API_KEY
@@ -122,7 +128,7 @@ class ImageService {
   }
 
   // Pexels curated photos (default)
-  async getPexelsCurated(count: number = 20): Promise<StockImage[]> {
+  async getPexelsCurated(count: number = 20, page: number = 1): Promise<StockImage[]> {
     if (!this.PEXELS_API_KEY) {
       console.warn('Pexels API key not found, falling back to Picsum');
       return this.getPicsumImages(count);
@@ -130,7 +136,7 @@ class ImageService {
 
     try {
       const response = await fetch(
-        `https://api.pexels.com/v1/curated?per_page=${count}`,
+        `https://api.pexels.com/v1/curated?per_page=${count}&page=${page}`,
         {
           headers: {
             'Authorization': this.PEXELS_API_KEY
@@ -189,13 +195,16 @@ class ImageService {
   }
 
   // Search images with keyword suggestions
-  async searchImages(query: string, count: number = 20): Promise<StockImage[]> {
+  async searchImages(query: string, count: number = 20, page: number = 1): Promise<StockImage[]> {
     if (!query.trim()) {
-      return this.getPexelsCurated(count);
+      return this.getPexelsCurated(count, page);
     }
 
+    // Apply query overrides for ambiguous terms
+    const finalQuery = this.queryOverrides[query.toLowerCase()] ?? query;
+
     // Try to get relevant images based on query using Pexels
-    return this.getPexelsImages(query, count);
+    return this.getPexelsImages(finalQuery, count, page);
   }
 }
 
