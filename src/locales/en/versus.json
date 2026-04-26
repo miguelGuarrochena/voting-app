@@ -109,5 +109,6 @@
   "minLength": "Must be at least {n} characters",
   "maxLength": "Must be at most {n} characters",
   "invalidFormat": "Invalid format",
-  "completeRequiredFields": "Please complete all required fields"
+  "completeRequiredFields": "Please complete all required fields",
+  "scrollHint": "Scroll to see all rounds"
 }

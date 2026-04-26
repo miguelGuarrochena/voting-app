@@ -454,8 +454,8 @@ function VersusTournamentPageInner({ params }: PageProps) {
           descendientes con w-max harían crecer al wrapper más allá del viewport
           y el overflow-x-auto del scroll container nunca se dispararía).
           League keeps the standard centered layout. */}
-      <div className={`${tournament.mode === 'bracket' ? 'px-4 sm:px-6 lg:px-8 max-w-[100vw] overflow-x-hidden' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}`}>
-        <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-4 sm:p-6 md:p-8 mb-12">
+      <div className={`${tournament.mode === 'bracket' ? 'px-4 sm:px-6 lg:px-8 max-w-[100vw]' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}`}>
+        <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-4 sm:p-6 md:p-8 mb-12 min-w-0">
           <div ref={bracketRef}>
             {/* Header for image (hidden on mobile) */}
             <div className="hidden md:block text-center mb-6 pb-4 border-b border-[var(--border)]">

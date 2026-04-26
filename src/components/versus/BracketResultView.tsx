@@ -31,6 +31,7 @@ export const BracketResultView = ({
   const { t } = useLanguage();
   const [isMobile, setIsMobile] = useState(false);
   const [viewRound, setViewRound] = useState(currentRound);
+  const [canScroll, setCanScroll] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -44,6 +45,12 @@ export const BracketResultView = ({
   useEffect(() => {
     setViewRound(currentRound);
   }, [currentRound]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScroll(el.scrollWidth > el.clientWidth);
+  }, [matches]);
 
   const getRoundLabel = (roundNumber: number, totalRounds: number) => {
     if (roundNumber === totalRounds) return t('versus.bracketRoundFinal');
@@ -239,9 +246,25 @@ export const BracketResultView = ({
   return (
     <div
       ref={scrollRef}
-      className="w-full overflow-x-auto"
+      className="bracket-scroll"
+      style={{
+        overflow: 'auto',
+        width: '100%',
+        minWidth: '0',
+        WebkitOverflowScrolling: 'touch',
+        maxWidth: '100vw',
+        boxSizing: 'border-box',
+      }}
     >
-      <div className="flex items-stretch gap-3 py-4 w-max">
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'stretch',
+          gap: '12px',
+          padding: '16px 0',
+          minWidth: 'max-content',
+        }}
+      >
         {/* Left side of bracket */}
         <div className="flex gap-3 flex-shrink-0">
           {leftSideRounds.map((roundNumber) => {
@@ -399,6 +422,11 @@ export const BracketResultView = ({
           })}
         </div>
       </div>
+      {canScroll && (
+        <p className="text-xs text-center text-[var(--text-muted)] mt-2 md:hidden-on-mouse">
+          ← {t('versus.scrollHint')} →
+        </p>
+      )}
     </div>
   );
 };
