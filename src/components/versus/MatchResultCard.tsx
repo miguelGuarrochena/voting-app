@@ -163,7 +163,7 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
             value={scoreA}
             onChange={handleScoreChange(setScoreA)}
             placeholder="0"
-            aria-label={`${match.playerA.name} score`}
+            aria-label={t('versus.scoreInputAriaLabel').replace('{name}', match.playerA.name)}
             className="w-12 flex-shrink-0 px-2 py-1 border border-[var(--border)] rounded bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           />
         </div>
@@ -179,7 +179,7 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
             value={scoreB}
             onChange={handleScoreChange(setScoreB)}
             placeholder="0"
-            aria-label={`${match.playerB.name} score`}
+            aria-label={t('versus.scoreInputAriaLabel').replace('{name}', match.playerB.name)}
             className="w-12 flex-shrink-0 px-2 py-1 border border-[var(--border)] rounded bg-[var(--surface-2)] text-[var(--text)] text-center font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           />
         </div>
@@ -270,7 +270,7 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
                 )}
               </div>
             ) : (
-              <span className="text-xs text-[var(--text-muted)]">vs</span>
+              <span className="text-xs text-[var(--text-muted)]">{t('versus.vsAbbrev')}</span>
             )}
           </div>
 
@@ -312,7 +312,7 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
 
           {/* VS */}
           <div className="flex items-center justify-center flex-shrink-0">
-            <span className="text-sm font-bold text-[var(--text-muted)]">vs</span>
+            <span className="text-sm font-bold text-[var(--text-muted)]">{t('versus.vsAbbrev')}</span>
           </div>
 
           {/* Player B */}
@@ -363,7 +363,7 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
         </button>
 
         {/* VS */}
-        <span className="text-sm font-bold text-[var(--text-muted)]">vs</span>
+        <span className="text-sm font-bold text-[var(--text-muted)]">{t('versus.vsAbbrev')}</span>
 
         {/* Player B - clickable to select as winner */}
         <button

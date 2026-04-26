@@ -101,6 +101,8 @@
   "bracketRoundEighths": "Octavos",
   "bracketRoundSixteenths": "16avos",
   "bracketRoundN": "Ronda {n}",
+  "vsAbbrev": "vs",
+  "scoreInputAriaLabel": "Puntaje de {name}",
   "roundXofY": "Ronda {n} de {total}",
   "playerWins": "{name} gana",
   "drawLabel": "Empate",

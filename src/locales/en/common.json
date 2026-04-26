@@ -32,9 +32,16 @@
   "liveResults": "Live results",
   "seeResultsBelow": "See results below",
   "actions": "Actions",
+  "close": "Close",
   "imagePicker": {
     "searchPlaceholder": "Search images...",
     "noResults": "No images found",
+    "noResultsHint": "Try a different search term or pick a category.",
+    "errorTitle": "Could not load images",
+    "errorHint": "Check your connection and try again.",
+    "retry": "Retry",
+    "loadingMore": "Loading more…",
+    "stockImageAlt": "Stock image",
     "category": {
       "nature": "Nature",
       "cities": "Cities",

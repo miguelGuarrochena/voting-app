@@ -1,23 +1,50 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- White circle without border -->
-  <circle cx="256" cy="256" r="240" fill="white"/>
-  
-  <!-- Letter P -->
-  <text x="256" y="340" font-family="Arial, sans-serif" font-size="280" font-weight="bold" fill="#FF4D6A" text-anchor="middle">P</text>
-  
-  <!-- Yellow sparkles around P -->
-  <path d="M146 140 L151 155 L166 160 L151 165 L146 180 L141 165 L126 160 L141 155 Z" fill="#F7DC6F" filter="url(#glow)"/>
-  <path d="M171 165 L174 175 L184 178 L174 181 L171 191 L168 181 L158 178 L168 175 Z" fill="#F7DC6F" filter="url(#glow)"/>
-  <path d="M191 145 L194 155 L204 158 L194 161 L191 171 L188 161 L178 158 L188 155 Z" fill="#F7DC6F" filter="url(#glow)"/>
-  
-  <!-- Glow filter -->
-  <defs>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-  </defs>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    Pickly favicon.
+    Background: primary color (#FF4D6A) en rounded square.
+    Foreground: blanco — letra P + sparkle decorativo arriba a la derecha.
+    Diseño plano, sin filters/glow para que se vea bien a 16x16 también.
+  -->
+
+  <!-- Rounded square background -->
+  <rect x="0" y="0" width="512" height="512" rx="110" ry="110" fill="#FF4D6A"/>
+
+  <!-- Letter P, centered horizontally -->
+  <text
+    x="240"
+    y="372"
+    font-family="'Sora', 'DM Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif"
+    font-size="340"
+    font-weight="800"
+    fill="#FFFFFF"
+    text-anchor="middle"
+    letter-spacing="-8">P</text>
+
+  <!-- Sparkle (cuatro puntas) arriba a la derecha del P -->
+  <g fill="#FFFFFF">
+    <!-- Punta principal del sparkle -->
+    <path d="
+      M 388 138
+      L 401 174
+      L 437 187
+      L 401 200
+      L 388 236
+      L 375 200
+      L 339 187
+      L 375 174
+      Z
+    "/>
+    <!-- Sparkle secundario, más chico, arriba a la derecha del principal -->
+    <path d="
+      M 442 92
+      L 448 108
+      L 464 114
+      L 448 120
+      L 442 136
+      L 436 120
+      L 420 114
+      L 436 108
+      Z
+    "/>
+  </g>
 </svg>

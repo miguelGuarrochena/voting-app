@@ -32,9 +32,16 @@
   "liveResults": "Resultados en vivo",
   "seeResultsBelow": "Mira los resultados debajo",
   "actions": "Acciones",
+  "close": "Cerrar",
   "imagePicker": {
     "searchPlaceholder": "Buscar imágenes...",
     "noResults": "No se encontraron imágenes",
+    "noResultsHint": "Probá otro término o elegí una categoría.",
+    "errorTitle": "No pudimos cargar las imágenes",
+    "errorHint": "Revisá tu conexión y volvé a intentar.",
+    "retry": "Reintentar",
+    "loadingMore": "Cargando más…",
+    "stockImageAlt": "Imagen de stock",
     "category": {
       "nature": "Naturaleza",
       "cities": "Ciudades",
