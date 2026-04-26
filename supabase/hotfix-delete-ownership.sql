@@ -20,6 +20,8 @@
 --   - Las RPCs limpian dependencias antes de borrar para no asumir
 --     ON DELETE CASCADE en las FKs (si no está configurado, el
 --     borrado falla con FK violation).
+--   - NOTA: tournaments no tiene dependencias externas (matches están
+--     en la columna matches jsonb de la propia tabla).
 --
 -- IDEMPOTENTE: se puede correr N veces sin romper nada.
 -- ============================================================
@@ -86,8 +88,7 @@ BEGIN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = 'P0001';
   END IF;
 
-  DELETE FROM public.duel_votes  WHERE tournament_token = p_token;
-  DELETE FROM public.tournaments WHERE token            = p_token;
+  DELETE FROM public.tournaments WHERE token = p_token;
 
   GET DIAGNOSTICS v_rows = ROW_COUNT;
   RETURN v_rows > 0;

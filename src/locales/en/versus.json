@@ -78,7 +78,6 @@
   "errExactly2": "Bracket of 2 needs exactly 2 named players",
   "errExactlyN": "Bracket of {n} needs exactly {n} named players",
   "errDuplicatePlayers": "Two players can't have the same name",
-  "advanceRound": "Advance to next round",
   "roundComplete": "Round complete",
   "standings": "Standings",
   "playerColumn": "Player",
@@ -112,5 +111,6 @@
   "maxLength": "Must be at most {n} characters",
   "invalidFormat": "Invalid format",
   "completeRequiredFields": "Please complete all required fields",
-  "scrollHint": "Scroll to see all rounds"
+  "scrollHint": "Scroll to see all rounds",
+  "noDraw": "Draws are not allowed in bracket mode. There must be a winner."
 }

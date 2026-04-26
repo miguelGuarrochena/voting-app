@@ -457,6 +457,18 @@ export async function updateMatchResult(
   result: any
 ): Promise<boolean> {
   try {
+    // Check if tournament is in bracket mode and result is a draw
+    const tournament = await getTournament(token);
+    if (tournament?.mode === 'bracket') {
+      const isDraw = result.type === 'score' 
+        ? result.scoreA === result.scoreB 
+        : result.winner === 'draw';
+      if (isDraw) {
+        toast.error('Los empates no están permitidos en el bracket. Debe haber un ganador.');
+        return false;
+      }
+    }
+
     const { data, error } = await supabase.rpc('update_match_result_rpc', {
       p_token: token,
       p_match_id: matchId,

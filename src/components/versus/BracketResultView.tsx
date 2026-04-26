@@ -12,7 +12,6 @@ interface BracketResultViewProps {
   hasScore: boolean;
   isEditable: boolean;
   onSaveResult: (matchId: string, result: any) => void;
-  onAdvanceRound: (roundNumber: number) => void;
   currentRound: number;
   totalRounds: number;
   champion: Player | null;
@@ -23,7 +22,6 @@ export const BracketResultView = ({
   hasScore,
   isEditable,
   onSaveResult,
-  onAdvanceRound,
   currentRound,
   totalRounds,
   champion,
@@ -70,7 +68,6 @@ export const BracketResultView = ({
     return roundMatches.every(m => m.status === 'completed');
   };
 
-  const canAdvanceCurrentRound = isRoundComplete(currentRound) && currentRound < totalRounds;
 
   // Match de la final (último round). Lo necesitamos para mostrar el
   // resultado en el centro junto con el card del campeón.
@@ -190,15 +187,6 @@ export const BracketResultView = ({
           ))}
         </motion.div>
 
-        {/* Advance round button */}
-        {canAdvanceCurrentRound && isEditable && (
-          <button
-            onClick={() => onAdvanceRound(currentRound)}
-            className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-lg font-medium hover:shadow-lg transition-all"
-          >
-            {t('versus.advanceRound')}
-          </button>
-        )}
 
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mt-6">
@@ -256,15 +244,17 @@ export const BracketResultView = ({
         boxSizing: 'border-box',
       }}
     >
-      <div
-        style={{
-          display: 'inline-flex',
-          alignItems: 'stretch',
-          gap: '12px',
-          padding: '16px 0',
-          minWidth: 'max-content',
-        }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'center', minWidth: '100%' }}>
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            padding: '16px',
+            minWidth: 'max-content',
+          }}
+        >
         {/* Left side of bracket */}
         <div className="flex gap-3 flex-shrink-0">
           {leftSideRounds.map((roundNumber) => {
@@ -371,15 +361,6 @@ export const BracketResultView = ({
             </div>
           )}
 
-          {/* Advance round button (desktop) */}
-          {canAdvanceCurrentRound && isEditable && (
-            <button
-              onClick={() => onAdvanceRound(currentRound)}
-              className="mt-4 px-4 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-lg font-medium hover:shadow-lg transition-all text-sm w-full"
-            >
-              {t('versus.advanceRound')}
-            </button>
-          )}
         </div>
 
         {/* Right side of bracket */}
@@ -421,6 +402,7 @@ export const BracketResultView = ({
             );
           })}
         </div>
+      </div>
       </div>
       {canScroll && (
         <p className="text-xs text-center text-[var(--text-muted)] mt-2 md:hidden-on-mouse">

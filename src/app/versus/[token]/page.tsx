@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { isExpired } from '@/lib/token';
-import { getTournament, updateMatchResult, advanceBracketRound, deleteTournament, closeTournament, updateTournamentTitle } from '@/lib/db';
+import { getTournament, updateMatchResult, deleteTournament, closeTournament, updateTournamentTitle } from '@/lib/db';
 import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
 import { Tournament, MatchResult, BracketMatch, LeagueMatch, Player } from '@/types/versus';
@@ -137,15 +137,6 @@ function VersusTournamentPageInner({ params }: PageProps) {
 
   const handleSaveResult = async (matchId: string, result: MatchResult) => {
     const success = await updateMatchResult(token, matchId, result);
-    if (success) {
-      // Reload tournament to get updated data
-      const updated = await getTournament(token);
-      if (updated) setTournament(updated);
-    }
-  };
-
-  const handleAdvanceRound = async (roundNumber: number) => {
-    const success = await advanceBracketRound(token, roundNumber);
     if (success) {
       // Reload tournament to get updated data
       const updated = await getTournament(token);
@@ -471,7 +462,6 @@ function VersusTournamentPageInner({ params }: PageProps) {
                 hasScore={tournament.hasScore}
                 isEditable={isEditable}
                 onSaveResult={handleSaveResult}
-                onAdvanceRound={handleAdvanceRound}
                 currentRound={getCurrentBracketRound(tournament.matches as BracketMatch[])}
                 totalRounds={getTotalBracketRounds(tournament.players.length)}
                 champion={champion}

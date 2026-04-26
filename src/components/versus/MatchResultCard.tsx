@@ -4,6 +4,7 @@ import { Match, MatchResult, ScoreResult, WinLossResult } from '@/types/versus';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import toast from 'react-hot-toast';
 
 interface MatchResultCardProps {
   match: Match;
@@ -46,6 +47,10 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
     const safeA = Number.isFinite(numScoreA) ? numScoreA : 0;
     const safeB = Number.isFinite(numScoreB) ? numScoreB : 0;
     if (safeA < 0 || safeB < 0) return;
+    if (isBracket && safeA === safeB) {
+      toast.error(t('versus.noDraw'));
+      return;
+    }
     const result: ScoreResult = { type: 'score', scoreA: safeA, scoreB: safeB };
     onSaveResult(match.id, result);
   };

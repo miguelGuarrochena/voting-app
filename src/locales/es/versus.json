@@ -78,7 +78,6 @@
   "errExactly2": "Las llaves de 2 jugadores necesitan exactamente 2 jugadores con nombre",
   "errExactlyN": "Las llaves de {n} jugadores necesitan exactamente {n} jugadores con nombre",
   "errDuplicatePlayers": "No puede haber dos jugadores con el mismo nombre",
-  "advanceRound": "Avanzar a la siguiente ronda",
   "roundComplete": "Ronda completa",
   "standings": "Tabla de Posiciones",
   "playerColumn": "Jugador",
@@ -112,5 +111,6 @@
   "maxLength": "Debe tener como máximo {n} caracteres",
   "invalidFormat": "Formato inválido",
   "completeRequiredFields": "Por favor completa todos los campos obligatorios",
-  "scrollHint": "Desliza para ver todas las rondas"
+  "scrollHint": "Desliza para ver todas las rondas",
+  "noDraw": "Los empates no están permitidos en el bracket. Debe haber un ganador."
 }
