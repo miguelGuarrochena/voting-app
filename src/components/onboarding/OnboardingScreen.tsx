@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useUsername } from '@/context/UsernameContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 // Lista de rutas donde el username SÍ es requerido inmediato. En home,
 // listados, /auth/*, /privacy/, /terms y /spin no tiene sentido bloquear
@@ -21,6 +22,7 @@ function pathRequiresUsername(pathname: string): boolean {
 
 export default function OnboardingScreen() {
   const { username, setUsername, hasOnboarded } = useUsername();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -39,17 +41,17 @@ export default function OnboardingScreen() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedName = name.trim();
-    
+
     if (trimmedName.length < 2) {
-      setError('Por favor, ingresa al menos 2 caracteres');
+      setError(t('onboarding.errorMin'));
       return;
     }
-    
+
     if (trimmedName.length > 20) {
-      setError('El nombre es muy largo (máximo 20 caracteres)');
+      setError(t('onboarding.errorMax'));
       return;
     }
-    
+
     setUsername(trimmedName);
   };
 
@@ -62,12 +64,12 @@ export default function OnboardingScreen() {
             <h1 className="text-4xl sm:text-5xl font-bold font-display text-[var(--primary)] mb-2">
               ✨ Pickly
             </h1>
-            <p className="text-[var(--text-muted)]">Decisiones rápidas, divertidas y en grupo</p>
+            <p className="text-[var(--text-muted)]">{t('onboarding.tagline')}</p>
           </div>
 
           {/* Question */}
           <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-6">
-            ¿Cómo te llamas? ✨
+            {t('onboarding.question')} ✨
           </h2>
 
           {/* Form */}
@@ -80,7 +82,7 @@ export default function OnboardingScreen() {
                   setName(e.target.value);
                   setError('');
                 }}
-                placeholder="Tu nombre o alias..."
+                placeholder={t('onboarding.placeholder')}
                 maxLength={20}
                 className="w-full px-6 py-4 text-lg border-2 border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-all text-center"
                 autoFocus
@@ -95,13 +97,13 @@ export default function OnboardingScreen() {
               disabled={!name.trim()}
               className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              Entrar a Pickly →
+              {t('onboarding.button')}
             </button>
           </form>
 
           {/* Footer note */}
           <p className="mt-6 text-sm text-[var(--text-muted)]">
-            Solo tu nombre, sin email ni contraseña 🎉
+            {t('onboarding.note')} 🎉
           </p>
         </div>
       </div>

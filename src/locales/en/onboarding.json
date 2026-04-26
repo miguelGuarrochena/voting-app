@@ -1,0 +1,9 @@
+{
+  "tagline": "Quick, fun, and group decisions",
+  "question": "What's your name?",
+  "placeholder": "Your name or alias...",
+  "button": "Enter Pickly →",
+  "note": "Just your name, no email or password",
+  "errorMin": "Please enter at least 2 characters",
+  "errorMax": "Name is too long (max 20 characters)"
+}

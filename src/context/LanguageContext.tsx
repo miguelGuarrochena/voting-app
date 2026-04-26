@@ -21,6 +21,7 @@ import ratingsEn from '@/locales/en/ratings.json';
 import authEn from '@/locales/en/auth.json';
 import privacyEn from '@/locales/en/privacy.json';
 import termsEn from '@/locales/en/terms.json';
+import onboardingEn from '@/locales/en/onboarding.json';
 
 import commonEs from '@/locales/es/common.json';
 import navEs from '@/locales/es/nav.json';
@@ -40,6 +41,7 @@ import ratingsEs from '@/locales/es/ratings.json';
 import authEs from '@/locales/es/auth.json';
 import privacyEs from '@/locales/es/privacy.json';
 import termsEs from '@/locales/es/terms.json';
+import onboardingEs from '@/locales/es/onboarding.json';
 
 type Language = 'en' | 'es';
 
@@ -86,7 +88,8 @@ const translations = {
     ...flattenObject(ratingsEn, 'ratings'),
     ...flattenObject(authEn, 'auth'),
     ...flattenObject(privacyEn, 'privacy'),
-    ...flattenObject(termsEn, 'terms')
+    ...flattenObject(termsEn, 'terms'),
+    ...flattenObject(onboardingEn, 'onboarding')
   },
   es: {
     ...flattenObject(commonEs, 'common'),
@@ -106,7 +109,8 @@ const translations = {
     ...flattenObject(ratingsEs, 'ratings'),
     ...flattenObject(authEs, 'auth'),
     ...flattenObject(privacyEs, 'privacy'),
-    ...flattenObject(termsEs, 'terms')
+    ...flattenObject(termsEs, 'terms'),
+    ...flattenObject(onboardingEs, 'onboarding')
   }
 };
 

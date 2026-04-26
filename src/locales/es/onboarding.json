@@ -1,0 +1,9 @@
+{
+  "tagline": "Decisiones rápidas, divertidas y en grupo",
+  "question": "¿Cómo te llamas?",
+  "placeholder": "Tu nombre o alias...",
+  "button": "Entrar a Pickly →",
+  "note": "Solo tu nombre, sin email ni contraseña",
+  "errorMin": "Por favor, ingresa al menos 2 caracteres",
+  "errorMax": "El nombre es muy largo (máximo 20 caracteres)"
+}
