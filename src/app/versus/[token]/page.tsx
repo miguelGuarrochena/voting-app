@@ -58,14 +58,12 @@ function VersusTournamentPageInner({ params }: PageProps) {
   // existiendo y showCelebration vuelve a false).
   const celebratedChampionId = useRef<string | null>(null);
   const searchParams = useSearchParams();
-  const justCreated = searchParams.get('created') === 'true';
 
   // Load tournament data
   useEffect(() => {
     const loadTournament = async () => {
-      // Show toast if just created
-      if (justCreated) {
-        toast(t('versus.tournamentCreated'));
+      // Clean up URL param if present (no longer needed for toast)
+      if (searchParams.get('created') === 'true') {
         window.history.replaceState({}, '', `/versus/${token}`);
       }
 
@@ -118,7 +116,7 @@ function VersusTournamentPageInner({ params }: PageProps) {
     return () => {
       supabase.removeChannel(tournamentChannel);
     };
-  }, [token, username, justCreated, t]);
+  }, [token, username, t]);
 
   // Countdown timer
   useEffect(() => {

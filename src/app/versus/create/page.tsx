@@ -258,6 +258,8 @@ function CreateVersusPageInner() {
       return;
     }
 
+    toast.success(t('versus.tournamentCreated'));
+
     // Guardar en "mis torneos" (localStorage) como creador.
     addMyPoll({
       token,
