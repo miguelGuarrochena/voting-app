@@ -1,15 +1,18 @@
-import type { Metadata } from 'next';
+'use client';
+
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
-
-export const metadata: Metadata = {
-  title: 'Términos',
-  description:
-    'Términos y condiciones de uso de Pickly: qué se permite, qué no, y los límites de responsabilidad.',
-};
+import { useLanguage } from '@/context/LanguageContext';
+import { useEffect } from 'react';
 
 export default function TermsPage() {
+  const { t, language } = useLanguage();
+
+  useEffect(() => {
+    document.title = t('terms.title');
+  }, [t, language]);
+
   return (
     <PageLayout className="pb-24 md:pb-16">
       <div className="max-w-3xl mx-auto px-1 sm:px-2 pt-6 sm:pt-10">
@@ -18,124 +21,100 @@ export default function TermsPage() {
           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Home</span>
+          <span>{t('terms.home')}</span>
         </Link>
 
         <article className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 sm:p-10">
           <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2">
-            Términos y condiciones
+            {t('terms.title')}
           </h1>
           <p className="text-sm text-[var(--text-muted)] mb-8">
-            Última actualización: 25 de abril de 2026
+            {t('terms.lastUpdated')}
           </p>
 
-          <Section title="1. Aceptación">
+          <Section title={t('terms.section1Title')}>
             <p>
-              Al usar Pickly aceptás estos términos. Si no estás de acuerdo, por
-              favor no uses el servicio.
+              {t('terms.section1Text')}
             </p>
           </Section>
 
-          <Section title="2. Qué es Pickly">
+          <Section title={t('terms.section2Title')}>
             <p>
-              Pickly es una herramienta gratuita para crear encuestas, rankings,
-              ratings y torneos de votación, y compartir el link con quienes
-              quieras. Está disponible "tal cual" — hacemos lo posible por
-              mantenerla disponible y con buena experiencia, pero sin garantías
-              expresas de uptime ni continuidad.
+              {t('terms.section2Text')}
             </p>
           </Section>
 
-          <Section title="3. Tu cuenta (opcional)">
+          <Section title={t('terms.section3Title')}>
             <p>
-              Podés usar Pickly sin cuenta. Si decidís crearte una, sos
-              responsable de la seguridad de tu contraseña (si elegís ese
-              método) y de toda actividad realizada desde esa cuenta.
+              {t('terms.section3Text')}
             </p>
           </Section>
 
-          <Section title="4. Uso aceptable">
+          <Section title={t('terms.section4Title')}>
             <p>
-              No usés Pickly para:
+              {t('terms.section4Text')}
             </p>
             <ul>
-              <li>Crear encuestas con contenido ilegal, violento, sexual con menores, hostigador o que viole derechos de terceros.</li>
-              <li>Suplantar a otra persona o atribuir falsamente declaraciones a personas reales.</li>
-              <li>Distribuir malware, phishing o cualquier código malicioso.</li>
-              <li>Realizar scraping masivo, spam o intentos de saturar la plataforma.</li>
-              <li>Burlar mecanismos anti-fraude para inflar votos.</li>
+              <li>{t('terms.section4_1')}</li>
+              <li>{t('terms.section4_2')}</li>
+              <li>{t('terms.section4_3')}</li>
+              <li>{t('terms.section4_4')}</li>
+              <li>{t('terms.section4_5')}</li>
             </ul>
             <p>
-              Nos reservamos el derecho de eliminar contenido que viole estas
-              reglas y/o suspender cuentas que las incumplan reiteradamente.
+              {t('terms.section4Text2')}
             </p>
           </Section>
 
-          <Section title="5. Tu contenido">
+          <Section title={t('terms.section5Title')}>
             <p>
-              Lo que escribís y subís sigue siendo tuyo. Al crear una encuesta,
-              nos otorgás una licencia limitada y no exclusiva para almacenar,
-              procesar y mostrar ese contenido a quienes accedan al link, con
-              el único fin de operar el servicio.
+              {t('terms.section5Text')}
             </p>
             <p>
-              Vos sos responsable del contenido que publiques. Antes de subir
-              imágenes verificá que tengas los derechos para usarlas.
+              {t('terms.section5Text2')}
             </p>
           </Section>
 
-          <Section title="6. Encuestas anónimas y borrado">
+          <Section title={t('terms.section6Title')}>
             <p>
-              Las encuestas creadas sin cuenta se administran únicamente desde
-              el dispositivo donde fueron creadas (token guardado localmente).
-              Si perdés ese dispositivo o limpias el almacenamiento del
-              navegador, podés perder la posibilidad de gestionar la encuesta.
-              Esto está expresamente comunicado al momento de crear sin cuenta.
+              {t('terms.section6Text')}
             </p>
             <p>
-              Las encuestas y sus respuestas se eliminan automáticamente a los
-              90 días de su creación.
+              {t('terms.section6Text2')}
             </p>
           </Section>
 
-          <Section title="7. Disponibilidad y cambios">
+          <Section title={t('terms.section7Title')}>
             <p>
-              Podemos modificar, suspender o discontinuar funcionalidades en
-              cualquier momento. Vamos a tratar de avisar con anticipación
-              cuando los cambios sean significativos, pero no es obligatorio.
+              {t('terms.section7Text')}
             </p>
           </Section>
 
-          <Section title="8. Limitación de responsabilidad">
+          <Section title={t('terms.section8Title')}>
             <p>
-              Hasta donde la ley lo permita, Pickly y sus operadores no son
-              responsables por daños indirectos, incidentales o consecuentes
-              derivados del uso del servicio (incluyendo pérdida de datos,
-              encuestas borradas, indisponibilidad temporal, etc.).
+              {t('terms.section8Text')}
             </p>
           </Section>
 
-          <Section title="9. Privacidad">
+          <Section title={t('terms.section9Title')}>
             <p>
-              El tratamiento de datos personales se rige por nuestra{' '}
+              {t('terms.section9Text')}{' '}
               <Link href="/privacy" className="text-[var(--primary)] hover:underline">
-                política de privacidad
+                {t('terms.privacyLink')}
               </Link>
               .
             </p>
           </Section>
 
-          <Section title="10. Ley aplicable">
+          <Section title={t('terms.section10Title')}>
             <p>
-              Estos términos se rigen por las leyes argentinas. Cualquier
-              disputa se resolverá en los tribunales con jurisdicción en
-              Argentina, salvo que la ley aplicable disponga otra cosa.
+              {t('terms.section10Text')}
             </p>
           </Section>
 
-          <Section title="11. Contacto">
+          <Section title={t('terms.section11Title')}>
             <p>
-              Para cualquier consulta sobre estos términos, escribinos a{' '}
+              {t('terms.section11Text')}{' '}
               <a href="mailto:hola@letspicky.com" className="text-[var(--primary)] hover:underline">
                 hola@letspicky.com
               </a>

@@ -19,6 +19,8 @@ import footerEn from '@/locales/en/footer.json';
 import rankingEn from '@/locales/en/ranking.json';
 import ratingsEn from '@/locales/en/ratings.json';
 import authEn from '@/locales/en/auth.json';
+import privacyEn from '@/locales/en/privacy.json';
+import termsEn from '@/locales/en/terms.json';
 
 import commonEs from '@/locales/es/common.json';
 import navEs from '@/locales/es/nav.json';
@@ -36,6 +38,8 @@ import footerEs from '@/locales/es/footer.json';
 import rankingEs from '@/locales/es/ranking.json';
 import ratingsEs from '@/locales/es/ratings.json';
 import authEs from '@/locales/es/auth.json';
+import privacyEs from '@/locales/es/privacy.json';
+import termsEs from '@/locales/es/terms.json';
 
 type Language = 'en' | 'es';
 
@@ -80,7 +84,9 @@ const translations = {
     ...flattenObject(footerEn, 'footer'),
     ...flattenObject(rankingEn, 'ranking'),
     ...flattenObject(ratingsEn, 'ratings'),
-    ...flattenObject(authEn, 'auth')
+    ...flattenObject(authEn, 'auth'),
+    ...flattenObject(privacyEn, 'privacy'),
+    ...flattenObject(termsEn, 'terms')
   },
   es: {
     ...flattenObject(commonEs, 'common'),
@@ -98,7 +104,9 @@ const translations = {
     ...flattenObject(footerEs, 'footer'),
     ...flattenObject(rankingEs, 'ranking'),
     ...flattenObject(ratingsEs, 'ratings'),
-    ...flattenObject(authEs, 'auth')
+    ...flattenObject(authEs, 'auth'),
+    ...flattenObject(privacyEs, 'privacy'),
+    ...flattenObject(termsEs, 'terms')
   }
 };
 
