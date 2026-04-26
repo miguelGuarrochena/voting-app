@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { imageService, StockImage } from '@/services/imageService';
 import { useLanguage } from '@/context/LanguageContext';
@@ -23,25 +23,94 @@ const ImagePickerModal = ({
   const modalTitle = title || t('common.chooseImage');
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load initial images
-  useEffect(() => {
-    if (isOpen) {
-      loadImages();
-    }
-  }, [isOpen]);
-
-  const loadImages = async () => {
+  const loadImages = useCallback(async () => {
     setLoading(true);
     try {
-      // Load default images
-      const stockImages = await imageService.searchImages('poll', 20);
+      // Load curated photos as default
+      const stockImages = await imageService.searchImages('', 20);
       setImages(stockImages);
     } catch (error) {
       console.error('Error loading images:', error);
       setImages([]);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const handleSearch = useCallback(async (query: string) => {
+    setLoading(true);
+    try {
+      const searchResults = await imageService.searchImages(query, 20);
+      setImages(searchResults);
+    } catch (error) {
+      console.error('Error searching images:', error);
+      setImages([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchQuery(value);
+    
+    // Clear timeout if exists
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Debounce search
+    searchTimeoutRef.current = setTimeout(() => {
+      if (value.trim()) {
+        handleSearch(value);
+        setSelectedCategory(null); // Clear category when typing
+      } else {
+        loadImages(); // Load curated when empty
+      }
+    }, 500);
+  };
+
+  // Load initial images
+  useEffect(() => {
+    if (isOpen) {
+      loadImages();
+    }
+  }, [isOpen, loadImages]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const categories = [
+    { key: 'nature', query: 'nature' },
+    { key: 'cities', query: 'city' },
+    { key: 'food', query: 'food' },
+    { key: 'sports', query: 'sports' },
+    { key: 'technology', query: 'technology' },
+    { key: 'art', query: 'art' },
+    { key: 'animals', query: 'animals' },
+    { key: 'travel', query: 'travel' }
+  ];
+
+  const handleCategoryClick = async (category: { key: string; query: string }) => {
+    if (selectedCategory === category.key) {
+      // Deselect category and load curated photos
+      setSelectedCategory(null);
+      setSearchQuery('');
+      loadImages();
+    } else {
+      // Select category and fill search input
+      setSelectedCategory(category.key);
+      setSearchQuery(category.query);
+      handleSearch(category.query);
     }
   };
 
@@ -58,8 +127,8 @@ const ImagePickerModal = ({
   const handleLoadMore = async () => {
     setLoading(true);
     try {
-      // Load more default images
-      const newImages = await imageService.searchImages('poll', 20);
+      // Load more curated photos
+      const newImages = await imageService.searchImages('', 20);
       setImages(prev => [...prev, ...newImages]);
     } catch (error) {
       console.error('Error loading more images:', error);
@@ -99,7 +168,7 @@ const ImagePickerModal = ({
         >
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-[var(--text)]">{modalTitle}</h2>
               <button
                 onClick={handleClose}
@@ -109,6 +178,47 @@ const ImagePickerModal = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+            </div>
+            {/* Search Input */}
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
+                  placeholder="Search... / Buscar..."
+                  className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-[var(--surface)] text-[var(--text)] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+                />
+                <svg
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+            {/* Category Chips */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {categories.map((category) => (
+                <button
+                  key={category.key}
+                  onClick={() => handleCategoryClick(category)}
+                  className={`px-4 py-2 rounded-full border text-sm whitespace-nowrap transition-colors ${
+                    selectedCategory === category.key
+                      ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                      : 'bg-[var(--surface)] text-[var(--text)] border-gray-300 dark:border-gray-600 hover:border-[var(--primary)]'
+                  }`}
+                >
+                  {t(`common.imagePicker.category.${category.key}`)}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -120,6 +230,10 @@ const ImagePickerModal = ({
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
                   <p className="text-gray-600">{t('common.loadingImages')}</p>
                 </div>
+              </div>
+            ) : images.length === 0 ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-gray-600">{t('common.imagePicker.noResults')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -157,7 +271,7 @@ const ImagePickerModal = ({
             )}
 
             {/* Load More Button */}
-            {images.length > 0 && !loading && (
+            {images.length > 0 && !loading && !searchQuery && !selectedCategory && (
               <div className="text-center mt-6">
                 <button
                   onClick={handleLoadMore}

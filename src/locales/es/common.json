@@ -31,5 +31,19 @@
   "results": "Resultados",
   "liveResults": "Resultados en vivo",
   "seeResultsBelow": "Mira los resultados debajo",
-  "actions": "Acciones"
+  "actions": "Acciones",
+  "imagePicker": {
+    "searchPlaceholder": "Buscar imágenes...",
+    "noResults": "No se encontraron imágenes",
+    "category": {
+      "nature": "Naturaleza",
+      "cities": "Ciudades",
+      "food": "Comida",
+      "sports": "Deportes",
+      "technology": "Tecnología",
+      "art": "Arte",
+      "animals": "Animales",
+      "travel": "Viajes"
+    }
+  }
 }

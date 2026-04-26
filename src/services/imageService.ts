@@ -121,6 +121,48 @@ class ImageService {
     }
   }
 
+  // Pexels curated photos (default)
+  async getPexelsCurated(count: number = 20): Promise<StockImage[]> {
+    if (!this.PEXELS_API_KEY) {
+      console.warn('Pexels API key not found, falling back to Picsum');
+      return this.getPicsumImages(count);
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.pexels.com/v1/curated?per_page=${count}`,
+        {
+          headers: {
+            'Authorization': this.PEXELS_API_KEY
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Pexels API request failed');
+      }
+
+      const data = await response.json();
+      
+      return data.photos.map((photo: {
+        id: number;
+        src: { large: string; medium: string };
+        photographer: string;
+        photographer_url: string;
+      }) => ({
+        id: photo.id.toString(),
+        url: photo.src.large,
+        thumbnail: photo.src.medium,
+        author: photo.photographer,
+        authorUrl: photo.photographer_url
+      }));
+    } catch (error) {
+      console.error('Pexels API error:', error);
+      // Fallback to Picsum
+      return this.getPicsumImages(count);
+    }
+  }
+
   // Main method to get images with fallback chain
   async getStockImages(
     query: string = 'nature', 
@@ -149,12 +191,11 @@ class ImageService {
   // Search images with keyword suggestions
   async searchImages(query: string, count: number = 20): Promise<StockImage[]> {
     if (!query.trim()) {
-      return this.getPollPlaceholders(count);
+      return this.getPexelsCurated(count);
     }
 
-    // Try to get relevant images based on query
-    const images = await this.getStockImages(query, count);
-    return images;
+    // Try to get relevant images based on query using Pexels
+    return this.getPexelsImages(query, count);
   }
 }
 
