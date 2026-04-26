@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PlusIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
-import { Trash2, ArrowLeft } from 'lucide-react';
+import { Trash2, ArrowLeft, Camera } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import toast from 'react-hot-toast';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
@@ -336,6 +336,28 @@ export default function CreateRatingPage() {
                           <CloudArrowUpIcon className="w-4 h-4" />
                           {uploadingItem === item.id ? t('ratings.uploading') : t('ratings.upload')}
                         </button>
+                        <label className="md:hidden cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleFileUpload(item.id, file);
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            disabled={uploadingItem === item.id}
+                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                          >
+                            <Camera className="w-4 h-4" />
+                            {t('ratings.camera')}
+                          </button>
+                        </label>
                       </div>
                       <span className="text-sm text-[var(--text-muted)]">
                         {itemFileNames[item.id] || t('form.noFileChosen')}

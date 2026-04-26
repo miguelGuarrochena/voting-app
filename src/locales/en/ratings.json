@@ -19,6 +19,7 @@
   "gallery": "Gallery",
   "upload": "Upload",
   "uploading": "Uploading...",
+  "camera": "Camera",
   "imageUrlPlaceholder": "Or paste image URL (optional)",
   "needAtLeast2Items": "You need at least 2 items",
   "removeItem": "Remove item",

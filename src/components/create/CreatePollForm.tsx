@@ -9,7 +9,7 @@ import ImagePickerModal from './ImagePickerModal';
 import { generateShareLink } from '@/lib/token';
 import { createPoll } from '@/lib/db';
 import { addMyPoll } from '@/lib/mypolls';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Camera } from 'lucide-react';
 import { PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { AnonCreateModal } from '@/components/auth/AnonCreateModal';
@@ -470,6 +470,28 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                       <PhotoIcon className="w-4 h-4" />
                       {t('ratings.gallery')}
                     </button>
+                    <label className="md:hidden cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setTitleFileName(file.name);
+                            handleTitleImageUpload(file);
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                      >
+                        <Camera className="w-4 h-4" />
+                        {t('ratings.camera')}
+                      </button>
+                    </label>
                   </div>
                   <span className="text-sm text-[var(--text-muted)]">
                     {titleFileName || t('form.noFileChosen')}
@@ -664,6 +686,28 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                         <PhotoIcon className="w-4 h-4" />
                         {t('ratings.gallery')}
                       </button>
+                      <label className="md:hidden cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setOptionFileNames(prev => ({ ...prev, [option.id]: file.name }));
+                              handleImageUpload(option.id, file);
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                        >
+                          <Camera className="w-4 h-4" />
+                          {t('ratings.camera')}
+                        </button>
+                      </label>
                     </div>
                     <span className="text-sm text-[var(--text-muted)]">
                       {optionFileNames[option.id] || t('form.noFileChosen')}
