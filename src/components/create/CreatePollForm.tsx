@@ -484,13 +484,10 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                           }
                         }}
                       />
-                      <button
-                        type="button"
-                        className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
-                      >
+                      <span className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2">
                         <Camera className="w-4 h-4" />
                         {t('ratings.camera')}
-                      </button>
+                      </span>
                     </label>
                   </div>
                   <span className="text-sm text-[var(--text-muted)]">
@@ -700,13 +697,10 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                             }
                           }}
                         />
-                        <button
-                          type="button"
-                          className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
-                        >
+                        <span className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2">
                           <Camera className="w-4 h-4" />
                           {t('ratings.camera')}
-                        </button>
+                        </span>
                       </label>
                     </div>
                     <span className="text-sm text-[var(--text-muted)]">

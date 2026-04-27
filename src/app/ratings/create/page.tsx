@@ -349,14 +349,10 @@ export default function CreateRatingPage() {
                               }
                             }}
                           />
-                          <button
-                            type="button"
-                            disabled={uploadingItem === item.id}
-                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                          >
+                          <span className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50" style={{ pointerEvents: uploadingItem === item.id ? 'none' : 'auto' }}>
                             <Camera className="w-4 h-4" />
                             {t('ratings.camera')}
-                          </button>
+                          </span>
                         </label>
                       </div>
                       <span className="text-sm text-[var(--text-muted)]">
