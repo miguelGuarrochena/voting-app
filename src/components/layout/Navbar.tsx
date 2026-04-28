@@ -118,7 +118,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between px-4 py-3">
             {/* Left side - Back button or spacer */}
             <div className="flex-1">
-              {pathname !== '/' && !['/votes', '/ranking', '/ratings', '/spin', '/versus'].includes(pathname) ? (
+              {pathname !== '/' && !['/votes', '/ranking', '/spin', '/versus'].includes(pathname) ? (
                 <button
                   onClick={() => {
                     if (pathname === '/spin') {
@@ -215,14 +215,25 @@ const Navbar = () => {
                 <TrophyIcon className="w-5 h-5" />
                 <span>{t('nav.createRanking')}</span>
               </Link>
-              <Link
-                href="/ratings/create"
-                onClick={() => setShowMobileMenu(false)}
-                className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-              >
-                <StarIcon className="w-5 h-5" />
-                <span>{t('nav.createRating')}</span>
-              </Link>
+              {FEATURES.ratings ? (
+                <Link
+                  href="/ratings/create"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                >
+                  <StarIcon className="w-5 h-5" />
+                  <span>{t('nav.createRating')}</span>
+                </Link>
+              ) : (
+                <div
+                  aria-disabled="true"
+                  title={t('ratings.comingSoonTitle')}
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3 text-sm font-medium text-[var(--text-muted)] opacity-50 cursor-not-allowed"
+                >
+                  <StarIcon className="w-5 h-5" />
+                  <span>{t('nav.createRating')}</span>
+                </div>
+              )}
               <Link
                 href="/spin"
                 onClick={() => setShowMobileMenu(false)}
@@ -331,14 +342,24 @@ const Navbar = () => {
               <TrophyIcon className="w-6 h-6" />
             </Link>
 
-            <Link
-              href="/ratings"
-              className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
-                pathname === '/ratings' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
-              }`}
-            >
-              <StarIcon className="w-6 h-6" />
-            </Link>
+            {FEATURES.ratings ? (
+              <Link
+                href="/ratings"
+                className={`flex items-center justify-center p-2 rounded-lg transition-all duration-300 ease-out flex-1 ${
+                  pathname === '/ratings' ? 'text-[var(--primary)] scale-110' : 'text-[var(--text-muted)] hover:scale-105 hover:text-[var(--text)]'
+                }`}
+              >
+                <StarIcon className="w-6 h-6" />
+              </Link>
+            ) : (
+              <div
+                aria-disabled="true"
+                title={t('ratings.comingSoonTitle')}
+                className="relative flex items-center justify-center p-2 rounded-lg flex-1 text-[var(--text-muted)] opacity-50 cursor-not-allowed"
+              >
+                <StarIcon className="w-6 h-6" />
+              </div>
+            )}
 
             <Link
               href="/spin"
@@ -462,22 +483,38 @@ const Navbar = () => {
                 )}
               </Link>
 
-              <Link
-                href="/ratings"
-                className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
-                  pathname === '/ratings'
-                    ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
-                }`}
-              >
-                <StarIcon className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/ratings' ? 'scale-110' : 'group-hover:scale-110'}`} />
-                {!isMedium && <span className="font-medium">{t('nav.ratings')}</span>}
-                {isMedium && (
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-                    {t('nav.ratings')}
-                  </span>
-                )}
-              </Link>
+              {FEATURES.ratings ? (
+                <Link
+                  href="/ratings"
+                  className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl transition-all duration-300 ${
+                    pathname === '/ratings'
+                      ? 'text-[var(--primary)] dark:text-white bg-[var(--primary)]/30 dark:bg-[var(--primary)]'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]'
+                  }`}
+                >
+                  <StarIcon className={`w-5 h-5 transition-all duration-300 ${isMedium ? 'w-6 h-6' : ''} ${pathname === '/ratings' ? 'scale-110' : 'group-hover:scale-110'}`} />
+                  {!isMedium && <span className="font-medium">{t('nav.ratings')}</span>}
+                  {isMedium && (
+                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                      {t('nav.ratings')}
+                    </span>
+                  )}
+                </Link>
+              ) : (
+                <div
+                  aria-disabled="true"
+                  title={t('ratings.comingSoonTitle')}
+                  className={`relative group flex items-center ${isMedium ? 'justify-center px-4' : 'space-x-2 px-4'} py-2.5 rounded-xl text-[var(--text-muted)] opacity-60 cursor-not-allowed`}
+                >
+                  <StarIcon className={`w-5 h-5 ${isMedium ? 'w-6 h-6' : ''}`} />
+                  {!isMedium && <span className="font-medium">{t('nav.ratings')}</span>}
+                  {isMedium && (
+                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                      {t('nav.ratings')}
+                    </span>
+                  )}
+                </div>
+              )}
 
               <Link
                 href="/spin"
@@ -570,14 +607,25 @@ const Navbar = () => {
                             <TrophyIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
                             <span>{t('nav.ranking')}</span>
                           </Link>
-                          <Link
-                            href="/ratings/create"
-                            onClick={() => setShowCreateMenu(false)}
-                            className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
-                          >
-                            <StarIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
-                            <span>{t('nav.ratings')}</span>
-                          </Link>
+                          {FEATURES.ratings ? (
+                            <Link
+                              href="/ratings/create"
+                              onClick={() => setShowCreateMenu(false)}
+                              className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--primary-light)] hover:text-[var(--primary)] transition-colors group"
+                            >
+                              <StarIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                              <span>{t('nav.ratings')}</span>
+                            </Link>
+                          ) : (
+                            <div
+                              aria-disabled="true"
+                              title={t('ratings.comingSoonTitle')}
+                              className="flex items-center gap-3 w-full text-left px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] opacity-50 cursor-not-allowed"
+                            >
+                              <StarIcon className="w-4 h-4" />
+                              <span>{t('nav.ratings')}</span>
+                            </div>
+                          )}
                           <Link
                             href="/spin"
                             onClick={() => setShowCreateMenu(false)}

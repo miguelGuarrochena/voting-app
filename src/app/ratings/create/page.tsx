@@ -15,6 +15,8 @@ import { createPoll } from '@/lib/db';
 import { addMyPoll } from '@/lib/mypolls';
 import { safeBack } from '@/lib/navigation';
 import { AnonCreateModal } from '@/components/auth/AnonCreateModal';
+import { RatingsComingSoon } from '@/components/ratings/ComingSoon';
+import { FEATURES } from '@/lib/features';
 
 type RatingItemForm = {
   id: string;
@@ -197,6 +199,7 @@ export default function CreateRatingPage() {
 
   return (
     <PageLayout className="pb-24 md:pb-8">
+      {!FEATURES.ratings && <RatingsComingSoon />}
       <div className="max-w-2xl mx-auto pb-8">
         <>
             <div className="mb-6">

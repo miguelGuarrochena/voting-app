@@ -9,6 +9,8 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { MyPollCard } from '@/components/mypolls/MyPollCard';
 import { ListingEmptyState } from '@/components/mypolls/ListingEmptyState';
+import { RatingsComingSoon } from '@/components/ratings/ComingSoon';
+import { FEATURES } from '@/lib/features';
 import {
   removeMyPoll,
   pruneExpiredMyPolls,
@@ -49,6 +51,8 @@ export default function RatingsPage() {
       </PageLayout>
     );
   }
+
+  if (!FEATURES.ratings) return <RatingsComingSoon />;
 
   const isEmpty = entries.length === 0;
 

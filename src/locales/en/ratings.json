@@ -46,5 +46,7 @@
   "star": "star",
   "stars": "stars",
   "ratingCount": "ratings",
-  "average": "avg"
+  "average": "avg",
+  "comingSoonTitle": "Ratings is being restructured",
+  "comingSoonDesc": "We're improving the ratings mode. Check back in a few days — in the meantime you can create Votes, Rankings or a Spin Wheel."
 }

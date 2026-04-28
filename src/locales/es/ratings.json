@@ -46,5 +46,7 @@
   "star": "estrella",
   "stars": "estrellas",
   "ratingCount": "valoraciones",
-  "average": "prom."
+  "average": "prom.",
+  "comingSoonTitle": "Ratings está en reestructuración",
+  "comingSoonDesc": "Estamos mejorando el modo ratings. Volvé en unos días — mientras tanto podés crear Votaciones, Rankings o la Ruleta."
 }

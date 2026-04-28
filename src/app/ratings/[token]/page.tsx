@@ -23,6 +23,8 @@ import { ImageModal } from '@/components/modals/ImageModal';
 import { AnimatePresence } from 'framer-motion';
 import { WinnerPodium, PodiumEntry } from '@/components/results/WinnerPodium';
 import { fireWinnerConfetti } from '@/lib/confetti';
+import { RatingsComingSoon } from '@/components/ratings/ComingSoon';
+import { FEATURES } from '@/lib/features';
 
 // ------------------------------------------------------------
 //  RATINGS — Detalle por token
@@ -234,6 +236,8 @@ export default function RatingTokenPage() {
       </PageLayout>
     );
   }
+
+  if (!FEATURES.ratings) return <RatingsComingSoon />;
 
   if (error === 'not_found') {
     return (

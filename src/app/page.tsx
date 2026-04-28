@@ -51,9 +51,9 @@ export default function Home() {
   const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
-  // Versus se muestra siempre, pero deshabilitado si la flag está off.
+  // Versus y Ratings se muestran siempre, pero deshabilitados si la flag está off.
   const features = allFeatures;
-  const isDisabled = (id: string) => id === 'versus' && !FEATURES.versus;
+  const isDisabled = (id: string) => (id === 'versus' && !FEATURES.versus) || (id === 'ratings' && !FEATURES.ratings);
 
   useEffect(() => {
     setMounted(true);
@@ -149,7 +149,7 @@ export default function Home() {
                 {disabled ? (
                   <div
                     aria-disabled="true"
-                    title={t('versus.comingSoonTitle')}
+                    title={feature.id === 'versus' ? t('versus.comingSoonTitle') : t('ratings.comingSoonTitle')}
                     className="block h-full"
                   >
                     {inner}

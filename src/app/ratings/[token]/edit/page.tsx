@@ -9,6 +9,8 @@ import { findMyPoll } from '@/lib/mypolls';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
 import { safeBack } from '@/lib/navigation';
+import { RatingsComingSoon } from '@/components/ratings/ComingSoon';
+import { FEATURES } from '@/lib/features';
 
 // ------------------------------------------------------------
 //  RATINGS — Edit page
@@ -106,6 +108,8 @@ export default function EditRatingPage() {
       </PageLayout>
     );
   }
+
+  if (!FEATURES.ratings) return <RatingsComingSoon />;
 
   if (error === 'not_found') {
     return (
