@@ -25,10 +25,24 @@ import { WinnerPodium, PodiumEntry } from '@/components/results/WinnerPodium';
 import { fireWinnerConfetti } from '@/lib/confetti';
 import { RatingsComingSoon } from '@/components/ratings/ComingSoon';
 import { FEATURES } from '@/lib/features';
+import {
+  getAttributesFromPoll,
+  recomputeRatings,
+  avgOverall,
+  avgForAttr,
+  type RatingAttribute,
+  type RatingMap,
+} from '@/lib/ratings';
 
 // ------------------------------------------------------------
 //  RATINGS — Detalle por token
-//  Requiere puntuar TODAS las opciones antes de enviar (hint visible).
+//
+//  Refactor: ahora cada item se puntúa en N criterios
+//  (attributes) definidos por el creador. El user tiene que
+//  puntuar TODOS los (option, attribute) antes de enviar.
+//
+//  Compat: ratings sin attributes definidos (legacy) caen en
+//  un único atributo "Overall" — ver lib/ratings.ts.
 // ------------------------------------------------------------
 
 export default function RatingTokenPage() {
@@ -46,7 +60,8 @@ export default function RatingTokenPage() {
   const [responses, setResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [ratings, setRatings] = useState<Record<string, number>>({});
+  // ratings: { [optId]: { [attrId]: stars } }
+  const [ratings, setRatings] = useState<RatingMap>({});
   const [submitting, setSubmitting] = useState(false);
   const [hasVotedState, setHasVotedState] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -56,7 +71,7 @@ export default function RatingTokenPage() {
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [zoomImage, setZoomImage] = useState<{ url: string; alt: string } | null>(null);
-  const [wasJustCreated, setWasJustCreated] = useState(justCreated);
+  const [wasJustCreated] = useState(justCreated);
 
   useEffect(() => {
     const load = async () => {
@@ -91,9 +106,6 @@ export default function RatingTokenPage() {
 
       const responses = await getPollResponses(token);
       setResponses(responses);
-      // Recomputar ratings desde las responses ya guardadas.
-      // Si no hacemos esto, al abrir una page con datos previos se ven
-      // todas las opciones en 0 hasta que entra un evento de realtime.
       setPollData((prev: any) =>
         prev ? { ...prev, options: recomputeRatings(prev.options, responses) } : prev
       );
@@ -137,9 +149,10 @@ export default function RatingTokenPage() {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, username]);
 
-  // Confeti al pasar a expirado (si al menos una opción tiene ratings)
+  // Confeti cuando expira si hay al menos un rating
   useEffect(() => {
     if (expired && pollData) {
       const hasRatings = (pollData.options ?? []).some(
@@ -149,27 +162,58 @@ export default function RatingTokenPage() {
     }
   }, [expired, pollData, token]);
 
-  const handleStarClick = (optionId: string, rating: number) => {
-    setRatings((prev) => ({ ...prev, [optionId]: rating }));
+  const attributes: RatingAttribute[] = pollData
+    ? getAttributesFromPoll(pollData, t('ratings.defaultAttribute') || 'Overall')
+    : [];
+
+  const handleStarClick = (
+    optionId: string,
+    attrId: string,
+    starsValue: number
+  ) => {
+    setRatings((prev) => ({
+      ...prev,
+      [optionId]: { ...(prev[optionId] || {}), [attrId]: starsValue },
+    }));
+  };
+
+  // Cuántas combinaciones (option × attribute) faltan calificar
+  const computeMissing = () => {
+    if (!pollData) return { missing: 0, total: 0, rated: 0 };
+    const opts = pollData.options ?? [];
+    const total = opts.length * attributes.length;
+    let rated = 0;
+    for (const opt of opts) {
+      for (const a of attributes) {
+        const v = ratings[opt.id]?.[a.id];
+        if (typeof v === 'number' && v > 0) rated += 1;
+      }
+    }
+    return { missing: total - rated, total, rated };
   };
 
   const handleSubmitRating = async () => {
     if (!pollData || submitting) return;
 
-    const missing = pollData.options.filter(
-      (opt: any) => !ratings[opt.id] || ratings[opt.id] < 1
-    );
-    if (missing.length > 0) {
-      toast.error(t('ratings.needToRateAll').replace('{count}', String(missing.length)));
+    const { missing } = computeMissing();
+    if (missing > 0) {
+      toast.error(
+        t('ratings.needToRateAll').replace('{count}', String(missing))
+      );
       return;
     }
 
     setSubmitting(true);
     const captchaToken = await getCaptchaToken();
-    const ok = await submitResponse(token, username || 'Anonymous', { ratings }, captchaToken);
+    const ok = await submitResponse(
+      token,
+      username || 'Anonymous',
+      { ratings },
+      captchaToken
+    );
     setSubmitting(false);
 
-    if (!ok) return; // error real ya se tosteó desde db.ts
+    if (!ok) return;
 
     setHasVotedState(true);
     toast.success(t('ratings.submittedToast'));
@@ -266,12 +310,8 @@ export default function RatingTokenPage() {
     );
   }
 
-  const totalOptions = pollData.options.length;
-  const ratedOptions = pollData.options.filter(
-    (o: any) => ratings[o.id] && ratings[o.id] > 0
-  ).length;
-  const missing = totalOptions - ratedOptions;
-  const ready = missing === 0;
+  const { missing, total, rated } = computeMissing();
+  const ready = total > 0 && missing === 0;
 
   return (
     <PageLayout className="pb-24 md:pb-8">
@@ -288,7 +328,11 @@ export default function RatingTokenPage() {
           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-3"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>{isCreator && !hasVotedState && wasJustCreated ? t('poll.edit') : t('ratings.title')}</span>
+          <span>
+            {isCreator && !hasVotedState && wasJustCreated
+              ? t('poll.edit')
+              : t('ratings.title')}
+          </span>
         </button>
 
         {/* Header: título + acciones */}
@@ -303,7 +347,9 @@ export default function RatingTokenPage() {
               aria-label={t('common.share')}
             >
               <Share2 size={18} />
-              <span className="hidden sm:inline ml-2 text-sm">{t('common.share')}</span>
+              <span className="hidden sm:inline ml-2 text-sm">
+                {t('common.share')}
+              </span>
             </button>
             {isCreator && (
               <OwnerMenu
@@ -320,11 +366,13 @@ export default function RatingTokenPage() {
           </div>
         </div>
 
-        {/* Cover image (si el creador la subió) */}
+        {/* Cover image */}
         {pollData.coverImage && (
           <button
             type="button"
-            onClick={() => setZoomImage({ url: pollData.coverImage, alt: pollData.title })}
+            onClick={() =>
+              setZoomImage({ url: pollData.coverImage, alt: pollData.title })
+            }
             className="block w-full mb-4 sm:mb-6 rounded-2xl overflow-hidden cursor-zoom-in group"
             aria-label={`Ver imagen de ${pollData.title}`}
           >
@@ -352,12 +400,16 @@ export default function RatingTokenPage() {
               </p>
             </div>
             <p className="text-xs text-[var(--text-muted)]">
-              {pollData.closedAt ? t('poll.closedByCreator') : t('poll.closedByTime')}
+              {pollData.closedAt
+                ? t('poll.closedByCreator')
+                : t('poll.closedByTime')}
             </p>
           </div>
         ) : (
           <div className="rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-center border bg-[var(--primary-light)]/40 border-[var(--primary-light)]">
-            <p className="text-xs text-[var(--text-muted)] mb-1">{t('votes.timeRemaining')}</p>
+            <p className="text-xs text-[var(--text-muted)] mb-1">
+              {t('votes.timeRemaining')}
+            </p>
             <p className="text-lg sm:text-xl font-bold text-[var(--primary)]">
               {formatTimeRemaining(timeRemaining)}
             </p>
@@ -372,21 +424,26 @@ export default function RatingTokenPage() {
         )}
 
         {/* Main card */}
-        <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-4 sm:p-6 md:p-8">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-4 sm:p-6 md:p-8 min-w-0">
           {pollData.description && (
-            <p className="text-[var(--text-muted)] mb-4 sm:mb-6">{pollData.description}</p>
+            <p className="text-[var(--text-muted)] mb-4 sm:mb-6 break-words">
+              {pollData.description}
+            </p>
           )}
 
           {!hasVotedState && !expired ? (
             <div className="space-y-4">
-              <p className="text-sm text-[var(--text-muted)] font-medium">{t('ratings.rateFromTo')}</p>
+              <p className="text-sm text-[var(--text-muted)] font-medium">
+                {t('ratings.rateFromTo')}
+              </p>
 
               {pollData.options.map((option: any) => (
                 <RatingItem
                   key={option.id}
                   option={option}
-                  value={ratings[option.id] || 0}
-                  onChange={(r) => handleStarClick(option.id, r)}
+                  attributes={attributes}
+                  values={ratings[option.id] || {}}
+                  onChange={(attrId, r) => handleStarClick(option.id, attrId, r)}
                   starLabel={t('ratings.star')}
                   starsLabel={t('ratings.stars')}
                   notRatedLabel={t('ratings.notRated')}
@@ -394,16 +451,18 @@ export default function RatingTokenPage() {
                 />
               ))}
 
-              {/* Sticky-feeling footer: hint + botón */}
               <div className="space-y-2 pt-2">
                 {!ready && (
                   <p className="text-sm text-amber-600 dark:text-amber-400 text-center font-medium">
-                    {t('ratings.needToRateAll').replace('{count}', String(missing))}
+                    {t('ratings.needToRateAll').replace(
+                      '{count}',
+                      String(missing)
+                    )}
                   </p>
                 )}
                 <button
                   onClick={handleSubmitRating}
-                  disabled={submitting}
+                  disabled={submitting || total === 0}
                   className={`w-full py-3 sm:py-3.5 rounded-xl font-semibold transition-colors ${
                     ready
                       ? 'bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)]'
@@ -414,18 +473,20 @@ export default function RatingTokenPage() {
                     ? submitting
                       ? '…'
                       : t('ratings.submitRatings')
-                    : `${t('ratings.submitRatings')} (${ratedOptions}/${totalOptions})`}
+                    : `${t('ratings.submitRatings')} (${rated}/${total})`}
                 </button>
               </div>
             </div>
           ) : (
             <RatingResultsList
               options={pollData.options}
+              attributes={attributes}
               expired={expired}
               expiredTitle={t('ratings.expiredTitle')}
               expiredDesc={t('ratings.expiredDesc')}
               countLabel={t('ratings.ratingCount')}
               avgLabel={t('ratings.average')}
+              overallAverageLabel={t('ratings.overallAverage')}
               onZoomImage={(url, alt) => setZoomImage({ url, alt })}
             />
           )}
@@ -441,7 +502,7 @@ export default function RatingTokenPage() {
               {responses.map((r: any, idx: number) => (
                 <span
                   key={idx}
-                  className="text-xs bg-[var(--primary-light)]/50 text-[var(--primary)] px-2.5 py-1 rounded-full font-medium"
+                  className="text-xs bg-[var(--primary-light)]/50 text-[var(--primary)] px-2.5 py-1 rounded-full font-medium break-all"
                 >
                   {r.username}
                 </span>
@@ -535,7 +596,8 @@ function buildOwnerItems({
 
 function RatingItem({
   option,
-  value,
+  attributes,
+  values,
   onChange,
   starLabel,
   starsLabel,
@@ -543,15 +605,16 @@ function RatingItem({
   onZoomImage,
 }: {
   option: any;
-  value: number;
-  onChange: (rating: number) => void;
+  attributes: RatingAttribute[];
+  values: Record<string, number>;
+  onChange: (attrId: string, rating: number) => void;
   starLabel: string;
   starsLabel: string;
   notRatedLabel: string;
   onZoomImage: (url: string, alt: string) => void;
 }) {
   return (
-    <div className="bg-[var(--surface-2)] rounded-xl p-3 sm:p-4 border border-[var(--border)]">
+    <div className="bg-[var(--surface-2)] rounded-xl p-3 sm:p-4 border border-[var(--border)] min-w-0">
       {option.imageUrl && (
         <button
           type="button"
@@ -572,51 +635,76 @@ function RatingItem({
           </div>
         </button>
       )}
-      <div className="mb-3">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="mb-3 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           {option.emoji && (
             <span className="text-xl flex-shrink-0" aria-hidden>
               {option.emoji}
             </span>
           )}
-          <span className="font-semibold text-[var(--text)] text-base">{option.title}</span>
+          <span className="font-semibold text-[var(--text)] text-base break-words min-w-0">
+            {option.title}
+          </span>
         </div>
         {option.comment && (
-          <p className="text-sm text-[var(--text-muted)] mt-1">{option.comment}</p>
+          <p className="text-sm text-[var(--text-muted)] mt-1 break-words">
+            {option.comment}
+          </p>
         )}
         {option.locationUrl && (
           <a
             href={option.locationUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-[var(--primary)] hover:underline mt-1 inline-flex items-center gap-1 break-all"
+            className="text-sm text-[var(--primary)] hover:underline mt-1 inline-flex items-center gap-1 break-all max-w-full"
           >
-            <span className="truncate max-w-[220px] sm:max-w-none">{option.locationUrl}</span>
+            <span className="truncate max-w-[220px] sm:max-w-none">
+              {option.locationUrl}
+            </span>
             <ExternalLink size={14} className="flex-shrink-0" />
           </a>
         )}
       </div>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              onClick={() => onChange(star)}
-              className="transition-transform hover:scale-110 active:scale-95 p-0.5"
-              aria-label={`${star} ${star === 1 ? starLabel : starsLabel}`}
+      <div className="space-y-2.5">
+        {attributes.map((attr) => {
+          const value = values[attr.id] || 0;
+          return (
+            <div
+              key={attr.id}
+              className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap min-w-0"
             >
-              <Star
-                className={`w-7 h-7 sm:w-6 sm:h-6 ${
-                  value >= star ? 'fill-yellow-400 text-yellow-400' : 'text-[var(--text-muted)]'
-                }`}
-              />
-            </button>
-          ))}
-        </div>
-        <span className="text-xs sm:text-sm text-[var(--text-muted)]">
-          {value ? `${value} ${value > 1 ? starsLabel : starLabel}` : notRatedLabel}
-        </span>
+              <span className="text-sm font-medium text-[var(--text)] truncate flex-1 min-w-0">
+                {attr.label}
+              </span>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex gap-0.5 sm:gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => onChange(attr.id, star)}
+                      className="transition-transform hover:scale-110 active:scale-95 p-0.5"
+                      aria-label={`${star} ${star === 1 ? starLabel : starsLabel}`}
+                    >
+                      <Star
+                        className={`w-6 h-6 sm:w-6 sm:h-6 ${
+                          value >= star
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-[var(--text-muted)]'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs text-[var(--text-muted)] min-w-[3rem] text-right">
+                  {value
+                    ? `${value} ${value > 1 ? starsLabel : starLabel}`
+                    : notRatedLabel}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -624,33 +712,35 @@ function RatingItem({
 
 function RatingResultsList({
   options,
+  attributes,
   expired,
   expiredTitle,
   expiredDesc,
   countLabel,
   avgLabel,
+  overallAverageLabel,
   onZoomImage,
 }: {
   options: any[];
+  attributes: RatingAttribute[];
   expired: boolean;
   expiredTitle: string;
   expiredDesc: string;
   countLabel: string;
   avgLabel: string;
+  overallAverageLabel: string;
   onZoomImage: (url: string, alt: string) => void;
 }) {
-  const sorted = [...options].sort((a: any, b: any) => {
-    const avgA = a.ratingCount > 0 ? a.totalRating / a.ratingCount : 0;
-    const avgB = b.ratingCount > 0 ? b.totalRating / b.ratingCount : 0;
-    return avgB - avgA;
-  });
+  const sorted = [...options].sort(
+    (a: any, b: any) => avgOverall(b) - avgOverall(a)
+  );
 
   const sortedWithRatings = sorted.filter((o) => (o.ratingCount || 0) > 0);
   const showPodium = expired && sortedWithRatings.length > 0;
 
   const podiumEntries: PodiumEntry[] = showPodium
     ? sortedWithRatings.slice(0, 3).map((o: any) => {
-        const avg = o.ratingCount > 0 ? o.totalRating / o.ratingCount : 0;
+        const avg = avgOverall(o);
         return {
           id: o.id,
           title: o.title,
@@ -662,14 +752,22 @@ function RatingResultsList({
       })
     : [];
   const podiumIds = new Set(podiumEntries.map((e) => e.id));
-  const listOptions = showPodium ? sorted.filter((o) => !podiumIds.has(o.id)) : sorted;
+  const listOptions = showPodium
+    ? sorted.filter((o) => !podiumIds.has(o.id))
+    : sorted;
+
+  // Si hay sólo 1 attribute (ej. legacy "Overall"), no mostramos
+  // un breakdown redundante.
+  const showAttrBreakdown = attributes.length > 1;
 
   return (
     <div className="space-y-3">
       {expired && (
         <div className="text-center mb-4">
           <div className="text-5xl mb-2">🏆</div>
-          <h2 className="text-lg sm:text-xl font-bold text-[var(--text)]">{expiredTitle}</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-[var(--text)]">
+            {expiredTitle}
+          </h2>
           <p className="text-sm text-[var(--text-muted)]">{expiredDesc}</p>
         </div>
       )}
@@ -679,14 +777,14 @@ function RatingResultsList({
 
       {listOptions.map((option: any) => {
         const index = sorted.indexOf(option);
-        const avg = option.ratingCount > 0 ? option.totalRating / option.ratingCount : 0;
+        const avg = avgOverall(option);
         const avgStr = avg.toFixed(1);
-        const isWinner = index === 0 && option.ratingCount > 0;
+        const isWinner = index === 0 && (option.ratingCount || 0) > 0;
 
         return (
           <div
             key={option.id}
-            className={`rounded-xl p-3 sm:p-4 border ${
+            className={`rounded-xl p-3 sm:p-4 border min-w-0 ${
               isWinner
                 ? 'bg-[var(--surface-2)] border-[var(--primary-light)]'
                 : 'bg-[var(--surface-2)] border-[var(--border)]'
@@ -712,31 +810,39 @@ function RatingResultsList({
                 </div>
               </button>
             )}
-            <div className="mb-2">
-              <div className="flex items-center gap-2 min-w-0">
+            <div className="mb-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
                 {isWinner && <span aria-hidden>👑</span>}
                 {option.emoji && (
                   <span className="text-lg flex-shrink-0" aria-hidden>
                     {option.emoji}
                   </span>
                 )}
-                <span className="font-semibold text-[var(--text)] truncate">{option.title}</span>
+                <span className="font-semibold text-[var(--text)] break-words min-w-0">
+                  {option.title}
+                </span>
               </div>
               {option.comment && (
-                <p className="text-sm text-[var(--text-muted)] mt-1">{option.comment}</p>
+                <p className="text-sm text-[var(--text-muted)] mt-1 break-words">
+                  {option.comment}
+                </p>
               )}
               {option.locationUrl && (
                 <a
                   href={option.locationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-[var(--primary)] hover:underline mt-1 inline-flex items-center gap-1 break-all"
+                  className="text-sm text-[var(--primary)] hover:underline mt-1 inline-flex items-center gap-1 break-all max-w-full"
                 >
-                  <span className="truncate max-w-[220px] sm:max-w-none">{option.locationUrl}</span>
+                  <span className="truncate max-w-[220px] sm:max-w-none">
+                    {option.locationUrl}
+                  </span>
                   <ExternalLink size={14} className="flex-shrink-0" />
                 </a>
               )}
             </div>
+
+            {/* Overall row */}
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -751,33 +857,53 @@ function RatingResultsList({
                 ))}
               </div>
               <span className="text-sm text-[var(--text)] font-semibold">
-                {avgStr} {avgLabel}
+                {avgStr}{' '}
+                {showAttrBreakdown ? overallAverageLabel : avgLabel}
               </span>
               <span className="text-xs text-[var(--text-muted)]">
                 · {option.ratingCount || 0} {countLabel}
               </span>
             </div>
+
+            {/* Per-attribute breakdown (sólo si hay más de uno) */}
+            {showAttrBreakdown && (
+              <div className="mt-3 space-y-1.5 pt-3 border-t border-[var(--border)]">
+                {attributes.map((attr) => {
+                  const a = avgForAttr(option, attr.id);
+                  const aStr = a.toFixed(1);
+                  return (
+                    <div
+                      key={attr.id}
+                      className="flex items-center justify-between gap-2 min-w-0"
+                    >
+                      <span className="text-xs text-[var(--text-muted)] truncate flex-1 min-w-0">
+                        {attr.label}
+                      </span>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-3.5 h-3.5 ${
+                                star <= Math.round(a)
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-[var(--text-muted)]'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-[var(--text)] font-medium tabular-nums w-7 text-right">
+                          {aStr}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       })}
     </div>
   );
-}
-
-// --- helpers ---
-function recomputeRatings(options: any[], responses: any[]) {
-  const totals: Record<string, { total: number; count: number }> = {};
-  responses.forEach((r) => {
-    const map = r.response?.ratings || {};
-    Object.entries(map).forEach(([id, val]: [string, any]) => {
-      if (!totals[id]) totals[id] = { total: 0, count: 0 };
-      totals[id].total += Number(val) || 0;
-      totals[id].count += 1;
-    });
-  });
-  return options.map((opt: any) => ({
-    ...opt,
-    totalRating: totals[opt.id]?.total || 0,
-    ratingCount: totals[opt.id]?.count || 0,
-  }));
 }

@@ -367,11 +367,11 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-24 md:pb-8">
       {!isEdit && <AnonCreateModal />}
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
         {/* Poll Basics Section */}
-        <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
+        <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-4 sm:p-6 md:p-8 min-w-0">
           <h2 className="font-display text-xl font-bold text-[var(--text)] mb-6">{t('form.pollBasics')}</h2>
 
           <div className="space-y-6">
@@ -457,7 +457,7 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                     <button
                       type="button"
                       onClick={() => titleFileInputRef.current?.click()}
-                      className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                      className="w-full min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
                     >
                       <CloudArrowUpIcon className="w-4 h-4" />
                       {t('ratings.upload')}
@@ -465,7 +465,7 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                     <button
                       type="button"
                       onClick={() => openImagePicker('title')}
-                      className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                      className="w-full min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
                     >
                       <PhotoIcon className="w-4 h-4" />
                       {t('ratings.gallery')}
@@ -484,7 +484,7 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                           }
                         }}
                       />
-                      <span className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2">
+                      <span className="w-full min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2">
                         <Camera className="w-4 h-4" />
                         {t('ratings.camera')}
                       </span>
@@ -564,7 +564,7 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
         </div>
 
         {/* Poll Options Section */}
-        <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-6 md:p-8">
+        <div className="bg-[var(--surface)] rounded-xl shadow-md border border-[var(--border)] p-4 sm:p-6 md:p-8 min-w-0">
           <h2 className="font-display text-xl font-bold text-[var(--text)] mb-4">{t('create.pollOptions')}</h2>
           <p className="font-body text-sm text-[var(--text-muted)] mb-6">
             {pollType === 'rank' ? t('create.addRankingOptionsDesc') : t('create.addOptionsDesc')}
@@ -572,14 +572,14 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
 
           <div className="space-y-4">
             {options.map((option, index) => (
-              <div key={option.id} className="flex items-start gap-3">
-                <div className="flex-1">
-                  <div className="flex gap-2 mb-2">
+              <div key={option.id} className="flex items-start gap-2 sm:gap-3 min-w-0">
+                <div className="flex-1 min-w-0">
+                  <div className="flex gap-2 mb-2 min-w-0">
                     <input
                       type="text"
                       value={option.text}
                       onChange={(e) => updateOption(option.id, { text: e.target.value })}
-                      className="flex-1 px-4 h-12 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
+                      className="flex-1 min-w-0 px-3 sm:px-4 h-12 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
                       placeholder={t('create.optionPlaceholder').replace('{n}', String(index + 1))}
                       maxLength={50}
                     />
@@ -666,11 +666,11 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                         }
                       }}
                     />
-                    <div className="flex flex-col lg:flex-row gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 min-w-0">
                       <button
                         type="button"
                         onClick={() => optionFileInputRefs.current[option.id]?.click()}
-                        className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                        className="w-full min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
                       >
                         <CloudArrowUpIcon className="w-4 h-4" />
                         {t('ratings.upload')}
@@ -678,7 +678,7 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                       <button
                         type="button"
                         onClick={() => openImagePicker('option', option.id)}
-                        className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
+                        className="w-full min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2"
                       >
                         <PhotoIcon className="w-4 h-4" />
                         {t('ratings.gallery')}
@@ -697,7 +697,7 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                             }
                           }}
                         />
-                        <span className="w-full lg:flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2">
+                        <span className="w-full min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2">
                           <Camera className="w-4 h-4" />
                           {t('ratings.camera')}
                         </span>
@@ -730,11 +730,12 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
                 <button
                   type="button"
                   onClick={() => removeOption(option.id)}
-                  className="w-10 h-10 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                  className="flex-shrink-0 w-10 h-10 mt-1 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition-colors"
                   disabled={options.length <= 2}
                   title={options.length <= 2 ? t('create.needAtLeast2Options') : t('create.removeOption')}
+                  aria-label={t('create.removeOption') || 'Remove option'}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={18} />
                 </button>
               </div>
             ))}
