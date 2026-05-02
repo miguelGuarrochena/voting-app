@@ -162,6 +162,8 @@ function VersusTournamentPageInner({ params }: PageProps) {
   };
 
   const handleDelete = async () => {
+    // db.ts handles the ownership-mismatch case from the RPC's
+    // 'forbidden' exception with an actionable toast.
     const ok = await deleteTournament(token);
     if (!ok) return;
     removeMyPoll(token);

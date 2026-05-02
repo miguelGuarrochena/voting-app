@@ -65,6 +65,9 @@ export interface Tournament {
   expiresAt: string; // ISO string - always 24h after creation
   description?: string;
   coverImage?: string;
+  // Server-side owner (auth.uid). null = anonymous tournament.
+  // Used by the UI to detect identity mismatches before destructive ops.
+  userId?: string | null;
 }
 
 // Helper to determine winner from score result

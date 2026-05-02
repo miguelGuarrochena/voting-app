@@ -176,8 +176,13 @@ export default function VoteTokenPage() {
   };
 
   const handleDelete = async () => {
+    // db.ts handles the ownership-mismatch case via the RPC's
+    // 'forbidden' exception — it surfaces an actionable toast.
+    // Don't pre-empt here: AuthContext can still be hydrating when
+    // the user clicks, and any false negative would block legitimate
+    // owners from deleting their own polls.
     const ok = await deletePoll(token);
-    if (!ok) return; // db.ts ya mostró el toast
+    if (!ok) return; // db.ts already showed the toast
     removeMyPoll(token);
     toast.success(t('common.removed'));
     router.push('/votes');

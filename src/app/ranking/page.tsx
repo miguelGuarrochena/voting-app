@@ -10,11 +10,13 @@ import { useAuth } from '@/context/AuthContext';
 import { MyPollCard } from '@/components/mypolls/MyPollCard';
 import { ListingEmptyState } from '@/components/mypolls/ListingEmptyState';
 import {
+  findMyPoll,
   removeMyPoll,
   pruneExpiredMyPolls,
   type MyPollEntry,
 } from '@/lib/mypolls';
 import { getMyPollsHybrid } from '@/lib/mypollsHybrid';
+import { deletePoll } from '@/lib/db';
 
 export default function RankingPage() {
   const { t } = useLanguage();
@@ -33,7 +35,14 @@ export default function RankingPage() {
     if (!authLoading) refresh();
   }, [refresh, authLoading]);
 
-  const handleRemove = (token: string) => {
+  const handleRemove = async (token: string) => {
+    // Same as /votes: creator entries must be deleted on the server,
+    // otherwise refresh() pulls them back from get_my_polls_rpc.
+    const entry = entries.find((e) => e.token === token) ?? findMyPoll(token);
+    if (entry?.role === 'creator') {
+      const ok = await deletePoll(token);
+      if (!ok) return; // deletePoll already showed an error toast
+    }
     removeMyPoll(token);
     toast.success(t('common.removed'));
     refresh();

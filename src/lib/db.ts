@@ -133,6 +133,10 @@ export async function getPoll(token: string): Promise<any | null> {
       // camelCase aliases for optional fields (may be absent if the
       // content-v3.sql migration hasn't been applied yet).
       coverImage: row.cover_image ?? null,
+      // Server-side owner. NULL means anonymous poll (anyone with the
+      // token can delete). When set, only that auth.uid() can delete —
+      // the UI uses this to detect identity mismatches up front.
+      userId: row.user_id ?? null,
     }
   } catch (error) {
     toast.error(logSupabaseError('getPoll', error))
@@ -228,14 +232,40 @@ export async function deletePoll(token: string): Promise<boolean> {
       p_token: token,
     })
 
+    // Diagnostic — tells us at a glance whether the RPC actually
+    // returned success or a wrapped/null result that the code below
+    // would otherwise swallow.
+    // eslint-disable-next-line no-console
+    console.log('[deletePoll] token:', token, '| data:', data, '| error:', error)
+
     if (error) {
-      if (error.message?.includes('forbidden')) {
-        toast.error('No tenés permiso para borrar esta encuesta')
+      // 'forbidden' = the poll has an owner and the current session
+      // can't prove it. Two common cases (treated identically here):
+      //   1) User isn't logged in.
+      //   2) User is logged in with a different account.
+      // We surface an actionable toast based on the local session.
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('forbidden') || error.code === 'P0001') {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const loggedIn = !!sessionData?.session?.user?.id
+        toast.error(
+          loggedIn
+            ? 'Esta encuesta fue creada con otra cuenta. Iniciá sesión con esa cuenta para borrarla.'
+            : 'Esta encuesta es de una cuenta. Iniciá sesión con esa cuenta para poder borrarla.'
+        )
         return false
       }
       throw error
     }
-    return data === true
+    // The RPC returns boolean. true = something was deleted (or was
+    // already gone). Anything falsy here means the row is still there
+    // for a non-error reason — surface a message instead of silently
+    // looking like the click did nothing.
+    if (data !== true) {
+      toast.error('No pudimos borrar la encuesta. Recargá la página y probá de nuevo.')
+      return false
+    }
+    return true
   } catch (error) {
     toast.error(logSupabaseError('deletePoll', error))
     return false
@@ -434,6 +464,9 @@ export async function getTournament(token: string): Promise<any | null> {
       matches: row.matches,
       status: row.status,
       coverImage: row.cover_image ?? null,
+      // See getPoll for the rationale — server-side owner, used to
+      // detect identity mismatches before attempting destructive ops.
+      userId: row.user_id ?? null,
     }
   } catch (error) {
     toast.error(logSupabaseError('getTournament', error))
@@ -523,13 +556,24 @@ export async function deleteTournament(token: string): Promise<boolean> {
     })
 
     if (error) {
-      if (error.message?.includes('forbidden')) {
-        toast.error('No tenés permiso para borrar este torneo')
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('forbidden') || error.code === 'P0001') {
+        const { data: sessionData } = await supabase.auth.getSession()
+        const loggedIn = !!sessionData?.session?.user?.id
+        toast.error(
+          loggedIn
+            ? 'Este torneo fue creado con otra cuenta. Iniciá sesión con esa cuenta para borrarlo.'
+            : 'Este torneo es de una cuenta. Iniciá sesión con esa cuenta para poder borrarlo.'
+        )
         return false
       }
       throw error
     }
-    return data === true
+    if (data !== true) {
+      toast.error('No pudimos borrar el torneo. Recargá la página y probá de nuevo.')
+      return false
+    }
+    return true
   } catch (error) {
     toast.error(logSupabaseError('deleteTournament', error))
     return false

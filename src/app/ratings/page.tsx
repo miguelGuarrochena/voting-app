@@ -12,11 +12,13 @@ import { ListingEmptyState } from '@/components/mypolls/ListingEmptyState';
 import { RatingsComingSoon } from '@/components/ratings/ComingSoon';
 import { FEATURES } from '@/lib/features';
 import {
+  findMyPoll,
   removeMyPoll,
   pruneExpiredMyPolls,
   type MyPollEntry,
 } from '@/lib/mypolls';
 import { getMyPollsHybrid } from '@/lib/mypollsHybrid';
+import { deletePoll } from '@/lib/db';
 
 export default function RatingsPage() {
   const { t } = useLanguage();
