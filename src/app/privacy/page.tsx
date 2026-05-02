@@ -63,8 +63,13 @@ export default function PrivacyPage() {
             </ul>
             <p>
               {t('privacy.accountDelete')}{' '}
-              <a href="mailto:hola@letspicky.com" className="text-[var(--primary)] hover:underline">
-                hola@letspicky.com
+              <a
+                href="https://miguelguarrochena.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--primary)] hover:underline"
+              >
+                miguelguarrochena.dev
               </a>
               . {t('privacy.accountDelete2')}
             </p>
@@ -105,8 +110,13 @@ export default function PrivacyPage() {
             </p>
             <p>
               {t('privacy.deletePollText2')}{' '}
-              <a href="mailto:hola@letspicky.com" className="text-[var(--primary)] hover:underline">
-                hola@letspicky.com
+              <a
+                href="https://miguelguarrochena.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--primary)] hover:underline"
+              >
+                miguelguarrochena.dev
               </a>{' '}
               {t('privacy.deletePollText3')}
             </p>
@@ -133,8 +143,13 @@ export default function PrivacyPage() {
           <Section title={t('privacy.contactTitle')}>
             <p>
               {t('privacy.contactText')}{' '}
-              <a href="mailto:hola@letspicky.com" className="text-[var(--primary)] hover:underline">
-                hola@letspicky.com
+              <a
+                href="https://miguelguarrochena.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--primary)] hover:underline"
+              >
+                miguelguarrochena.dev
               </a>
               .
             </p>

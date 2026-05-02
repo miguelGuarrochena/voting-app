@@ -71,7 +71,7 @@ export default function Home() {
 
   return (
     <PageLayout className="pb-24 md:pb-8">
-        {/* Claim flow banner (solo si hay user logueado con polls locales) */}
+        {/* Claim flow banner (only when a logged-in user has local polls) */}
         <div className="pt-4">
           <ClaimBanner />
         </div>

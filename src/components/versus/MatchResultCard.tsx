@@ -14,9 +14,9 @@ interface MatchResultCardProps {
   totalRounds?: number;
   isBracket?: boolean;
   /**
-   * Layout vertical/apilado: nombre arriba, scores en el medio, nombre
-   * abajo. Lo usamos en el bracket de desktop para que los nombres entren
-   * completos (sin truncate) y todos los cards queden del mismo tamaño.
+   * Vertical/stacked layout: name on top, scores in the middle, name
+   * on the bottom. We use this in desktop bracket so names fit
+   * fully (no truncate) and all cards are the same size.
    */
   stacked?: boolean;
 }
@@ -55,9 +55,9 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
     onSaveResult(match.id, result);
   };
 
-  // Solo permitir dígitos. Usamos type="text" + inputMode numérico para que
-  // funcione bien en mobile (teclado numérico) y permita borrar/escribir a
-  // mano sin las quirks de type="number" (rueda del mouse, leading zeros, etc.)
+  // Only allow digits. We use type="text" + numeric inputMode so it
+  // works well on mobile (numeric keyboard) and allows deleting/typing by hand
+  // without the quirks of type="number" (mouse wheel, leading zeros, etc.)
   const handleScoreChange = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     // Strip non-digits
@@ -77,12 +77,12 @@ export const MatchResultCard = ({ match, hasScore, isEditable, onSaveResult, tot
   };
 
   // ─────────────────────────────────────────────────────────────────
-  //  STACKED variants (desktop bracket): cada equipo en su propia fila
-  //  con su input/score al lado. Layout clásico de tabla de torneos —
-  //  no hay ambigüedad sobre a qué equipo corresponde cada resultado.
+  //  STACKED variants (desktop bracket): each team on its own row
+  //  with its input/score beside. Classic tournament table layout —
+  //  no ambiguity about which team gets which result.
   //
-  //  Equipo A     [score A]
-  //  Equipo B     [score B]
+  //  Team A     [score A]
+  //  Team B     [score B]
   //  [Save Result]
   // ─────────────────────────────────────────────────────────────────
 

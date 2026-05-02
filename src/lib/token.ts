@@ -39,7 +39,7 @@ export function isExpired(expiresAt: Date): boolean {
 /**
  * Checks if a poll is in "terminal" state: either closed manually
  * by the creator (closedAt set) or expired by time.
- * Una encuesta terminal no acepta más respuestas y muestra el podio.
+ * A terminal poll stops accepting responses and shows the podium.
  */
 export function isTerminal(expiresAt: Date, closedAt?: Date | string | null): boolean {
   if (closedAt) return true;

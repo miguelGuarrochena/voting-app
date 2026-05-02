@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import { Eye } from 'lucide-react';
 
 // ------------------------------------------------------------
-//  WinnerPodium — top 3 al terminar la encuesta.
-//  Se usa en votes / ranking / ratings cuando `expired === true`.
-//  Se espera que el caller filtre entries con 0 actividad y pase
-//  sólo las que realmente ganaron algo (1 a 3 entries).
+//  WinnerPodium — top 3 when the poll finishes.
+//  Used in votes / ranking / ratings when `expired === true`.
+//  Expects the caller to filter out entries with 0 activity and only pass
+//  those that actually won something (1 to 3 entries).
 // ------------------------------------------------------------
 
 export type PodiumEntry = {
@@ -15,14 +15,14 @@ export type PodiumEntry = {
   title: string;
   emoji?: string;
   imageUrl?: string;
-  /** Métrica principal ya formateada (ej. "12 votos", "⭐ 4.3"). */
+  /** Primary metric already formatted (e.g. "12 votes", "⭐ 4.3"). */
   primary: string;
-  /** Métrica secundaria opcional (ej. "42%", "8 ratings"). */
+  /** Optional secondary metric (e.g. "42%", "8 ratings"). */
   secondary?: string;
 };
 
 type Props = {
-  /** Top 1-3 ya ordenados (mejor primero). Caller debe filtrar ceros. */
+  /** Top 1-3 already sorted (best first). Caller must filter zeros. */
   entries: PodiumEntry[];
   onZoomImage?: (url: string, alt: string) => void;
 };
@@ -37,14 +37,14 @@ const PLACE = {
 export function WinnerPodium({ entries, onZoomImage }: Props) {
   if (!entries || entries.length === 0) return null;
 
-  // Orden visual: 2º - 1º - 3º. Si faltan, la columna no se renderiza.
+  // Visual order: 2nd - 1st - 3rd. If missing, the column doesn't render.
   const visual: Array<{ entry: PodiumEntry | undefined; place: 1 | 2 | 3 }> = [
     { entry: entries[1], place: 2 },
     { entry: entries[0], place: 1 },
     { entry: entries[2], place: 3 },
   ];
 
-  // Si hay un solo ganador, centramos.
+  // If there's only one winner, center it.
   const onlyOne = entries.length === 1;
 
   return (
@@ -57,8 +57,8 @@ export function WinnerPodium({ entries, onZoomImage }: Props) {
         {(onlyOne ? [{ entry: entries[0], place: 1 as const }] : visual).map(
           ({ entry, place }, idx) => {
             if (!entry) {
-              // columna vacía (cuando no hay 3er puesto), placeholder para
-              // mantener la alineación
+              // Empty column (when there's no 3rd place), placeholder to
+              // maintain alignment
               return <div key={`empty-${place}`} aria-hidden />;
             }
             const step = PLACE[place];
@@ -70,7 +70,7 @@ export function WinnerPodium({ entries, onZoomImage }: Props) {
                 transition={{ delay: 0.12 * idx, type: 'spring', stiffness: 240, damping: 22 }}
                 className="flex flex-col items-stretch"
               >
-                {/* Card del ganador */}
+                {/* Winner card */}
                 <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-2 sm:p-3 mb-0 text-center shadow-sm">
                   {entry.imageUrl ? (
                     <button

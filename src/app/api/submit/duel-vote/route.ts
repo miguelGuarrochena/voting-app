@@ -1,11 +1,11 @@
 /**
  * POST /api/submit/duel-vote
  *
- * Edge route que orquesta el envío de un voto en un duelo de torneo (versus).
- * Reemplaza el INSERT/UPSERT directo a duel_votes desde el cliente —
- * ahora cerrado por RLS (las policies abiertas se dropearon en anti-fraud-v6).
+ * Edge route that orchestrates a duel vote in a tournament (versus).
+ * Replaces the direct duel_votes INSERT/UPSERT from the client —
+ * now locked down by RLS (the open policies were dropped in anti-fraud-v6).
  *
- * Body esperado (JSON):
+ * Expected body (JSON):
  *   {
  *     tournamentToken: string,
  *     duelId:          string,
@@ -14,7 +14,7 @@
  *     captchaToken:    string?
  *   }
  *
- * Respuestas:
+ * Responses:
  *   200 { ok: true }
  *   400 { error: 'bad_request' | 'empty_username' | 'empty_duel_id' | 'empty_option_id' }
  *   403 { error: 'captcha_failed' }

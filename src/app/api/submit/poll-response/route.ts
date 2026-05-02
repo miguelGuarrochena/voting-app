@@ -1,22 +1,22 @@
 /**
  * POST /api/submit/poll-response
  *
- * Edge route que orquesta el envío de votos de las verticales vote/ranking/rating.
- * Reemplaza la llamada directa de supabase.rpc('submit_response_rpc') desde el cliente,
- * y agrega:
- *   1) Validación de Turnstile (anti-bot invisible).
- *   2) Extracción + hash del IP del visitante (rate limit por IP).
- *   3) Traducción de errores Postgres a códigos HTTP apropiados.
+ * Edge route that orchestrates vote submission for vote/ranking/rating verticals.
+ * Replaces the direct call to supabase.rpc('submit_response_rpc') from the client,
+ * and adds:
+ *   1) Turnstile validation (invisible anti-bot).
+ *   2) Extraction + hash of visitor IP (rate limit per IP).
+ *   3) Translation of Postgres errors to appropriate HTTP codes.
  *
- * Body esperado (JSON):
+ * Expected body (JSON):
  *   {
- *     pollToken:    string,   // token público del poll
+ *     pollToken:    string,   // poll's public token
  *     username:     string,
- *     response:     any,      // payload específico de la vertical
- *     captchaToken: string?   // null si dev / Turnstile no configurado
+ *     response:     any,      // vertical-specific payload
+ *     captchaToken: string?   // null if dev / Turnstile not configured
  *   }
  *
- * Respuestas:
+ * Responses:
  *   200 { ok: true }
  *   400 { error: 'bad_request' | 'empty_username' }
  *   403 { error: 'captcha_failed' }
@@ -30,9 +30,9 @@ import { createClient } from '@supabase/supabase-js'
 import { verifyTurnstile } from '@/lib/turnstile'
 import { getClientIp, hashIp } from '@/lib/server/ip-hash'
 
-// Edge runtime: ms de cold start, sin Node APIs nativas.
-// Pero crypto.createHash de node:crypto NO funciona en edge — por eso
-// dejamos esto como Node runtime (default). Es un POST corto, no importa.
+// Edge runtime: fast cold start, no native Node APIs.
+// But crypto.createHash from node:crypto does NOT work in edge — that's why
+// we keep this as Node runtime (default). It's a short POST, doesn't matter.
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
@@ -73,10 +73,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'captcha_failed' }, { status: 403 })
   }
 
-  // ----- 2) Hash IP para rate limit -----
+  // ----- 2) Hash IP for rate limit -----
   const ipHash = hashIp(ip)
 
-  // ----- 3) Llamar RPC -----
+  // ----- 3) Call RPC -----
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_KEY
   if (!url || !key) {

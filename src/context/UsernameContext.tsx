@@ -3,26 +3,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
-// ------------------------------------------------------------
-//  UsernameContext
-//
-//  Fuente de verdad del "nombre con el que firmo mis votos".
-//  Reglas:
-//    1) Si NO hay sesión, se usa el nombre anónimo que el usuario
-//       tipea en OnboardingScreen y queda persistido en
-//       localStorage.pickly_username.
-//    2) Si HAY sesión (Google OAuth, magic link, etc.), la
-//       identidad autenticada manda: pisamos el nombre anónimo
-//       con `displayName` (user_metadata.full_name / name) y lo
-//       persistimos. Esto evita que alguien siga firmando como
-//       "Miguel" después de loguearse como "Miguel Guarrochena".
-//    3) Logout limpia localStorage.pickly_username (en Navbar),
-//       así el próximo usuario del mismo navegador parte de cero.
-//
-//  Para overrides puntuales (firmar una poll con un alias),
-//  llamar a `setUsername(...)` desde el formulario — el override
-//  también se persiste, pero el próximo login lo vuelve a pisar.
-// ------------------------------------------------------------
+// Source of truth for the name your votes are signed with.
+// When there's a session, the auth displayName wins (Google, etc).
+// Otherwise we fall back to the anonymous name stored in localStorage.
 
 interface UsernameContextType {
   username: string | null;
@@ -39,9 +22,8 @@ export function UsernameProvider({ children }: { children: ReactNode }) {
   const [hasOnboarded, setHasOnboarded] = useState(false);
   const { displayName, loading: authLoading } = useAuth();
 
-  // (1) Hidratación inicial desde localStorage. Si el user está
-  // logueado, el effect (2) lo va a sobreescribir apenas auth
-  // resuelva — es el comportamiento esperado.
+  // Initial hydration from localStorage. If the user is logged in,
+  // the effect below overrides this once auth resolves.
   useEffect(() => {
     const savedUsername = localStorage.getItem(USERNAME_STORAGE_KEY);
     if (savedUsername) {
@@ -50,10 +32,7 @@ export function UsernameProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // (2) Sync con auth. Cuando el user se loguea, su displayName
-  // pasa a ser la fuente de verdad y pisa el nombre anónimo.
-  // Si auth todavía está cargando o el user es anónimo, no
-  // tocamos nada (preservamos lo del localStorage).
+  // When displayName appears (login resolves), overwrite the anonymous name.
   useEffect(() => {
     if (authLoading) return;
     if (!displayName) return;

@@ -10,16 +10,16 @@ import { useLanguage } from '@/context/LanguageContext';
 
 // ------------------------------------------------------------
 //  AnonCreateModal
-//  Pop-up que se muestra SOLO cuando el user está creando algo
-//  sin estar logueado. Le da 2 opciones claras:
-//    (1) Iniciar sesión → /auth/login
-//    (2) Continuar sin cuenta → dismiss
+//  Pop-up shown ONLY when the user is creating something
+//  without being logged in. Gives them 2 clear options:
+//    (1) Sign in → /auth/login
+//    (2) Continue without account → dismiss
 //
-//  Se dismissea por pathname+sesión de browser (sessionStorage) para
-//  no fastidiar en cada navegación. Al cerrar sesión de browser o
-//  entrar a otro flow distinto, vuelve a aparecer.
+//  Dismissed by pathname + browser session (sessionStorage) so it doesn't
+//  bug on every navigation. When browser session closes or they enter
+//  a different flow, it reappears.
 //
-//  Si hay sesión (user !== null), no renderiza nada.
+//  If there is a session (user !== null), it renders nothing.
 // ------------------------------------------------------------
 
 const SESSION_KEY_PREFIX = 'pickly_anon_modal_dismissed:';
@@ -36,8 +36,8 @@ export function AnonCreateModal() {
       setOpen(false);
       return;
     }
-    // clave por path para que /create, /ratings/create y /versus/create
-    // se comporten como "flujos" independientes.
+    // Key by path so /create, /ratings/create, and /versus/create
+    // behave as "independent flows".
     try {
       const key = SESSION_KEY_PREFIX + (pathname || 'create');
       const dismissed = sessionStorage.getItem(key) === '1';

@@ -13,15 +13,15 @@ import { useAuth } from '@/context/AuthContext';
 // ------------------------------------------------------------
 //  /auth/login
 //
-//  Pickly v1: el ÚNICO método de login es Google OAuth.
+//  Pickly v1: the ONLY login method is Google OAuth.
 //
-//  Decisión de producto: arrancamos sin email+password y sin magic link
-//  para no pagar SMTP propio en el lanzamiento. Quien no tenga cuenta de
-//  Google sigue pudiendo crear/votar polls anónimos sin loguearse.
+//  Product decision: we started without email+password and magic link
+//  to avoid paying for our own SMTP at launch. Anyone without a Google account
+//  can still create/vote on polls anonymously without logging in.
 //
-//  Si en el futuro queremos agregar email+password de nuevo, las funciones
-//  base ya están en lib/auth.ts (signInWithMagicLink, signInWithPassword,
-//  etc) — están comentadas o eliminadas en esta versión, ver git history.
+//  If we want to add email+password again in the future, the base functions
+//  already exist in lib/auth.ts (signInWithMagicLink, signInWithPassword,
+//  etc) — they're commented out or deleted in this version, see git history.
 // ------------------------------------------------------------
 
 export default function LoginPage() {
@@ -29,7 +29,7 @@ export default function LoginPage() {
   const { t } = useLanguage();
   const { user, loading } = useAuth();
 
-  // Si ya hay sesión, sacamos al usuario de la página de login.
+  // If there's already a session, redirect the user away from the login page.
   useEffect(() => {
     if (!loading && user) {
       router.replace('/');
@@ -47,7 +47,7 @@ export default function LoginPage() {
           <span>Home</span>
         </Link>
 
-        {/* Banner: login es opcional */}
+        {/* Banner: login is optional */}
         <div className="flex gap-2.5 bg-[var(--primary-light)]/30 border border-[var(--primary-light)] rounded-xl p-3 mb-5 text-sm">
           <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-[var(--primary)]" />
           <div>

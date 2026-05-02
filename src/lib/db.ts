@@ -1,26 +1,20 @@
 import { supabase } from './supabase'
 import toast from 'react-hot-toast'
 
-// ============================================================
-//  ACCESO A LA BASE DE DATOS
-// ------------------------------------------------------------
-//  Las LECTURAS (SELECT) van todas por funciones RPC definidas
-//  en Supabase con SECURITY DEFINER. Cada una exige el token.
-//  Ver: supabase/privacy-migration.sql
+// Database access layer.
+// Reads (SELECT) all go through RPC functions defined in Supabase with
+// SECURITY DEFINER. Each one requires the token.
+// See: supabase/privacy-migration.sql
 //
-//  Las ESCRITURAS (insert/update/delete) van por la API directa,
-//  usando las policies permisivas de RLS.
-// ============================================================
+// Writes (insert/update/delete) go through the direct API, relying on
+// the permissive RLS policies.
 
-// ------------------------------------------------------------
-//  Helper: log detallado de errores de Supabase.
-//  Antes mostrábamos "Error de conexión" genérico — inútil
-//  para debuggear 401/RLS/JWT inválido/migration faltante.
-//  Ahora dumpeamos el objeto completo y elegimos un mensaje
-//  amigable según el status.
-// ------------------------------------------------------------
+// Detailed Supabase error logger.
+// We used to show a generic "connection error" — useless for debugging
+// 401 / RLS / invalid JWT / missing migration. Now we dump the full
+// object and pick a friendly message based on the status.
 function logSupabaseError(context: string, error: any): string {
-  // Dump completo a consola (code, message, hint, details, status)
+  // Full console dump (code, message, hint, details, status)
   // eslint-disable-next-line no-console
   console.log(`[${context}] Error details:`, {
     'error === null': error === null,
@@ -56,15 +50,15 @@ function logSupabaseError(context: string, error: any): string {
   const status = error?.status || error?.statusCode
   const code = error?.code
 
-  // 401 → auth / clave inválida
+  // 401 → auth / invalid key
   if (status === 401 || code === 'PGRST301' || code === '401') {
     return 'Error de autenticación con la base de datos. Revisá que la migración esté aplicada y la API key sea válida.'
   }
-  // 403 / 42501 → RLS bloqueó la operación
+  // 403 / 42501 → RLS blocked the operation
   if (status === 403 || code === '42501') {
     return 'Operación bloqueada por permisos. Puede que falte correr la migración.'
   }
-  // 404 → RPC no existe
+  // 404 → RPC doesn't exist
   if (status === 404 || code === 'PGRST202') {
     return 'Función no encontrada en la base. Correr la migración de privacidad.'
   }
@@ -73,7 +67,7 @@ function logSupabaseError(context: string, error: any): string {
     return 'No se pudo conectar al servidor. Revisá tu conexión.'
   }
 
-  // Fallback — mostramos el mensaje real si existe
+  // Fallback — show the real message if we have one
   return error?.message
     ? `Error: ${error.message}`
     : 'Error de conexión, intenta de nuevo'
@@ -92,8 +86,8 @@ export async function createPoll(
   try {
     const token = generateToken()
 
-    // description / cover_image están disponibles desde la migración
-    // supabase/content-v3.sql. Solo las mandamos si el usuario las cargó.
+    // description / cover_image were added in supabase/content-v3.sql.
+    // Only send them if the user actually filled something in.
     const payload: Record<string, any> = {
       token,
       type,
@@ -107,8 +101,8 @@ export async function createPoll(
     const cover = extras?.coverImage?.trim()
     if (cover) payload.cover_image = cover
 
-    // No usamos .select() acá: con RLS bloqueando SELECT directo,
-    // el RETURNING no funciona. El token ya lo tenemos nosotros.
+    // No .select() here: with RLS blocking direct SELECT, RETURNING
+    // doesn't come back. We already generated the token client-side.
     const { error } = await supabase.from('polls').insert(payload)
 
     if (error) throw error
@@ -127,7 +121,7 @@ export async function getPoll(token: string): Promise<any | null> {
 
     if (error) throw error
 
-    // La RPC devuelve SETOF polls → array (0 o 1 filas)
+    // The RPC returns SETOF polls → array of 0 or 1 rows
     const row = Array.isArray(data) ? data[0] : data
     if (!row) return null
 
@@ -136,8 +130,8 @@ export async function getPoll(token: string): Promise<any | null> {
       expiresAt: row.expires_at,
       closedAt: row.closed_at ?? null,
       createdBy: row.created_by,
-      // alias camelCase para campos opcionales (pueden no existir si la
-      // migración content-v3.sql no fue aplicada todavía).
+      // camelCase aliases for optional fields (may be absent if the
+      // content-v3.sql migration hasn't been applied yet).
       coverImage: row.cover_image ?? null,
     }
   } catch (error) {
@@ -153,13 +147,11 @@ export async function submitResponse(
   captchaToken: string | null = null
 ): Promise<boolean> {
   try {
-    // ------------------------------------------------------------
-    //  Pasa por el edge route /api/submit/poll-response, que valida
-    //  Turnstile + extrae el IP, hashea, y llama a la RPC con guard
-    //  de rate limit. Antes acá llamábamos supabase.rpc('submit_response_rpc')
-    //  directo — sin captcha y sin IP, lo que dejaba la puerta abierta a
-    //  spam de votos.
-    // ------------------------------------------------------------
+    // Goes through the edge route /api/submit/poll-response, which
+    // validates Turnstile, extracts and hashes the IP, and calls the RPC
+    // with a rate-limit guard. Originally we called submit_response_rpc
+    // directly from here — no captcha, no IP — which left the door open
+    // to vote spam.
     const res = await fetch('/api/submit/poll-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -178,7 +170,7 @@ export async function submitResponse(
       const data = await res.json()
       if (typeof data?.error === 'string') errCode = data.error
     } catch {
-      // body no JSON — usamos el código por status
+      // non-JSON body — fall back to mapping by status code
     }
 
     if (res.status === 429 || errCode === 'rate_limited') {
@@ -226,12 +218,12 @@ export async function getPollResponses(pollToken: string): Promise<any[]> {
 
 export async function deletePoll(token: string): Promise<boolean> {
   try {
-    // Usa la RPC delete_poll_rpc (SECURITY DEFINER) que valida ownership:
-    //   - polls con user_id => solo el dueño (auth.uid() = user_id)
-    //   - polls anónimos    => cualquiera con el token (mismo modelo
-    //                          que voto/edit anónimo)
-    // Esto reemplaza el .from('polls').delete().eq('token', token) que
-    // dependía de una policy abierta USING (true).
+    // Uses the delete_poll_rpc (SECURITY DEFINER) which checks ownership:
+    //   - polls with user_id => only the owner (auth.uid() = user_id)
+    //   - anonymous polls    => anyone with the token (same model used
+    //                           for anonymous voting / editing)
+    // Replaces the old .from('polls').delete().eq('token', token), which
+    // relied on an open USING (true) policy.
     const { data, error } = await supabase.rpc('delete_poll_rpc', {
       p_token: token,
     })
@@ -250,18 +242,16 @@ export async function deletePoll(token: string): Promise<boolean> {
   }
 }
 
-// ------------------------------------------------------------
-//  closePoll / updatePollTitle
-//  Requieren la migración supabase/features-v2.sql:
-//    - policy polls_update (permite UPDATE sobre polls)
-//    - ajuste en get_poll_by_token (no filtrar expirados)
-//  Ver docs/SUPABASE_PENDING.md
-// ------------------------------------------------------------
+// closePoll / updatePollTitle
+// Both require the supabase/features-v2.sql migration:
+//   - polls_update policy (allows UPDATE on polls)
+//   - get_poll_by_token tweak (don't filter expired)
+// See docs/SUPABASE_PENDING.md
 
 /**
- * Cierra un poll inmediatamente seteando closed_at = now().
- * Usa la RPC close_poll_rpc (SECURITY DEFINER) para saltar RLS.
- * La UI ya sabe manejar el estado "terminal" (banner, bloqueo de voto, etc.).
+ * Close a poll immediately by setting closed_at = now().
+ * Uses close_poll_rpc (SECURITY DEFINER) to bypass RLS.
+ * The UI already handles the "terminal" state (banner, vote lock, etc.).
  */
 export async function closePoll(token: string): Promise<boolean> {
   try {
@@ -278,7 +268,7 @@ export async function closePoll(token: string): Promise<boolean> {
 }
 
 /**
- * Actualiza el título de un poll via RPC (valida que no esté cerrada).
+ * Update a poll's title via RPC (validates the poll isn't closed).
  */
 export async function updatePollTitle(token: string, title: string): Promise<boolean> {
   try {
@@ -305,8 +295,8 @@ export async function updatePollTitle(token: string, title: string): Promise<boo
 }
 
 /**
- * Actualiza un poll completo (título, descripción, imagen, opciones) via RPC.
- * El RPC rechaza con 'poll_closed' si la encuesta está terminal.
+ * Update a full poll (title, description, image, options) via RPC.
+ * The RPC rejects with 'poll_closed' if the poll is terminal.
  */
 export async function updatePoll(
   token: string,
@@ -379,9 +369,9 @@ export async function createTournament(
     const { error } = await supabase.from('tournaments').insert(payload)
 
     if (error) {
-      // Diagnóstico extremo: el browser estaba mostrando '{}' vacío. Forzamos
-      // que cada propiedad salga como argumento separado a console.error
-      // (los browsers nunca colapsan args sueltos) + un toast visible.
+      // Aggressive diagnostics: the browser was logging an empty '{}'.
+      // Force each property as its own console.error arg (browsers never
+      // collapse separate args) plus a visible toast.
       const e = error as any
       const dumpStr = (() => {
         try {
@@ -410,7 +400,7 @@ export async function createTournament(
       // eslint-disable-next-line no-console
       console.error('[createTournament] dumpStr:', dumpStr)
 
-      // Toast visible con el mensaje real (truncado a 300 chars)
+      // Visible toast with the real message (truncated to 300 chars)
       const visible = e?.message || dumpStr || String(e)
       toast.error(`DB error: ${String(visible).slice(0, 300)}`)
 
@@ -527,7 +517,7 @@ export async function advanceBracketRound(
 
 export async function deleteTournament(token: string): Promise<boolean> {
   try {
-    // Mismo patrón que deletePoll: RPC con check de ownership.
+    // Same pattern as deletePoll: RPC with an ownership check.
     const { data, error } = await supabase.rpc('delete_tournament_rpc', {
       p_token: token,
     })
@@ -546,20 +536,18 @@ export async function deleteTournament(token: string): Promise<boolean> {
   }
 }
 
-// ------------------------------------------------------------
-//  closeTournament / updateTournamentTitle
-//  Usan la policy tourn_update ya existente — no hace falta
-//  tocar RLS para versus. Ver docs/SUPABASE_PENDING.md
-// ------------------------------------------------------------
+// closeTournament / updateTournamentTitle
+// Both use the existing tourn_update policy — no extra RLS work needed
+// for versus. See docs/SUPABASE_PENDING.md
 
 /**
- * Cierra un torneo inmediatamente: setea expires_at = now() y status='finished'.
+ * Close a tournament immediately: sets expires_at = now() and status='finished'.
  *
- * NOTA: usamos 'finished' (no 'expired') porque:
- *  - El CHECK constraint de tournaments incluye 'active' | 'finished' | 'expired',
- *    pero la UI filtra por 'finished' para mostrar el banner de campeón.
- *  - Coherente con cuando el bracket termina solo (advance_bracket_round_rpc
- *    también marca 'finished').
+ * NOTE: we use 'finished' (not 'expired') because:
+ *  - The CHECK constraint on tournaments allows 'active' | 'finished' | 'expired',
+ *    but the UI filters on 'finished' to show the champion banner.
+ *  - Consistent with the bracket finishing on its own (advance_bracket_round_rpc
+ *    also marks the tournament as 'finished').
  */
 export async function closeTournament(token: string): Promise<boolean> {
   try {
@@ -580,7 +568,7 @@ export async function closeTournament(token: string): Promise<boolean> {
 }
 
 /**
- * Actualiza el título de un torneo.
+ * Update a tournament's title.
  */
 export async function updateTournamentTitle(token: string, title: string): Promise<boolean> {
   try {
@@ -600,20 +588,18 @@ export async function updateTournamentTitle(token: string, title: string): Promi
   }
 }
 
-// ------------------------------------------------------------
-//  NOTA: getTournaments() fue eliminada a propósito.
-//  Antes devolvía TODOS los torneos del mundo a cualquier visitante
-//  — un leak grave de privacidad.
-//  Los listados ahora leen desde localStorage (ver src/lib/mypolls.ts).
-// ------------------------------------------------------------
+// NOTE: getTournaments() was removed on purpose.
+// It used to return EVERY tournament to every visitor — a serious
+// privacy leak. Listings now read from localStorage instead
+// (see src/lib/mypolls.ts).
 
 // ============ HELPER FUNCTIONS ============
 
 function generateToken(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
-  // crypto.getRandomValues es criptográficamente seguro,
-  // a diferencia de Math.random() que era predecible.
+  // crypto.getRandomValues is cryptographically secure,
+  // unlike Math.random() which was predictable.
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     const bytes = new Uint8Array(7)
     crypto.getRandomValues(bytes)
@@ -624,7 +610,7 @@ function generateToken(): string {
     return out
   }
 
-  // Fallback (no debería pasar en navegadores modernos ni en Node 19+)
+  // Fallback (shouldn't happen on modern browsers or Node 19+)
   let result = ''
   for (let i = 0; i < 7; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length))

@@ -22,8 +22,8 @@ const FALLBACK_DESCRIPTION =
   'Vota, rankéa y compartí en Pickly. Decisiones rápidas y divertidas.'
 
 /**
- * Trae los campos mínimos para metadata por token.
- * Devuelve null si no existe o si hubo error (no rompe el SSR).
+ * Fetch the minimum fields needed for metadata, by token.
+ * Returns null if not found or on error (doesn't break SSR).
  */
 export async function getPollMetadata(
   token: string
@@ -73,7 +73,7 @@ export function buildPollMetadata(
   kind: 'vote' | 'ranking' | 'rating' | 'versus'
 ) {
   if (!row || !row.title) {
-    return null // dejar que el root metadata aplique
+    return null // let the root metadata apply
   }
 
   const kindLabel: Record<typeof kind, string> = {

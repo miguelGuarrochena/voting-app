@@ -1,21 +1,20 @@
 /**
  * src/lib/mypolls.ts
- * --------------------------------------------------------------
- * Manager de "mis polls" en localStorage.
  *
- * En Pickly no hay sistema de cuentas ni "mis polls en el servidor"
- * — todo se comparte por token. Como los listados del servidor se
- * eliminaron por privacidad (ver privacy-migration.sql), la UX de
- * "mis polls" se resuelve de este lado:
+ * "My polls" tracker, stored in localStorage.
  *
- *   - Cuando el usuario CREA un poll → se guarda acá con role='creator'
- *   - Cuando abre un link compartido /votes/[token] (o similar)
- *     → se guarda acá con role='participant'
+ * Pickly doesn't have user accounts or a server-side "my polls" list —
+ * everything is shared by token. Because the server listings were removed
+ * for privacy reasons (see privacy-migration.sql), the "my polls" UX lives
+ * entirely on the client:
  *
- * Los listados `/votes`, `/ranking`, `/ratings`, `/versus` leen de acá
- * y filtran por type. Quien no tiene un token en su localStorage,
- * no ve ese poll en ningún listado.
- * --------------------------------------------------------------
+ *   - When the user CREATES a poll → save it here with role='creator'
+ *   - When the user opens a shared /votes/[token] (or similar) link
+ *     → save it here with role='participant'
+ *
+ * The `/votes`, `/ranking`, `/ratings`, `/versus` listings read from here
+ * and filter by type. Anyone without the token in localStorage simply
+ * won't see that poll in any listing.
  */
 
 const STORAGE_KEY = 'pickly_mypolls'
@@ -30,10 +29,10 @@ export interface MyPollEntry {
   role: MyPollRole
   createdBy?: string
   expiresAt?: string   // ISO string
-  savedAt: string      // ISO string, cuándo se guardó en este device
+  savedAt: string      // ISO string, when it was saved on this device
 }
 
-// --- Utilidades internas ---------------------------------------
+// --- Internal helpers ------------------------------------------
 
 function readAll(): MyPollEntry[] {
   if (typeof window === 'undefined') return []
@@ -56,12 +55,12 @@ function writeAll(list: MyPollEntry[]): void {
   }
 }
 
-// --- API pública -----------------------------------------------
+// --- Public API ------------------------------------------------
 
 /**
- * Agrega (o actualiza) un poll en "mis polls". Si ya existe el mismo
- * token, NO sobrescribe si el rol actual es 'creator' (la info de
- * creador pesa más que la de participante).
+ * Add (or update) a poll in "my polls". If an entry with the same
+ * token already exists, we do NOT overwrite when the current role is
+ * 'creator' — being the creator outranks being a participant.
  */
 export function addMyPoll(
   entry: Omit<MyPollEntry, 'savedAt'> & { savedAt?: string }
@@ -76,7 +75,7 @@ export function addMyPoll(
 
   if (existingIdx >= 0) {
     const existing = list[existingIdx]
-    // Si ya figura como 'creator', no lo degradamos a 'participant'
+    // If it's already flagged 'creator', don't downgrade to 'participant'
     if (existing.role === 'creator' && newEntry.role === 'participant') {
       return
     }
@@ -89,8 +88,7 @@ export function addMyPoll(
 }
 
 /**
- * Devuelve todos los polls guardados, opcionalmente filtrados por type.
- * Más recientes primero.
+ * Return every saved poll, optionally filtered by type. Newest first.
  */
 export function getMyPolls(type?: MyPollType): MyPollEntry[] {
   const list = readAll()
@@ -101,15 +99,15 @@ export function getMyPolls(type?: MyPollType): MyPollEntry[] {
 }
 
 /**
- * Busca un poll específico por token, o null si no está guardado.
+ * Look up a specific poll by token, or null if it isn't saved.
  */
 export function findMyPoll(token: string): MyPollEntry | null {
   return readAll().find(p => p.token === token) ?? null
 }
 
 /**
- * Quita un poll de "mis polls" (ej. si se borró o expiró).
- * No toca el servidor.
+ * Remove a poll from "my polls" (e.g. when it was deleted or expired).
+ * Doesn't touch the server.
  */
 export function removeMyPoll(token: string): void {
   const list = readAll().filter(p => p.token !== token)
@@ -117,7 +115,7 @@ export function removeMyPoll(token: string): void {
 }
 
 /**
- * Limpia entradas expiradas.
+ * Drop expired entries.
  */
 export function pruneExpiredMyPolls(): void {
   const now = Date.now()
@@ -129,7 +127,7 @@ export function pruneExpiredMyPolls(): void {
 }
 
 /**
- * Borra todo (útil para logout o testing).
+ * Wipe everything (useful for logout / testing).
  */
 export function clearMyPolls(): void {
   if (typeof window === 'undefined') return

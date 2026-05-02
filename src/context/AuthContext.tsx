@@ -13,25 +13,25 @@ import { supabase } from '@/lib/supabase';
 
 // ------------------------------------------------------------
 //  AuthContext
-//  Fuente de verdad de la sesión. El resto de la app consume
-//  useAuth() para saber si el user está logueado y quién es.
+//  Source of truth for the session. The rest of the app consumes
+//  useAuth() to know if the user is logged in and who they are.
 //
-//  Notas:
-//   - Login es OPCIONAL en Pickly. Si user === null, la app
-//     sigue funcionando (modelo token-as-capability).
-//   - El único punto donde la sesión cambia es supabase.auth.
-//     Escuchamos onAuthStateChange y propagamos cambios.
-//   - displayName intenta user_metadata.full_name / name
-//     (Google lo manda) y si no, el prefijo del email.
+//  Notes:
+//   - Login is OPTIONAL in Pickly. If user === null, the app
+//     keeps working (token-as-capability model).
+//   - The only place where the session changes is supabase.auth.
+//     We listen to onAuthStateChange and propagate changes.
+//   - displayName tries user_metadata.full_name / name
+//     (Google sends it) and if not, the email prefix.
 // ------------------------------------------------------------
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  /** Nombre "lindo" para mostrar en Navbar/avatar */
+  /** "Nice" name to display in Navbar/avatar */
   displayName: string | null;
-  /** Email primario del user (si tiene). Útil para UI. */
+  /** User's primary email (if any). Useful for UI. */
   email: string | null;
   /** Avatar URL (Google / gravatar / null) */
   avatarUrl: string | null;
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Sesión inicial (chequea localStorage + refresca si hace falta)
+    // Initial session (checks localStorage + refreshes if needed)
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
       setSession(data.session);
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Listener de cambios: login, logout, refresh token, etc.
+    // Listener for changes: login, logout, refresh token, etc.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       if (!mounted) return;
       setSession(s);

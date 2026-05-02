@@ -34,16 +34,8 @@ import {
   type RatingMap,
 } from '@/lib/ratings';
 
-// ------------------------------------------------------------
-//  RATINGS — Detalle por token
-//
-//  Refactor: ahora cada item se puntúa en N criterios
-//  (attributes) definidos por el creador. El user tiene que
-//  puntuar TODOS los (option, attribute) antes de enviar.
-//
-//  Compat: ratings sin attributes definidos (legacy) caen en
-//  un único atributo "Overall" — ver lib/ratings.ts.
-// ------------------------------------------------------------
+// Rating detail page. Each item is scored across N criteria (attributes).
+// Every (option, attribute) pair must be scored before submitting.
 
 export default function RatingTokenPage() {
   const router = useRouter();
@@ -152,7 +144,7 @@ export default function RatingTokenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, username]);
 
-  // Confeti cuando expira si hay al menos un rating
+  // Confetti when it expires if there's at least one rating
   useEffect(() => {
     if (expired && pollData) {
       const hasRatings = (pollData.options ?? []).some(
@@ -177,7 +169,7 @@ export default function RatingTokenPage() {
     }));
   };
 
-  // Cuántas combinaciones (option × attribute) faltan calificar
+  // How many (option × attribute) combinations are still unrated
   const computeMissing = () => {
     if (!pollData) return { missing: 0, total: 0, rated: 0 };
     const opts = pollData.options ?? [];
@@ -756,8 +748,8 @@ function RatingResultsList({
     ? sorted.filter((o) => !podiumIds.has(o.id))
     : sorted;
 
-  // Si hay sólo 1 attribute (ej. legacy "Overall"), no mostramos
-  // un breakdown redundante.
+  // If there's only 1 attribute (e.g. legacy "Overall"), skip the
+  // redundant per-attribute breakdown.
   const showAttrBreakdown = attributes.length > 1;
 
   return (
@@ -865,7 +857,7 @@ function RatingResultsList({
               </span>
             </div>
 
-            {/* Per-attribute breakdown (sólo si hay más de uno) */}
+            {/* Per-attribute breakdown (only when there's more than one) */}
             {showAttrBreakdown && (
               <div className="mt-3 space-y-1.5 pt-3 border-t border-[var(--border)]">
                 {attributes.map((attr) => {

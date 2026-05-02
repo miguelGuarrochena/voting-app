@@ -69,8 +69,8 @@ export const BracketResultView = ({
   };
 
 
-  // Match de la final (último round). Lo necesitamos para mostrar el
-  // resultado en el centro junto con el card del campeón.
+  // Final match (last round). We need it to show the
+  // result in the center along with the champion card.
   const finalMatch = matches.find(m => m.round === totalRounds && m.status === 'completed') ?? null;
 
   // Move useRef to top level to avoid hooks order violation
@@ -206,16 +206,16 @@ export const BracketResultView = ({
     );
   }
 
-  // Desktop bracket view: las rondas no-finales se splittean en izquierda
-  // y derecha; la final va al centro.
+  // Desktop bracket view: non-final rounds are split left
+  // and right; the final goes in the center.
   const leftSideRounds = Array.from({ length: totalRounds - 1 }, (_, i) => i + 1);
   const rightSideRounds = [...leftSideRounds].reverse();
 
-  // Ancho fijo de columna en desktop: con el layout stacked (cada equipo
-  // en su fila con el input al lado) este ancho entra cómodo para nombres
-  // típicos. Si el bracket es grande, el wrapper tiene overflow-x-auto
-  // así que el user scrollea horizontal en lugar de cortar info.
-  // El usuario pidió "que sea el mismo tamaño para todos" → un solo width.
+  // Fixed column width on desktop: with stacked layout (each team
+  // on its own row with input beside) this width fits comfortably for typical
+  // names. If the bracket is large, the wrapper has overflow-x-auto
+  // so the user scrolls horizontally instead of truncating info.
+  // User requested "all the same size" → single width.
   const columnWidth = 'w-48 lg:w-56';
   const centerWidth = 'w-48 lg:w-56';
 
@@ -270,9 +270,8 @@ export const BracketResultView = ({
                 </div>
 
                 {/* Matches in this round (left half).
-                    stacked=true → en desktop usamos layout vertical para que
-                    los nombres entren completos y todos los cards queden
-                    del mismo tamaño. */}
+                    stacked=true → on desktop we use vertical layout so
+                    names fit fully and all cards are the same size. */}
                 <div className="flex flex-col justify-around gap-3 flex-1">
                   {leftMatches.map((match, index) => (
                     <motion.div

@@ -1,28 +1,28 @@
 /**
- * Cloudflare Turnstile — helpers cliente y servidor.
+ * Cloudflare Turnstile — client and server helpers.
  *
- * Cliente (browser):
- *   - turnstileExecute(siteKey): dispara un challenge invisible y devuelve un token.
- *     El token tiene vida útil de ~5 min y se consume en el server al validar.
+ * Client (browser):
+ *   - turnstileExecute(siteKey): fires an invisible challenge and returns a token.
+ *     The token is valid for ~5 min and is consumed on the server when validating.
  *
- * Servidor (Next.js edge route):
- *   - verifyTurnstile(token, secret, ip?): valida el token contra
+ * Server (Next.js edge route):
+ *   - verifyTurnstile(token, secret, ip?): validates the token against
  *     https://challenges.cloudflare.com/turnstile/v0/siteverify
  *
  * Setup:
- *   - Crear sitio en https://dash.cloudflare.com → Turnstile → Add Site.
- *   - Mode: "Invisible" o "Managed" (Managed muestra el widget solo si
- *     hay sospecha; Invisible nunca lo muestra). Recomendado: Managed.
- *   - Copiar Site Key → NEXT_PUBLIC_TURNSTILE_SITE_KEY (Vercel + .env.local)
- *   - Copiar Secret Key → TURNSTILE_SECRET (solo en Vercel)
+ *   - Create site at https://dash.cloudflare.com → Turnstile → Add Site.
+ *   - Mode: "Invisible" or "Managed" (Managed shows the widget only if
+ *     there's suspicion; Invisible never shows it). Recommended: Managed.
+ *   - Copy Site Key → NEXT_PUBLIC_TURNSTILE_SITE_KEY (Vercel + .env.local)
+ *   - Copy Secret Key → TURNSTILE_SECRET (only on Vercel)
  *
- *   Para dev sin Cloudflare, hay test keys oficiales:
+ *   For dev without Cloudflare, there are official test keys:
  *     Site key:   1x00000000000000000000AA  (always passes)
  *     Secret:     1x0000000000000000000000000000000AA
  *
- *   Si las env vars no están seteadas, el código degrada gracefully:
- *   en cliente skip el challenge, en server skip la verificación.
- *   Esto permite trabajar local sin Cloudflare aún.
+ *   If env vars aren't set, the code degrades gracefully:
+ *   on client skip the challenge, on server skip the verification.
+ *   This allows local work without Cloudflare for now.
  */
 
 // ------------------------------------------------------------
@@ -58,9 +58,9 @@ export const TURNSTILE_SCRIPT_URL =
   'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
 
 /**
- * Ejecuta un challenge invisible y devuelve el token.
- * Si Turnstile no está cargado o no hay siteKey, devuelve null
- * (degraded mode — el server lo aceptará si tampoco tiene secret seteado).
+ * Executes an invisible challenge and returns the token.
+ * If Turnstile isn't loaded or there's no siteKey, returns null
+ * (degraded mode — the server will accept it if it also doesn't have secret set).
  */
 export async function turnstileExecute(
   siteKey: string | undefined,
@@ -69,7 +69,7 @@ export async function turnstileExecute(
   if (typeof window === 'undefined') return null
   if (!siteKey) return null
   if (!window.turnstile) {
-    // Esperamos hasta 3s a que cargue el script
+    // Wait up to 3s for the script to load
     for (let i = 0; i < 30; i++) {
       await new Promise((r) => setTimeout(r, 100))
       if (window.turnstile) break
@@ -77,7 +77,7 @@ export async function turnstileExecute(
     if (!window.turnstile) return null
   }
 
-  // Crea un container temporal en off-screen para el render invisible
+  // Create a temporary off-screen container for the invisible render
   const container = document.createElement('div')
   container.style.position = 'fixed'
   container.style.left = '-9999px'
@@ -105,7 +105,7 @@ export async function turnstileExecute(
       setTimeout(() => reject(new Error('turnstile_timeout')), 15000)
     })
   } finally {
-    // limpiamos el container; el script de Turnstile sigue cargado
+    // Clean up the container; the Turnstile script stays loaded
     setTimeout(() => container.remove(), 0)
   }
 }
@@ -124,10 +124,10 @@ interface TurnstileVerifyResponse {
 }
 
 /**
- * Valida un token de Turnstile contra Cloudflare. Devuelve true si OK.
+ * Validates a Turnstile token against Cloudflare. Returns true if OK.
  *
- * Si TURNSTILE_SECRET no está seteado, degrada a true (modo dev).
- * Esto se loguea para que sea evidente en producción si pasa.
+ * If TURNSTILE_SECRET isn't set, degrades to true (dev mode).
+ * This is logged so it's obvious in production if it happens.
  */
 export async function verifyTurnstile(
   token: string | null | undefined,

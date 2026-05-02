@@ -17,8 +17,8 @@ function shuffleArray<T>(array: T[]): T[] {
  * Only accepts 2, 4, 8, or 16 players.
  *
  * Special case: playerCount === 2 with homeAndAway === true generates 2
- * matches in round 1 (ida y vuelta). El campeón se decide por agregado
- * (ver getBracketChampion).
+ * matches in round 1 (home and away). The champion is decided by aggregate
+ * (see getBracketChampion).
  */
 export function generateBracketMatches(
   players: Player[],
@@ -35,11 +35,11 @@ export function generateBracketMatches(
   // Shuffle if requested
   const shuffledPlayers = randomize ? shuffleArray(players) : [...players];
 
-  // Special case: 2 players, ida y vuelta
-  // Round 1 tiene 2 matches:
-  //   match 0: A (local) vs B (visitante)
-  //   match 1: B (local) vs A (visitante)
-  // No hay round 2 — el campeón se calcula por agregado.
+  // Special case: 2 players, home and away
+  // Round 1 has 2 matches:
+  //   match 0: A (home) vs B (away)
+  //   match 1: B (home) vs A (away)
+  // No round 2 — the champion is calculated by aggregate.
   if (playerCount === 2 && homeAndAway) {
     const [pA, pB] = shuffledPlayers;
     return [
@@ -152,11 +152,11 @@ export function isHomeAndAwayBracket(matches: BracketMatch[]): boolean {
  * Generates league matches (round robin - everyone plays everyone once)
  * Works with any number of players.
  *
- * - Si randomize === true, los pares se ordenan en una secuencia random
- *   (no afecta los enfrentamientos en sí, solo el orden de visualización).
- * - Si randomize === false, se respeta el orden de la lista de jugadores:
- *   primero todos los partidos del jugador 0, después los del 1, etc.
- *   Eso es lo que usa el modo "yo armo los partidos".
+ * - If randomize === true, pairings are arranged in a random sequence
+ *   (doesn't affect the matchups themselves, just the display order).
+ * - If randomize === false, the order of the players list is respected:
+ *   first all matches for player 0, then player 1, etc.
+ *   This is what the "I set up the matches" mode uses.
  */
 export function generateLeagueMatches(
   players: Player[],
@@ -181,7 +181,7 @@ export function generateLeagueMatches(
   }
 
   // If randomize, shuffle the order of matches (still same pairings, different sequence).
-  // Reasignamos los ids en orden para que coincidan con el orden visual.
+  // Reassign ids in order so they match the visual order.
   if (randomize) {
     const shuffled = shuffleArray(matches);
     return shuffled.map((m, idx) => ({ ...m, id: `match-${idx}` }));
@@ -267,26 +267,26 @@ export function calculateLeagueStandings(
 /**
  * Gets the champion of a bracket tournament.
  *
- * Caso especial home-and-away (2 matches en ronda 1, mismos 2 jugadores):
- *   - hasScore: campeón = jugador con suma de goles más alta. Si hay
- *     empate en el agregado, devolvemos null (sin campeón hasta que se
- *     desempate manualmente — futura mejora: prórroga / penales).
- *   - winloss: campeón = el que ganó más matches (1-0 o 2-0). Si fue
- *     1-1 en victorias, también null.
+ * Special case home-and-away (2 matches in round 1, same 2 players):
+ *   - hasScore: champion = player with the highest goal total. If there's
+ *     a tie on aggregate, we return null (no champion until manually broken
+ *     — future improvement: extra time / penalties).
+ *   - winloss: champion = the one who won more matches (1-0 or 2-0). If 1-1
+ *     in wins, also null.
  */
 export function getBracketChampion(matches: BracketMatch[]): Player | null {
   if (matches.length === 0) return null;
 
-  // Home-and-away: agregado de los 2 matches de ronda 1
+  // Home-and-away: aggregate of the 2 round 1 matches
   if (isHomeAndAwayBracket(matches)) {
     if (!matches.every(m => m.status === 'completed' && m.result)) return null;
 
     const [m1, m2] = matches;
-    // Necesitamos identificar a cada jugador por id de forma estable
+    // Need to identify each player by id stably
     const idA = m1.playerA.id;
 
     if (m1.result?.type === 'score' && m2.result?.type === 'score') {
-      // Sumar goles de cada jugador (ojo: en m2 los slots están invertidos)
+      // Add up goals for each player (note: in m2 the slots are reversed)
       const goalsA = m1.result.scoreA + (m2.playerA.id === idA ? m2.result.scoreA : m2.result.scoreB);
       const goalsB = m1.result.scoreB + (m2.playerA.id === idA ? m2.result.scoreB : m2.result.scoreA);
       if (goalsA > goalsB) return m1.playerA;
@@ -315,7 +315,7 @@ export function getBracketChampion(matches: BracketMatch[]): Player | null {
     return null;
   }
 
-  // Bracket normal: el match de la ronda más alta
+  // Normal bracket: the match from the highest round
   const maxRound = Math.max(...matches.map(m => m.round));
   const finalMatches = matches.filter(m => m.round === maxRound);
 
@@ -363,11 +363,11 @@ export function isRoundComplete(matches: Match[], roundNumber: number): boolean 
  * Gets the current round number for a bracket tournament
  * (the first incomplete round, or the last round if all complete).
  *
- * Caveat importante: si la primer ronda incompleta tiene jugadores TBD
- * (placeholders, porque todavía no se llamó a advance_bracket_round_rpc),
- * devolvemos la ronda anterior. Eso evita que la UI marque como editable
- * un match TBD vs TBD — el usuario primero tiene que apretar "Avanzar a
- * la siguiente ronda" para que se llenen los winners.
+ * Important caveat: if the first incomplete round has TBD players
+ * (placeholders, because advance_bracket_round_rpc hasn't been called yet),
+ * we return the previous round instead. That keeps the UI from rendering
+ * a TBD vs TBD match as editable — the user has to hit "Advance to next
+ * round" first so the winners get filled in.
  */
 export function getCurrentBracketRound(matches: BracketMatch[]): number {
   const maxRound = Math.max(...matches.map(m => m.round));

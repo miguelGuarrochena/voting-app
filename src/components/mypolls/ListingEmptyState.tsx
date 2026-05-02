@@ -13,9 +13,9 @@ interface ListingEmptyStateProps {
 }
 
 /**
- * Estado vacío unificado para los listados (vote/ranking/rating/versus).
- * Muestra un CTA grande para crear — por eso el header de la página debe ocultar
- * su botón de crear cuando está vacío (para evitar 2 botones duplicados).
+ * Unified empty state for the listings (vote/ranking/rating/versus).
+ * Renders a big "create" CTA — which is why the page header should hide
+ * its own create button when empty, to avoid two duplicate buttons.
  */
 export function ListingEmptyState({
   emoji,

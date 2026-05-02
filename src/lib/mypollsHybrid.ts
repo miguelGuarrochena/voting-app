@@ -1,23 +1,23 @@
 /**
  * src/lib/mypollsHybrid.ts
  * --------------------------------------------------------------
- * Lista "mis polls" que combina localStorage (dispositivo actual)
- * + server (todas las polls que me pertenecen cross-device) cuando
- * el usuario está logueado.
+ * "My polls" list that combines localStorage (current device)
+ * + server (all polls I own cross-device) when
+ * the user is logged in.
  *
- * Diseño:
- *   - Anon user: solo lee localStorage (comportamiento original).
- *   - Logged-in user: mergea localStorage + server RPC.
- *     · Dedupe por token.
- *     · Server gana en campos canónicos (title, expiresAt, etc.)
- *       porque es la fuente de verdad.
- *     · Se preserva `savedAt` del local si existía para ordenar.
- *     · Todo lo que venga del server es role='creator' (el RPC
- *       filtra WHERE user_id = auth.uid()).
+ * Design:
+ *   - Anon user: only reads from localStorage (original behavior).
+ *   - Logged-in user: merges localStorage + server RPC.
+ *     · Deduped by token.
+ *     · Server wins on canonical fields (title, expiresAt, etc.)
+ *       because it's the source of truth.
+ *     · Local `savedAt` is preserved if it existed for sorting.
+ *     · Everything from server is role='creator' (the RPC
+ *       filters WHERE user_id = auth.uid()).
  *
- * Este módulo importa del cliente supabase, así que no se puede
- * usar en server components. Los listados /votes, /ranking, etc.
- * ya son client components.
+ * This module imports from the supabase client, so it can't be
+ * used in server components. The listings /votes, /ranking, etc.
+ * are already client components.
  * --------------------------------------------------------------
  */
 
@@ -79,7 +79,7 @@ function mergeByToken(
 ): MyPollEntry[] {
   const byToken = new Map<string, MyPollEntry>()
 
-  // Primero local, para poder sobreescribir con server preservando savedAt
+  // First local, so we can override with server while preserving savedAt
   for (const e of local) {
     byToken.set(e.token, e)
   }
@@ -87,7 +87,7 @@ function mergeByToken(
   for (const s of server) {
     const existing = byToken.get(s.token)
     if (existing) {
-      // Preservamos el savedAt local si era más viejo (orden estable)
+      // Preserve the local savedAt if it was older (stable sort)
       const savedAt =
         new Date(existing.savedAt).getTime() < new Date(s.savedAt).getTime()
           ? existing.savedAt
@@ -108,12 +108,12 @@ function mergeByToken(
 }
 
 // ------------------------------------------------------------
-//  API pública
+//  Public API
 // ------------------------------------------------------------
 
 /**
- * Devuelve la lista híbrida (local + server si logueado).
- * Si `isLoggedIn` es false, es equivalente a getMyPolls(type).
+ * Returns the hybrid list (local + server if logged in).
+ * If `isLoggedIn` is false, it's equivalent to getMyPolls(type).
  */
 export async function getMyPollsHybrid(
   type: MyPollType | undefined,
@@ -123,8 +123,8 @@ export async function getMyPollsHybrid(
 
   if (!isLoggedIn) return local
 
-  // Logged in: traemos también del server.
-  // Para 'versus' vamos a tournaments, el resto a polls.
+  // Logged in: also fetch from server.
+  // For 'versus' we go to tournaments, the rest to polls.
   const wantsVersus = type === 'versus' || type === undefined
   const wantsPolls = type !== 'versus' // vote/ranking/rating/undefined
 

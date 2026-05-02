@@ -9,8 +9,9 @@ interface GoogleButtonProps {
 }
 
 /**
- * Botón OAuth con Google. Dispara redirect de Supabase Auth.
- * El listener de AuthContext toma la sesión cuando vuelve a /auth/callback.
+ * Google OAuth button. Triggers a Supabase Auth redirect.
+ * The AuthContext listener picks up the session when the user lands
+ * back on /auth/callback.
  */
 export function GoogleButton({ label, loadingLabel }: GoogleButtonProps) {
   const [busy, setBusy] = useState(false);

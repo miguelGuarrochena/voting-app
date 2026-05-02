@@ -26,11 +26,11 @@ import { WinnerPodium, PodiumEntry } from '@/components/results/WinnerPodium';
 import { fireWinnerConfetti } from '@/lib/confetti';
 
 // ------------------------------------------------------------
-//  VOTE — Detalle por token
+//  VOTE — Details by token
 //  UX:
-//   - Tap a card → se selecciona (check verde + borde).
-//   - "Cambiar" antes de enviar permite deseleccionar.
-//   - Submit: envía el voto y deja los resultados en vivo debajo.
+//   - Tap a card → it's selected (green check + border).
+//   - "Change" before sending lets you deselect.
+//   - Submit: sends the vote and leaves live results below.
 // ------------------------------------------------------------
 
 export default function VoteTokenPage() {
@@ -89,15 +89,15 @@ export default function VoteTokenPage() {
         expiresAt: data.expiresAt,
       });
 
-      // Saber si el current user es el creador (lo guardamos localmente al crear)
+      // Know if the current user is the creator (we save it locally when creating)
       const my = findMyPoll(token);
       setIsCreator(my?.role === 'creator');
 
       const responses = await getPollResponses(token);
       setResponses(responses);
-      // Recomputar votos desde las responses ya guardadas.
-      // Sin esto, las opciones se ven con 0 votos al abrir, hasta
-      // que entra un evento de realtime.
+      // Recompute votes from the responses already saved.
+      // Without this, options show 0 votes when opening, until
+      // a realtime event comes in.
       setPollData((prev: any) =>
         prev ? { ...prev, options: recomputeVotes(prev.options, responses) } : prev
       );
@@ -146,7 +146,7 @@ export default function VoteTokenPage() {
     };
   }, [token, username]);
 
-  // Confeti cuando la encuesta pasa a expirada (natural o "Cerrar ahora")
+  // Confetti when the poll expires (natural or "Close now")
   useEffect(() => {
     if (expired && pollData) {
       const hasWinner = (pollData.options ?? []).some((o: any) => (o.votes || 0) > 0);
@@ -337,7 +337,7 @@ export default function VoteTokenPage() {
           </div>
         )}
 
-        {/* Banner después de votar */}
+        {/* Post-vote banner */}
         {hasVotedState && !expired && (
           <div className="flex items-center gap-2 bg-[var(--badge-success-bg)] text-[var(--badge-success-text)] rounded-xl px-4 py-3 mb-4 sm:mb-6 text-sm">
             <Check className="w-5 h-5 flex-shrink-0" />
@@ -513,9 +513,9 @@ function HeaderBackOnly({
   );
 }
 
-// --------- Form de votación con checkmark ---------
-// Muestra imagen (si la hay) + emoji + título. Tap en la imagen hace zoom;
-// tap en cualquier otra parte selecciona la opción.
+// --------- Voting form with checkmark ---------
+// Shows image (if any) + emoji + title. Tap on the image zooms;
+// tap anywhere else selects the option.
 function VoteForm({
   options,
   selectedOption,
@@ -656,7 +656,7 @@ function ResultsList({
     (a: any, b: any) => (b.votes || 0) - (a.votes || 0)
   );
 
-  // Sólo las opciones que efectivamente recibieron votos entran al podio.
+  // Only options that actually received votes make it onto the podium.
   const sortedWithVotes = sorted.filter((o) => (o.votes || 0) > 0);
   const showPodium = expired && sortedWithVotes.length > 0;
 

@@ -93,7 +93,7 @@ function VersusPageInner() {
                 </div>
               </div>
 
-              {/* Botón en el hero solo si ya hay torneos (si está vacío, el CTA es el del EmptyState) */}
+              {/* Hero button only when tournaments exist (otherwise the EmptyState provides the CTA) */}
               {!isEmpty && (
                 <Link
                   href="/versus/create"

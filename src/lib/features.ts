@@ -1,10 +1,10 @@
 // ------------------------------------------------------------
-//  Feature flags — controladas por variables de entorno.
+//  Feature flags — controlled by environment variables.
 //
-//  VERSUS y RATINGS están habilitados por default después de
-//  sus rediseños (bracket/league modes para versus; criterios
-//  dinámicos + multi-attribute scoring para ratings).
-//  Se pueden apagar pasando NEXT_PUBLIC_ENABLE_*=false.
+//  VERSUS and RATINGS are enabled by default after
+//  their redesigns (bracket/league modes for versus; dynamic criteria
+//  + multi-attribute scoring for ratings).
+//  Can be disabled by setting NEXT_PUBLIC_ENABLE_*=false.
 // ------------------------------------------------------------
 
 export const FEATURES = {

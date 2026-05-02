@@ -13,16 +13,16 @@ interface ImagePickerModalProps {
 }
 
 // Skeleton box used during initial load + load-more. Same aspect-ratio
-// y rounding que las cards reales para que el layout no salte cuando
-// llegan los datos. animate-pulse de Tailwind = fade in/out suave.
+// and rounding as the real cards so the layout doesn't jump when the
+// data arrives. Tailwind's animate-pulse gives a smooth fade in/out.
 const SkeletonBox = () => (
   <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 animate-pulse" />
 );
 
-// Item individual con fade-in. Cada <img> arranca con opacity-0 y al
-// hacer onLoad activa opacity-100 con transición. Mientras tanto se ve
-// el placeholder gris con animate-pulse en el mismo aspect-ratio. Esto
-// evita el "flash" feo de imágenes apareciendo de golpe a destiempo.
+// Single image item with fade-in. Each <img> starts at opacity-0 and
+// transitions to opacity-100 once onLoad fires. Until then we show the
+// gray placeholder with animate-pulse at the same aspect-ratio. This
+// avoids the ugly "pop-in" of images appearing one by one out of sync.
 interface ImagePickerItemProps {
   image: StockImage;
   isSelected: boolean;
@@ -41,7 +41,7 @@ const ImagePickerItem = ({ image, isSelected, altText, authorLabel, onClick }: I
       className="relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-blue-500 transition-colors"
       onClick={onClick}
     >
-      {/* Placeholder gris con pulse hasta que la imagen carga */}
+      {/* Gray placeholder with pulse until the image loads */}
       {!loaded && (
         <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse" />
       )}
@@ -50,9 +50,9 @@ const ImagePickerItem = ({ image, isSelected, altText, authorLabel, onClick }: I
         alt={altText}
         loading="lazy"
         onLoad={() => setLoaded(true)}
-        // onError no rompe el grid: dejamos el placeholder visible.
-        // Cuando Pexels falla en una thumb específica, el resto del
-        // grid sigue funcionando.
+        // onError doesn't break the grid: we just leave the placeholder
+        // visible. When Pexels fails on a specific thumb, the rest of
+        // the grid keeps working.
         onError={() => setLoaded(false)}
         className={`w-full h-full object-cover transition-opacity duration-300 ${
           loaded ? 'opacity-100' : 'opacity-0'
@@ -83,9 +83,10 @@ const ImagePickerModal = ({ isOpen, onClose, onSelectImage, title }: ImagePicker
   const [images, setImages] = useState<StockImage[]>([]);
   const modalTitle = title || t('common.chooseImage');
 
-  // Estados de loading separados:
-  // - isLoading: primera carga / nueva búsqueda. Bloquea el grid y muestra skeletons full.
-  // - isLoadingMore: paginación. No bloquea el grid; muestra skeletons abajo + spinner en el botón.
+  // Two separate loading states:
+  // - isLoading: first load / new search. Blocks the grid and shows full skeletons.
+  // - isLoadingMore: pagination. Doesn't block the grid; shows skeletons at the
+  //   bottom plus a spinner on the button.
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState(false);
@@ -96,11 +97,11 @@ const ImagePickerModal = ({ isOpen, onClose, onSelectImage, title }: ImagePicker
   const [page, setPage] = useState(1);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Guardamos la última query "activa" para usarla en handleLoadMore. Si el
-  // usuario buscó "food" y después tocó Load More, queremos paginar dentro
-  // de "food", no volver a curated. searchQuery puede haber cambiado por el
-  // input antes del debounce; activeQuery sólo se actualiza después de un
-  // search exitoso.
+  // Track the last "active" query so handleLoadMore can use it. If the user
+  // searched "food" and then hit Load More, we want to paginate within
+  // "food", not fall back to curated. searchQuery may have changed via the
+  // input before the debounce fires; activeQuery only updates after a
+  // successful search.
   const activeQueryRef = useRef<string>('');
 
   const runSearch = useCallback(async (query: string) => {
@@ -129,8 +130,8 @@ const ImagePickerModal = ({ isOpen, onClose, onSelectImage, title }: ImagePicker
       clearTimeout(searchTimeoutRef.current);
     }
 
-    // Debounce: 500ms de espera después de la última tecla para no
-    // martillar a Pexels con cada caracter.
+    // Debounce: wait 500ms after the last keystroke so we don't hammer
+    // Pexels with a request per character.
     searchTimeoutRef.current = setTimeout(() => {
       if (value.trim()) {
         setSelectedCategory(null);
@@ -141,16 +142,16 @@ const ImagePickerModal = ({ isOpen, onClose, onSelectImage, title }: ImagePicker
     }, 500);
   };
 
-  // Load initial images cuando el modal abre.
+  // Load initial images when the modal opens.
   useEffect(() => {
     if (isOpen) {
       loadInitial();
     }
-    // intencional: solo correr cuando isOpen cambia a true.
+    // intentional: only run when isOpen flips to true.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Cleanup del timeout al desmontar.
+  // Clear the pending timeout on unmount.
   useEffect(() => {
     return () => {
       if (searchTimeoutRef.current) {
@@ -172,7 +173,7 @@ const ImagePickerModal = ({ isOpen, onClose, onSelectImage, title }: ImagePicker
 
   const handleCategoryClick = async (category: { key: string; query: string }) => {
     if (selectedCategory === category.key) {
-      // Toggle off: vuelvo a curated
+      // Toggle off: go back to curated
       setSelectedCategory(null);
       setSearchQuery('');
       loadInitial();
@@ -207,9 +208,9 @@ const ImagePickerModal = ({ isOpen, onClose, onSelectImage, title }: ImagePicker
       setPage(nextPage);
     } catch (err) {
       console.error('Error loading more images:', err);
-      // Para load-more no toggleamos el error global del grid (queremos
-      // preservar las imágenes ya cargadas). Sólo logueamos. El usuario
-      // puede reintentar tocando Load More de nuevo.
+      // For load-more we don't trip the global grid error (we want to
+      // keep the already-loaded images visible). Just log it; the user
+      // can retry by tapping Load More again.
     } finally {
       setIsLoadingMore(false);
     }
@@ -225,11 +226,11 @@ const ImagePickerModal = ({ isOpen, onClose, onSelectImage, title }: ImagePicker
 
   if (!isOpen) return null;
 
-  // Decide qué mostrar en el área del grid:
+  // Decide what to render in the grid area:
   // 1) Initial loading → 8 skeletons
-  // 2) Error → mensaje + retry
-  // 3) Empty (no resultados) → mensaje
-  // 4) Default → grid + (si load-more activo) 4 skeletons al final
+  // 2) Error → message + retry
+  // 3) Empty (no results) → message
+  // 4) Default → grid + (if load-more is active) 4 skeletons at the end
   const renderGridContent = () => {
     if (isLoading) {
       return (
@@ -318,16 +319,16 @@ const ImagePickerModal = ({ isOpen, onClose, onSelectImage, title }: ImagePicker
               onClick={() => handleSelectImage(image)}
             />
           ))}
-          {/* Skeletons de load-more se intercalan al final del grid */}
+          {/* Load-more skeletons are appended at the end of the grid */}
           {isLoadingMore &&
             Array.from({ length: 4 }).map((_, i) => (
               <SkeletonBox key={`more-skeleton-${i}`} />
             ))}
         </div>
 
-        {/* Botón Load More: visible cuando hay imágenes Y no estamos en
-            initial loading. Mostramos el botón también si hay search/category
-            activo — Pexels devuelve resultados paginados igual. */}
+        {/* Load More button: visible when we have images AND we're not in
+            initial loading. We show it for searches/categories too — Pexels
+            paginates those results just the same. */}
         <div className="text-center mt-6">
           <button
             onClick={handleLoadMore}

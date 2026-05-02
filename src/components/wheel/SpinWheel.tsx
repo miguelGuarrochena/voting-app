@@ -91,21 +91,21 @@ export const SpinWheel = () => {
       ctx.fill();
 
       if (isSelected) {
-        // Resaltado brillante para la opción seleccionada
+        // Bright highlight for the selected option
         ctx.shadowColor = option.color;
         ctx.shadowBlur = 25;
-        
-        // Dibujar un borde brillante adicional
+
+        // Draw an additional bright border
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 8;
         ctx.stroke();
-        
-        // Dibujar un segundo borde con el color de la opción
+
+        // Draw a second border with the option's color
         ctx.strokeStyle = option.color;
         ctx.lineWidth = 6;
         ctx.stroke();
-        
-        // Restaurar el borde blanco principal
+
+        // Restore the main white border
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 4;
         ctx.stroke();
@@ -135,7 +135,7 @@ export const SpinWheel = () => {
       ctx.font = fontSize;
 
       if (isSelected) {
-        // Texto resaltado para opción seleccionada
+        // Highlighted text for selected option
         ctx.shadowColor = option.color;
         ctx.shadowBlur = 8;
       } else {
@@ -179,7 +179,7 @@ export const SpinWheel = () => {
     }
   }, [addingAfterId]);
 
-  // Función para asegurar colores únicos
+  // Function to ensure unique colors
   const ensureUniqueColors = useCallback((opts: WheelOption[]) => {
     return opts.map((option, index) => ({
       ...option,
@@ -187,7 +187,7 @@ export const SpinWheel = () => {
     }));
   }, []);
 
-  // Funciones para editar opciones
+  // Functions to edit options
   const startEditing = useCallback((option: WheelOption) => {
     setEditingId(option.id);
     setEditingText(option.text);
@@ -218,7 +218,7 @@ export const SpinWheel = () => {
     setValidationError('');
   }, []);
 
-  // Función para agregar opción después de una específica
+  // Function to add an option after a specific one
   const addOptionAfter = useCallback((afterId: string) => {
     setValidationError('');
     if (options.length >= 12) { 
@@ -306,10 +306,10 @@ export const SpinWheel = () => {
       const currentOptions = optionsRef.current;
       const sectorAngle = 360 / currentOptions.length;
 
-      // El marcador apunta arriba (12 en punto).
-      // La rueda giró `stoppedAngle` grados en sentido horario.
-      // Para encontrar qué sector está bajo el marcador,
-      // invertimos la rotación y ajustamos el offset de -90° del canvas.
+      // The marker points up (12 o'clock).
+      // The wheel rotated `stoppedAngle` degrees clockwise.
+      // To find which sector is under the marker,
+      // we reverse the rotation and adjust for the -90° canvas offset.
       const normalizedAngle = (((-stoppedAngle) % 360) + 360) % 360;
       const adjustedAngle = (normalizedAngle + 90 + 360) % 360;
       const winningIndex = Math.floor(adjustedAngle / sectorAngle) % currentOptions.length;
@@ -329,13 +329,13 @@ export const SpinWheel = () => {
     setShowResult(false);
     setValidationError('');
     setShareCopied(false);
-    // Iniciar un nuevo giro inmediatamente
-    setTimeout(() => spin(), 100); // Pequeño delay para que el UI se actualice
+    // Start a new spin right away
+    setTimeout(() => spin(), 100); // Small delay for UI to update
   }, [spin]);
 
   // ----------------------------------------------------------------
-  //  Share — captura el contenedor completo (rueda + resultado) con html2canvas,
-  //  similar a Versus, con fallback a texto si falla.
+  //  Share — captures the full container (wheel + result) with html2canvas,
+  //  similar to Versus, with text fallback if it fails.
   // ----------------------------------------------------------------
   const handleShareResult = useCallback(async () => {
     if (!selectedOption || !captureRef.current) return;
@@ -391,7 +391,7 @@ export const SpinWheel = () => {
           return;
         }
       } catch {
-        // Usuario canceló el share nativo → seguimos al clipboard
+        // User cancelled native share — fall through to clipboard
       }
 
       // Final fallback: clipboard text
@@ -538,7 +538,7 @@ export const SpinWheel = () => {
                             }}
                             onBlur={() => {
                               if (editingId === option.id && option.text.trim()) {
-                                // Solo guardar si ya tiene texto
+                                // Only save if it already has text
                                 saveEditing();
                               }
                             }}
@@ -607,14 +607,14 @@ export const SpinWheel = () => {
                   ].map(({ emoji, label, opts }) => (
                     <button key={label}
                       onClick={() => { 
-                        const newOptions = opts.map((text, i) => ({ 
-                          id: (i+1).toString(), 
-                          text, 
-                          color: DEFAULT_COLORS[i % DEFAULT_COLORS.length] 
-                        })); 
-                        setOptions(newOptions); 
-                        setValidationError(''); 
-                        // Resetear el resultado anterior
+                        const newOptions = opts.map((text, i) => ({
+                          id: (i+1).toString(),
+                          text,
+                          color: DEFAULT_COLORS[i % DEFAULT_COLORS.length]
+                        }));
+                        setOptions(newOptions);
+                        setValidationError('');
+                        // Reset the previous result
                         setSelectedOption(null);
                         setShowResult(false);
                       }}

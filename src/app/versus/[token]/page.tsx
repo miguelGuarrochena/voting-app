@@ -53,9 +53,10 @@ function VersusTournamentPageInner({ params }: PageProps) {
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const bracketRef = useRef<HTMLDivElement>(null);
-  // Tracks qué champion id ya disparó la celebración. Sin esto, el effect
-  // re-abre el modal apenas el usuario lo cierra (porque champion sigue
-  // existiendo y showCelebration vuelve a false).
+  // Tracks which champion id has already triggered the celebration.
+  // Without this, the effect would re-open the modal as soon as the user
+  // closes it (because champion still exists and showCelebration flips back
+  // to false).
   const celebratedChampionId = useRef<string | null>(null);
   const searchParams = useSearchParams();
 
@@ -76,7 +77,7 @@ function VersusTournamentPageInner({ params }: PageProps) {
       setTournament(data);
       setLoading(false);
 
-      // Guardar en "mis torneos" como participante.
+      // Save in "my tournaments" as participant.
       addMyPoll({
         token,
         type: 'versus',
@@ -283,12 +284,12 @@ function VersusTournamentPageInner({ params }: PageProps) {
       : getLeagueChampion(calculateLeagueStandings(tournament.players, tournament.matches as LeagueMatch[]), tournament.matches as LeagueMatch[])
   ) : null;
 
-  // Show celebration ONCE per champion. Trackeamos por id del champion en
-  // un ref para que, una vez que el usuario cierra el modal, no se vuelva
-  // a abrir solo (ya que champion sigue existiendo). Si por algún motivo
-  // el champion cambia (raro pero posible al re-jugar), se vuelve a abrir.
-  // Mantenemos tournament?.status en deps para no cambiar el tamaño del
-  // array entre renders (causa error en HMR de Next/React).
+  // Show the celebration ONCE per champion. We track it via a ref keyed by
+  // champion id so that, once the user closes the modal, it doesn't pop
+  // back open on its own (champion still exists). If for some reason the
+  // champion changes (rare, but possible when replaying), the modal opens
+  // again. We keep tournament?.status in the deps array so its length
+  // stays stable between renders (otherwise HMR in Next/React errors out).
   useEffect(() => {
     if (champion && celebratedChampionId.current !== champion.id) {
       celebratedChampionId.current = champion.id;
@@ -437,11 +438,11 @@ function VersusTournamentPageInner({ params }: PageProps) {
 
       </div>
 
-      {/* Main Card — full width for bracket (capped a 100vw para que el scroll
-          horizontal del bracket funcione: la cadena body→main→PageLayout son
-          flex containers con min-width:auto, sin un cap explícito acá los
-          descendientes con w-max harían crecer al wrapper más allá del viewport
-          y el overflow-x-auto del scroll container nunca se dispararía).
+      {/* Main Card — full width for bracket (capped at 100vw so horizontal
+          bracket scroll actually works: body→main→PageLayout is a chain of
+          flex containers with min-width:auto, and without an explicit cap
+          here the w-max descendants would push the wrapper past the viewport
+          and the overflow-x-auto scroll container would never trigger).
           League keeps the standard centered layout. */}
       <div className={`${tournament.mode === 'bracket' ? 'px-4 sm:px-6 lg:px-8 max-w-[100vw]' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}`}>
         <div className="bg-[var(--surface)] rounded-xl shadow-lg border border-[var(--border)] p-4 sm:p-6 md:p-8 mb-12 min-w-0">

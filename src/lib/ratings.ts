@@ -1,22 +1,6 @@
-// ------------------------------------------------------------
-//  Ratings — helpers compartidos.
-//
-//  Hay 2 conceptos clave:
-//
-//    1) RatingAttribute (criterios) → cada rating se puede puntuar
-//       sobre 1 o N criterios definidos por el creador
-//       (ej: "Servicio", "Comida", "Tiempo de espera"). Cada
-//       attribute tiene id estable + label.
-//
-//    2) RatingValue (las estrellas) → cada participante manda
-//       ratings = { [optionId]: { [attributeId]: stars } }
-//
-//  Compat hacia atrás: ratings creados antes de esta refactor
-//  no tenían attributes. Los normalizamos a un único atributo
-//  con id LEGACY_ATTR_ID y label "General"/"Overall". Las
-//  responses viejas vienen como { [optionId]: number } y las
-//  reescribimos a { [optionId]: { [LEGACY_ATTR_ID]: number } }.
-// ------------------------------------------------------------
+// Helpers for ratings that use multiple criteria (e.g. "Service", "Food").
+// Each response sends stars keyed by (optionId, attributeId). For old polls
+// without attributes, we fall back to LEGACY_ATTR_ID.
 
 export const LEGACY_ATTR_ID = '__overall__';
 
@@ -28,18 +12,13 @@ export type RatingAttribute = {
 export type RatingMap = Record<string, Record<string, number>>; // optId -> attrId -> stars
 
 export type RatingOptionAggregate = {
-  // suma total y count GLOBAL (across attributes) — útil para podio.
   totalRating: number;
   ratingCount: number;
-  // por-atributo: total y count → permite calcular promedio por criterio.
   byAttr: Record<string, { total: number; count: number }>;
 };
 
-/**
- * Lee la lista de attributes embebida en `options[0].attributes`.
- * Si no hay (poll legacy o sin attributes definidos) devuelve un
- * único attribute "General" con LEGACY_ATTR_ID.
- */
+// Read the attributes list from options[0]. If there isn't one, return a
+// single attribute with LEGACY_ATTR_ID so old polls keep working.
 export function getAttributesFromPoll(
   pollData: any,
   fallbackLabel = 'Overall'
@@ -53,12 +32,7 @@ export function getAttributesFromPoll(
   return [{ id: LEGACY_ATTR_ID, label: fallbackLabel }];
 }
 
-/**
- * Normaliza el value de una response.
- * Acepta:
- *   - number (formato legacy single-rating)         → { __overall__: n }
- *   - object { [attrId]: number } (nuevo)           → tal cual
- */
+// Accepts the old shape (number) or the new one ({ [attrId]: number }).
 export function normalizeRatingValue(
   raw: unknown
 ): Record<string, number> {
@@ -78,10 +52,6 @@ export function normalizeRatingValue(
   return {};
 }
 
-/**
- * Recomputa los agregados de cada option a partir de las responses.
- * Devuelve un nuevo array de options con totalRating, ratingCount y byAttr.
- */
 export function recomputeRatings(options: any[], responses: any[]) {
   const aggregates: Record<string, RatingOptionAggregate> = {};
 
@@ -120,10 +90,6 @@ export function recomputeRatings(options: any[], responses: any[]) {
   });
 }
 
-/**
- * Promedio overall de una option (suma total / count total).
- * Si no hay ratings devuelve 0.
- */
 export function avgOverall(option: any): number {
   const c = Number(option?.ratingCount) || 0;
   if (c <= 0) return 0;
@@ -131,20 +97,13 @@ export function avgOverall(option: any): number {
   return t / c;
 }
 
-/**
- * Promedio de una option en un attribute específico.
- */
 export function avgForAttr(option: any, attrId: string): number {
   const a = option?.byAttr?.[attrId];
   if (!a || !a.count) return 0;
   return a.total / a.count;
 }
 
-/**
- * Genera un id estable para un attribute (no usar UUID muy largo en JSON).
- */
 export function newAttrId(): string {
-  // 8 chars hex es más que suficiente para 1 poll
   if (typeof crypto !== 'undefined' && 'getRandomValues' in crypto) {
     const buf = new Uint8Array(4);
     crypto.getRandomValues(buf);
@@ -153,11 +112,9 @@ export function newAttrId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-/**
- * Adjunta los attributes a CADA option (redundante pero sirve para
- * que cualquier consumidor que sólo lea options[i] tenga el contexto
- * de qué criterios existen). El UI siempre lee options[0].attributes.
- */
+// Attach attributes to every option (redundant, but it means any consumer
+// that only reads options[i] still has the context). The UI always reads
+// from options[0].
 export function attachAttributesToOptions(
   options: any[],
   attributes: RatingAttribute[]

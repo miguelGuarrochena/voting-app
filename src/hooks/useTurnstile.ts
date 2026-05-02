@@ -1,17 +1,17 @@
 /**
- * useTurnstile() — hook cliente para obtener un token de Turnstile bajo demanda.
+ * useTurnstile() — client hook to fetch a Turnstile token on demand.
  *
- * Uso:
+ * Usage:
  *   const getToken = useTurnstile()
  *   ...
- *   const token = await getToken()  // null si no está configurado / falla en dev
+ *   const token = await getToken()  // null if not configured / fails in dev
  *   await fetch('/api/submit/poll-response', {
  *     method: 'POST',
  *     body: JSON.stringify({ ..., captchaToken: token }),
  *   })
  *
- * Si NEXT_PUBLIC_TURNSTILE_SITE_KEY no está seteado, el hook degrada a
- * devolver null y el server-side acepta requests sin token (modo dev).
+ * If NEXT_PUBLIC_TURNSTILE_SITE_KEY isn't set, the hook gracefully
+ * returns null and the server accepts requests without a token (dev mode).
  */
 'use client'
 

@@ -11,17 +11,17 @@ import { supabase } from '@/lib/supabase';
 
 // ------------------------------------------------------------
 //  /auth/callback
-//  A donde Supabase redirige después de:
+//  Where Supabase redirects after:
 //    - OAuth (Google): ?code=<...>&...
 //    - Magic Link:     ?code=<...>&...
-//    - Errores OAuth:  ?error=<...>&error_description=<...>
+//    - OAuth errors:   ?error=<...>&error_description=<...>
 //
-//  El flow PKCE requiere que llamemos exchangeCodeForSession(code)
-//  con el code de la URL. Si no hay code y la sesión igual se creó
-//  (implicit flow, hash tokens), onAuthStateChange en AuthContext
-//  ya capturó la sesión.
+//  The PKCE flow requires us to call exchangeCodeForSession(code)
+//  with the code from the URL. If there's no code but the session was created anyway
+//  (implicit flow, hash tokens), onAuthStateChange in AuthContext
+//  already captured the session.
 //
-//  En cualquier caso: redirigimos a `/` cuando terminamos.
+//  In any case: we redirect to `/` when we're done.
 // ------------------------------------------------------------
 
 function AuthCallbackContent() {
@@ -45,7 +45,7 @@ function AuthCallbackContent() {
       const code = searchParams.get('code');
 
       if (code) {
-        // PKCE: canjear code por sesión
+        // PKCE: exchange code for session
         const { error: exchangeError } =
           await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
@@ -53,18 +53,18 @@ function AuthCallbackContent() {
           return;
         }
       } else {
-        // Sin code: puede ser implicit flow (tokens en hash) que el
-        // cliente de Supabase ya procesó, o un acceso directo raro.
-        // Chequeamos si ya hay sesión.
+        // No code: could be implicit flow (tokens in hash) that the
+        // Supabase client already processed, or some unusual access.
+        // Check if there's already a session.
         const { data } = await supabase.auth.getSession();
         if (!data.session) {
-          // No hay nada que hacer acá — mandemos al home.
+          // Nothing to do here — go to home.
           if (!cancelled) router.replace('/');
           return;
         }
       }
 
-      // Si llegamos acá, hay sesión. Redirigimos al home.
+      // If we get here, there's a session. Redirect to home.
       if (!cancelled) router.replace('/');
     };
 

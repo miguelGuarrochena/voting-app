@@ -12,15 +12,10 @@ import { safeBack } from '@/lib/navigation';
 import { RatingsComingSoon } from '@/components/ratings/ComingSoon';
 import { FEATURES } from '@/lib/features';
 
-// ------------------------------------------------------------
-//  RATINGS — Edit page
-//  Ojo: ratings tiene estructura de items distinta (label +
-//  locationUrl + comment), y el CreatePollForm NO lo soporta.
-//  Por ahora, este edit sólo permite ajustar título / descripción
-//  / imagen de portada del poll. Los items se editan borrando y
-//  creando un rating nuevo (o vía el modal "Editar título" del
-//  menú ⋮ si es sólo el título).
-// ------------------------------------------------------------
+// Rating edit page. For now just title, description and cover image —
+// items (with label + locationUrl + comment) can't be edited because
+// CreatePollForm doesn't support them. To change those, the rating has
+// to be deleted and re-created.
 
 export default function EditRatingPage() {
   const router = useRouter();

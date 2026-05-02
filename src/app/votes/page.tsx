@@ -95,7 +95,7 @@ export default function VotesPage() {
         )}
       </div>
 
-      {/* Mobile FAB — solo si hay entries (si no, el CTA grande es el del EmptyState) */}
+      {/* Mobile FAB — only when there are entries (otherwise the EmptyState shows the big CTA) */}
       {!isEmpty && (
         <Link
           href="/create?type=vote"

@@ -1,27 +1,27 @@
 /**
- * Auth helpers sobre Supabase Auth.
+ * Auth helpers for Supabase Auth.
  *
- * Modelo de Pickly v1:
- *   - Login es OPCIONAL. Cualquiera puede crear/votar sin cuenta.
- *   - El ÚNICO método de login soportado es Google OAuth — arrancamos así
- *     para no depender de SMTP propio (email+password y magic link
- *     requieren mandar emails).
- *   - Los creadores que se logueen ganan:
- *       · "Mis polls" cross-device (desde get_my_polls_rpc)
- *       · Reclamo de polls creadas antes del login (claim_polls_rpc)
- *   - Votar sigue siendo por link/token, sin cuenta.
+ * Pickly v1 model:
+ *   - Login is OPTIONAL. Anyone can create/vote without an account.
+ *   - The ONLY supported login method is Google OAuth — we started this way
+ *     to avoid depending on our own SMTP (email+password and magic link
+ *     require sending emails).
+ *   - Creators who log in gain:
+ *       · "My polls" cross-device (from get_my_polls_rpc)
+ *       · Claim of polls created before login (claim_polls_rpc)
+ *   - Voting remains link/token-based, no account needed.
  *
- *   Nota: los helpers de email+password y magic link se removieron en
- *   esta versión. Si más adelante agregamos SMTP propio (Resend/Brevo)
- *   se pueden restaurar — viven en el git history.
+ *   Note: email+password and magic link helpers were removed in
+ *   this version. If we add our own SMTP later (Resend/Brevo)
+ *   they can be restored — they live in the git history.
  */
 
 import toast from 'react-hot-toast'
 import { supabase } from './supabase'
 
 /**
- * Devuelve el redirect absoluto para OAuth callbacks.
- * En SSR no hay window, así que fallback a vacío (no se usa en server).
+ * Returns the absolute redirect URL for OAuth callbacks.
+ * In SSR there's no window, so we fall back to empty string (not used on server).
  */
 function getRedirectUrl(): string {
   if (typeof window === 'undefined') return ''
@@ -29,12 +29,12 @@ function getRedirectUrl(): string {
 }
 
 // ------------------------------------------------------------
-//  Sign-in / sign-out (solo Google OAuth)
+//  Sign-in / sign-out (Google OAuth only)
 // ------------------------------------------------------------
 
 /**
- * Login con Google OAuth. Redirige al proveedor y vuelve a
- * /auth/callback donde el listener del AuthContext completa el login.
+ * Login with Google OAuth. Redirects to the provider and returns to
+ * /auth/callback where the AuthContext listener completes the login.
  */
 export async function signInWithGoogle(): Promise<boolean> {
   try {
@@ -53,7 +53,7 @@ export async function signInWithGoogle(): Promise<boolean> {
 }
 
 /**
- * Logout. El listener del AuthContext limpia el estado local.
+ * Logout. The AuthContext listener cleans up local state.
  */
 export async function signOut(): Promise<boolean> {
   try {
@@ -71,11 +71,11 @@ export async function signOut(): Promise<boolean> {
 // ------------------------------------------------------------
 
 /**
- * Reclama como propias las polls de la lista (solo las que están
- * user_id IS NULL en la DB). Devuelve cuántas se reclamaron efectivamente.
+ * Claims the polls in the list as owned (only those with
+ * user_id IS NULL in the DB). Returns how many were actually claimed.
  *
- * Se llama después del primer login cuando hay mypolls locales con
- * role='creator'. Los tokens que no sean propios o ya tengan dueño se ignoran.
+ * Called after first login when there are local mypolls with
+ * role='creator'. Tokens that aren't owned or already have an owner are ignored.
  */
 export async function claimPolls(tokens: string[]): Promise<number> {
   try {
@@ -86,14 +86,14 @@ export async function claimPolls(tokens: string[]): Promise<number> {
     if (error) throw error
     return typeof data === 'number' ? data : 0
   } catch (error: any) {
-    // No tosteamos acá — el caller decide el UX
+    // Don't toast here — let the caller decide the UX
     console.error('[claimPolls]', error)
     return 0
   }
 }
 
 /**
- * Misma idea, pero para torneos de Versus.
+ * Same idea, but for Versus tournaments.
  */
 export async function claimTournaments(tokens: string[]): Promise<number> {
   try {
@@ -110,8 +110,8 @@ export async function claimTournaments(tokens: string[]): Promise<number> {
 }
 
 /**
- * Lista cross-device de las polls del user logueado.
- * Falla si el user no está autenticado.
+ * Cross-device list of polls owned by the logged-in user.
+ * Fails if the user is not authenticated.
  */
 export async function getMyPollsFromServer(): Promise<any[]> {
   try {
@@ -125,7 +125,7 @@ export async function getMyPollsFromServer(): Promise<any[]> {
 }
 
 /**
- * Lista cross-device de los torneos del user logueado.
+ * Cross-device list of tournaments owned by the logged-in user.
  */
 export async function getMyTournamentsFromServer(): Promise<any[]> {
   try {

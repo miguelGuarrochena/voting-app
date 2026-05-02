@@ -36,11 +36,11 @@ export default function CreateRatingPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedDuration, setSelectedDuration] = useState('24h');
-  // Ahora arrancamos con 1 solo item (antes eran 2 forzados).
+  // We now start with a single item (used to be 2 forced).
   const [items, setItems] = useState<RatingItemForm[]>([
     { id: crypto.randomUUID(), label: '', imageUrl: '' },
   ]);
-  // Attributes globales del rating. Por default 1 ("General"/"Overall").
+  // Global attributes for the rating. Default to one ("Overall").
   const [attributes, setAttributes] = useState<RatingAttribute[]>([
     { id: newAttrId(), label: t('ratings.defaultAttribute') || 'Overall' },
   ]);
@@ -65,7 +65,7 @@ export default function CreateRatingPage() {
     { value: '7d', label: t('form.duration.7d'), hours: 168 },
   ];
 
-  // ---------- Items CRUD ----------
+  // Items CRUD
   const addItem = () => {
     setItems((prev) => [
       ...prev,
@@ -74,7 +74,7 @@ export default function CreateRatingPage() {
   };
 
   const removeItem = (id: string) => {
-    // Mínimo 1 item — se permite borrar hasta dejar 1.
+    // At least 1 item — deletion is allowed down to 1.
     if (items.length <= 1) return;
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
@@ -85,13 +85,13 @@ export default function CreateRatingPage() {
     );
   };
 
-  // ---------- Attributes CRUD ----------
+  // Attributes CRUD
   const addAttribute = () => {
     setAttributes((prev) => [...prev, { id: newAttrId(), label: '' }]);
   };
 
   const removeAttribute = (id: string) => {
-    if (attributes.length <= 1) return; // siempre tiene que haber al menos 1
+    if (attributes.length <= 1) return; // there must always be at least 1
     setAttributes((prev) => prev.filter((a) => a.id !== id));
   };
 
@@ -101,7 +101,7 @@ export default function CreateRatingPage() {
     );
   };
 
-  // ---------- Imágenes ----------
+  // Images
   const openImagePicker = (itemId: string) => {
     setImagePickerContext({ itemId });
     setImagePickerOpen(true);
@@ -151,8 +151,8 @@ export default function CreateRatingPage() {
     }
   };
 
-  // ---------- Validación ----------
-  const validateForm = () => {
+  // Validation
+  const computeErrors = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
 
     if (!title.trim()) {
@@ -180,9 +180,16 @@ export default function CreateRatingPage() {
       newErrors.attributes = t('ratings.duplicateAttribute');
     }
 
+    return newErrors;
+  };
+
+  const validateForm = () => {
+    const newErrors = computeErrors();
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const isFormValid = Object.keys(computeErrors()).length === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -257,9 +264,9 @@ export default function CreateRatingPage() {
       {!FEATURES.ratings && <RatingsComingSoon />}
       {/*
         Layout note (mobile):
-        - usamos px-4 a nivel del wrapper para evitar que las cards toquen
-          el borde de la pantalla.
-        - max-w-2xl + mx-auto centra en desktop.
+        - we add px-4 on the wrapper so the cards don't touch the edge
+          of the screen.
+        - max-w-2xl + mx-auto centers on desktop.
       */}
       <div className="max-w-2xl mx-auto px-4 sm:px-0 pb-8">
         <div className="mb-6">
@@ -554,8 +561,12 @@ export default function CreateRatingPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={submitting}
-            className="w-full px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-60"
+            disabled={submitting || !isFormValid}
+            className={`w-full px-6 py-3 rounded-lg font-medium transition-all ${
+              submitting || !isFormValid
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white hover:shadow-lg'
+            }`}
           >
             {submitting ? '…' : t('ratings.createRating')}
           </button>

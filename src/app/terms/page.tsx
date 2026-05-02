@@ -115,8 +115,13 @@ export default function TermsPage() {
           <Section title={t('terms.section11Title')}>
             <p>
               {t('terms.section11Text')}{' '}
-              <a href="mailto:hola@letspicky.com" className="text-[var(--primary)] hover:underline">
-                hola@letspicky.com
+              <a
+                href="https://miguelguarrochena.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--primary)] hover:underline"
+              >
+                miguelguarrochena.dev
               </a>
               .
             </p>

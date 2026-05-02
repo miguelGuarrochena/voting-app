@@ -90,9 +90,9 @@ export default function RankingTokenPage() {
 
       const responses = await getPollResponses(token);
       setResponses(responses);
-      // Recomputar scores desde las responses ya guardadas.
-      // Sin esto, las opciones se ven con 0 puntos al abrir, hasta
-      // que entra un evento de realtime.
+      // Recompute scores from the responses we already loaded.
+      // Without this, options would render with 0 points on open until
+      // the first realtime event came in.
       setPollData((prev: any) =>
         prev ? { ...prev, options: recomputeScores(prev.options, responses) } : prev
       );

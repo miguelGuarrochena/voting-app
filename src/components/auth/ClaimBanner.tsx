@@ -9,21 +9,19 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getMyPolls } from '@/lib/mypolls';
 import { claimPolls, claimTournaments } from '@/lib/auth';
 
-// ------------------------------------------------------------
-//  ClaimBanner
-//  Se muestra cuando:
-//    - Hay un auth user logueado
-//    - En localStorage hay polls con role='creator' (antes del login)
-//    - El usuario no dismisseó ni reclamó ya en este device/cuenta
+// ClaimBanner
+// Shown when:
+//   - There's a logged-in auth user
+//   - localStorage has polls with role='creator' (created pre-login)
+//   - The user hasn't already claimed or dismissed on this device/account
 //
-//  Al hacer click en "Vincular":
-//    - Llama claim_polls_rpc + claim_tournaments_rpc
-//    - Toast con el total reclamado
-//    - Marca done para no volver a mostrar
+// On "Link":
+//   - Calls claim_polls_rpc + claim_tournaments_rpc
+//   - Toast with the total claimed
+//   - Marks done so we don't show it again
 //
-//  Al hacer click en "Ahora no":
-//    - Marca dismissed por user-id (se vuelve a mostrar si cambia de cuenta)
-// ------------------------------------------------------------
+// On "Not now":
+//   - Marks dismissed per user-id (reappears if the account changes)
 
 export function ClaimBanner() {
   const { user, loading } = useAuth();

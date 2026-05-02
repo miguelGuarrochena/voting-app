@@ -6,26 +6,26 @@ import { MoreVertical, Trash2, Edit3, Clock } from 'lucide-react';
 export type OwnerMenuVariant = 'default' | 'warning' | 'danger';
 
 export interface OwnerMenuItem {
-  /** Texto del item */
+  /** Item label */
   label: string;
-  /** Callback al clickear */
+  /** Click handler */
   onClick: () => void;
-  /** Icon opcional (por defecto se usa uno acorde a la variant si no se pasa) */
+  /** Optional icon (a default is picked from the variant when omitted) */
   icon?: ReactNode;
-  /** Estilo del item */
+  /** Item style */
   variant?: OwnerMenuVariant;
-  /** Mostrar separador arriba del item */
+  /** Show a separator above this item */
   divider?: boolean;
-  /** Deshabilitar el item (se muestra en gris y no clickea) */
+  /** Disable the item (renders gray, doesn't fire onClick) */
   disabled?: boolean;
 }
 
 interface OwnerMenuProps {
-  /** Items del menú. Se muestran en orden. */
+  /** Menu items. Rendered in order. */
   items: OwnerMenuItem[];
-  /** aria-label del botón kebab */
+  /** aria-label for the kebab trigger */
   ariaLabel?: string;
-  /** Clases extras */
+  /** Extra classes */
   className?: string;
 }
 
@@ -36,14 +36,14 @@ const variantClasses: Record<OwnerMenuVariant, string> = {
 };
 
 /**
- * Menú de acciones del creador (kebab ⋮).
- * Se usa en el header de las pages [token] de votes/ranking/ratings/versus,
- * solo cuando el current user es creator.
+ * Creator-only actions menu (kebab ⋮).
+ * Used in the header of the [token] pages for votes/ranking/ratings/versus,
+ * shown only when the current user is the creator.
  *
- * Soporta múltiples items con icon/variant/divider/disabled.
+ * Supports multiple items with icon/variant/divider/disabled.
  *
- * - Abre/cierra con click en el botón.
- * - Cierra al clicar fuera o al apretar Escape.
+ * - Toggles open on button click.
+ * - Closes on outside click or Escape key.
  */
 export function OwnerMenu({ items, ariaLabel, className = '' }: OwnerMenuProps) {
   const [open, setOpen] = useState(false);
@@ -74,7 +74,7 @@ export function OwnerMenu({ items, ariaLabel, className = '' }: OwnerMenuProps) 
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={ariaLabel || 'Acciones'}
+        aria-label={ariaLabel || 'Actions'}
         aria-haspopup="menu"
         aria-expanded={open}
         className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors flex-shrink-0"

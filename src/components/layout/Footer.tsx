@@ -27,7 +27,9 @@ const Footer = () => {
             </Link>
             <span aria-hidden="true" className="opacity-30">·</span>
             <a
-              href="mailto:hola@letspicky.com"
+              href="https://miguelguarrochena.dev"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:text-[var(--text)] transition-colors whitespace-nowrap"
             >
               {t('footer.contact')}

@@ -1,12 +1,12 @@
 /**
  * src/lib/navigation.ts
  * --------------------------------------------------------------
- * Helpers de navegación.
+ * Navigation helpers.
  *
- * `safeBack` se usa para los botones "Volver". Cuando el usuario
- * abre un link compartido en una pestaña nueva, no hay history,
- * por lo que `router.back()` no va a ningún lado (se queda en la
- * misma página). En ese caso, redirigimos a `/`.
+ * `safeBack` is used for "Back" buttons. When the user
+ * opens a shared link in a new tab, there's no history,
+ * so `router.back()` goes nowhere (stays on the same page). In that case,
+ * we redirect to `/`.
  * --------------------------------------------------------------
  */
 
@@ -18,15 +18,15 @@ export function safeBack(router: AppRouterInstance, fallback: string = '/'): voi
     return
   }
 
-  // Si no hay history previo en esta pestaña, ir al fallback.
-  // history.length === 1 cuando la pestaña se abre directamente en el link.
+  // If there's no previous history in this tab, go to fallback.
+  // history.length === 1 when the tab opens directly to the link.
   if (window.history.length <= 1) {
     router.push(fallback)
     return
   }
 
-  // Guardamos la URL actual antes de ir atrás; si después de un tick
-  // seguimos en el mismo lado (porque back no hizo nada), forzamos fallback.
+  // Save the current URL before going back; if after one tick
+  // we're still on the same page (because back did nothing), force fallback.
   const currentPath = window.location.pathname
   router.back()
   setTimeout(() => {

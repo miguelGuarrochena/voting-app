@@ -19,11 +19,11 @@ interface EditTitleModalProps {
 }
 
 /**
- * Modal de edición de título reusable.
- * - Enter = guardar, Esc = cancelar.
- * - Autoselecciona el texto al abrir.
- * - Deshabilita save si el título es igual al original o está vacío.
- * - Muestra contador de caracteres.
+ * Reusable title-edit modal.
+ * - Enter = save, Esc = cancel.
+ * - Auto-selects the text on open.
+ * - Disables save when the title equals the original or is empty.
+ * - Shows a character counter.
  */
 export default function EditTitleModal({
   isOpen,
@@ -41,12 +41,12 @@ export default function EditTitleModal({
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Reset al abrir / cerrar
+  // Reset on open / close
   useEffect(() => {
     if (isOpen) {
       setValue(initialTitle);
       setSaving(false);
-      // Autoselect cuando monta
+      // Auto-select on mount
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();

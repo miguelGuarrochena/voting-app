@@ -35,17 +35,17 @@ function CreateVersusPageInner() {
   const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [mode, setMode] = useState<TournamentMode>('bracket');
-  // El default es bracket de 8 → arrancamos con 8 inputs vacíos. Si el user
-  // cambia a otro tamaño o a liga, handleBracketSizeChange/handleModeChange
-  // ajustan la lista. Antes arrancábamos con 2 inputs y quedaba inconsistente
-  // con el default seleccionado.
+  // Default is 8-player bracket → start with 8 empty inputs. If the user
+  // changes to a different size or league, handleBracketSizeChange/handleModeChange
+  // adjust the list. Before we started with 2 inputs and it was inconsistent
+  // with the selected default.
   const [players, setPlayers] = useState<PlayerForm[]>(() =>
     Array.from({ length: 8 }, () => ({ id: crypto.randomUUID(), name: '' }))
   );
   const [selectedDuration, setSelectedDuration] = useState('3');
   const [bracketSize, setBracketSize] = useState<BracketSize>(8);
   const [hasScore, setHasScore] = useState(true);
-  // matchupMode: 'auto' = Pickly random, 'manual' = orden de la lista
+  // matchupMode: 'auto' = Pickly random, 'manual' = order of the list
   const [matchupMode, setMatchupMode] = useState<'auto' | 'manual'>('auto');
   const [homeAndAway, setHomeAndAway] = useState(false);
 
@@ -69,9 +69,9 @@ function CreateVersusPageInner() {
     t,
   });
 
-  // Duration options (days). Cap a 7 días: el plan free de Supabase
-  // tiene 500MB y los torneos no son chiquitos (matches JSON puede crecer).
-  // Si más adelante migramos a un plan pago, descomentamos 14 días.
+  // Duration options (days). Capped at 7 days: Supabase's free plan
+  // has 500MB and tournaments aren't small (matches JSON can grow).
+  // If we migrate to a paid plan later, we uncomment 14 days.
   const durationOptions = [
     { value: '1', label: t('versus.1day'), days: 1 },
     { value: '3', label: t('versus.3days'), days: 3 },
@@ -100,8 +100,8 @@ function CreateVersusPageInner() {
   };
 
   /**
-   * Reordena players moviendo el item en `from` a la posición `to`.
-   * Si las posiciones son iguales o inválidas, no hace nada.
+   * Reorders players by moving the item at `from` to position `to`.
+   * If positions are equal or invalid, does nothing.
    */
   const reorderPlayers = (from: number, to: number) => {
     if (from === to || from < 0 || to < 0) return;
@@ -115,13 +115,13 @@ function CreateVersusPageInner() {
   };
 
   // ----- Drag-drop handlers (desktop) -----
-  // Usamos HTML5 drag-and-drop nativo para no agregar dependencias.
-  // dragIndexRef guarda el índice de origen entre eventos (los datos
-  // del drag los maneja el browser; el ref evita serialización innecesaria).
+  // We use native HTML5 drag-and-drop to avoid adding dependencies.
+  // dragIndexRef holds the source index between events (browser handles drag data;
+  // the ref avoids unnecessary serialization).
   const onDragStart = (index: number) => (e: React.DragEvent) => {
     dragIndexRef.current = index;
     e.dataTransfer.effectAllowed = 'move';
-    // Necesario en Firefox para que el drag arranque
+    // Needed in Firefox for drag to start
     try { e.dataTransfer.setData('text/plain', String(index)); } catch {}
   };
   const onDragOver = (index: number) => (e: React.DragEvent) => {
@@ -144,8 +144,8 @@ function CreateVersusPageInner() {
   };
 
   /**
-   * Cuando el user elige un tamaño de bracket, ajustamos la lista de inputs
-   * para tener exactamente N entradas. Conservamos los nombres ya cargados.
+   * When the user picks a bracket size, we adjust the inputs list
+   * to have exactly N entries. We preserve names already entered.
    */
   const handleBracketSizeChange = (size: BracketSize) => {
     setBracketSize(size);
@@ -271,9 +271,9 @@ function CreateVersusPageInner() {
     });
 
     // Redirect directly to detail page with success flag.
-    // Usamos replace (no push) para que el back desde /versus/[token]
-    // no traiga al user de nuevo al formulario de creación: el flujo natural
-    // post-creación es volver al listado /versus.
+    // We use replace (not push) so the back button from /versus/[token]
+    // doesn't take the user back to the create form: the natural
+    // post-creation flow is to land on the /versus listing.
     router.replace(`/versus/${token}?created=true`);
   };
 
@@ -282,12 +282,12 @@ function CreateVersusPageInner() {
   const titleValid = title.trim().length >= 3;
   const hasEnoughPlayers = validPlayers.length >= 2;
 
-  // Set de ids de inputs cuyo nombre (normalizado) aparece más de una vez
-  // en el formulario. Lo usamos para:
-  //   1) bloquear submit con toast
-  //   2) marcar el borde de los inputs duplicados en rojo
-  // Normalización: trim + toLowerCase para que "Juan", " juan" y "JUAN"
-  // cuenten como el mismo nombre.
+  // Set of input ids whose (normalized) name appears more than once
+  // in the form. We use it to:
+  //   1) block submission with a toast
+  //   2) mark the borders of duplicated inputs in red
+  // Normalization: trim + toLowerCase so "Juan", " juan" and "JUAN"
+  // all count as the same name.
   const duplicatePlayerIds: Set<string> = (() => {
     const counts = new Map<string, string[]>();
     for (const p of players) {
@@ -428,10 +428,10 @@ function CreateVersusPageInner() {
               {t('versus.playersLabel')}
             </label>
 
-            {/* Render condicional:
-                - manual + bracket → pares con "vs" explícito (Match #1: A vs B)
-                - resto (auto, o liga) → lista plana
-                En liga no hay drag handles porque los partidos siempre son aleatorios */}
+            {/* Conditional render:
+                - manual + bracket → pairs with explicit "vs" (Match #1: A vs B)
+                - everything else (auto, or league) → flat list
+                League has no drag handles because matches are always random. */}
             {matchupMode === 'manual' && mode === 'bracket' ? (
               <div className="space-y-3">
                 {Array.from({ length: Math.ceil(players.length / 2) }, (_, pairIdx) => {
@@ -451,10 +451,10 @@ function CreateVersusPageInner() {
 
                       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                         {/* Slot A.
-                            En mobile (sm:) sacamos el drag handle: alcanza con
-                            borrar y reescribir el nombre, o usar Intercambiar.
-                            En desktop (sm:+) el drag-drop sigue activo. El input
-                            usa pr-8 sólo en desktop para hacer espacio al handle. */}
+                            On mobile (sm:) we drop the drag handle: clearing
+                            and retyping the name (or using Swap) is enough.
+                            On desktop (sm:+) drag-drop stays active. The input
+                            uses pr-8 only on desktop to leave room for the handle. */}
                         <div
                           onDragOver={onDragOver(idxA)}
                           onDragLeave={onDragLeave}
@@ -551,7 +551,7 @@ function CreateVersusPageInner() {
                       onDragOver={isManual ? onDragOver(index) : undefined}
                       onDragLeave={isManual ? onDragLeave : undefined}
                       onDrop={isManual ? onDrop(index) : undefined}
-                      className={`flex items-center gap-2 rounded-lg transition-colors ${
+                      className={`flex items-center gap-2 rounded-lg transition-colors min-w-0 ${
                         isDragOver ? 'bg-[var(--primary-light)]/30 ring-2 ring-[var(--primary)]' : ''
                       }`}
                     >
@@ -577,12 +577,12 @@ function CreateVersusPageInner() {
                         </span>
                       )}
 
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <input
                           type="text"
                           value={player.name}
                           onChange={(e) => updatePlayer(player.id, e.target.value)}
-                          className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
+                          className={`w-full min-w-0 px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500 ${
                             duplicatePlayerIds.has(player.id)
                               ? 'border-red-500'
                               : 'border-gray-300 dark:border-gray-700'
@@ -622,8 +622,9 @@ function CreateVersusPageInner() {
                         <button
                           type="button"
                           onClick={() => removePlayer(player.id)}
-                          className="p-2 text-red-500 hover:text-red-700"
+                          className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
                           title={t('versus.removePlayer')}
+                          aria-label={t('versus.removePlayer')}
                         >
                           <Trash2 size={18} />
                         </button>
@@ -697,9 +698,9 @@ function CreateVersusPageInner() {
                 </button>
               </div>
 
-              {/* Antes había un preview de pares acá. Lo sacamos porque ahora los pares
-                  se ven directamente en el listado de inputs (con "VS" entre cada par)
-                  cuando matchupMode === 'manual' && mode === 'bracket'. */}
+              {/* There used to be a pair preview here. We dropped it because the
+                  pairs are now visible directly in the inputs list (with "VS"
+                  between each pair) when matchupMode === 'manual' && mode === 'bracket'. */}
             </div>
           )}
 

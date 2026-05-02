@@ -56,20 +56,20 @@ const Navbar = () => {
     }
   };
 
-  // Logout unificado: si hay sesión de auth la cierra, y siempre limpia el
-  // username local. Redirige a / con reload duro para limpiar todo.
+  // Unified logout: if there's an auth session, close it, and always clean up the
+  // local username. Redirect to / with hard reload to clean everything.
   //
-  // Orden importante: PRIMERO limpiamos local + redirigimos, DESPUÉS firamos
-  // el signOut() en background. Antes hacíamos await signOut() ANTES del
-  // redirect, lo que en redes lentas dejaba al user ~2s sin feedback visual
-  // ("nada pasa" cuando clickea logout). Ahora la UI responde instantáneo.
+  // Important order: FIRST we clean local + redirect, THEN fire
+  // signOut() in background. Before we did await signOut() BEFORE
+  // the redirect, which on slow networks left the user ~2s with no visual feedback
+  // ("nothing happens" when they click logout). Now the UI responds instantly.
   const handleLogout = () => {
     setShowMobileMenu(false);
     setShowUsernameMenu(false);
     setShowCreateMenu(false);
 
-    // 1) Limpiar local INMEDIATO (antes del redirect, garantiza que el next
-    //    page load no vea estado stale).
+    // 1) Clean local IMMEDIATELY (before redirect, ensures the next
+    //    page load doesn't see stale state).
     try {
       localStorage.removeItem('pickly_username');
       const toRemove: string[] = [];
@@ -82,17 +82,17 @@ const Navbar = () => {
       /* ignore */
     }
 
-    // 2) Fire-and-forget signOut. La request a supabase.auth.signOut() se
-    //    sigue mandando, pero NO bloquea el redirect. El cookie/token
-    //    server-side se revoca en background; el client lo limpia ya.
+    // 2) Fire-and-forget signOut. The request to supabase.auth.signOut()
+    //    still gets sent, but does NOT block the redirect. The server-side
+    //    cookie/token is revoked in background; the client already cleaned it.
     if (authUser) {
       void signOut().catch(() => {
-        /* la sesión local ya se va a limpiar con el reload */
+        /* local session will be cleaned with the reload anyway */
       });
     }
 
-    // 3) Redirect duro (reload). Reemplaza la URL actual en el history,
-    //    así "back" no vuelve a la página privada en la que estaba.
+    // 3) Hard redirect (reload). Replaces the current URL in history,
+    //    so "back" doesn't return to the private page we were on.
     window.location.replace('/');
   };
 
@@ -302,7 +302,9 @@ const Navbar = () => {
                 </Link>
                 <span aria-hidden="true" className="opacity-30">·</span>
                 <a
-                  href="mailto:hola@letspicky.com"
+                  href="https://miguelguarrochena.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={() => setShowMobileMenu(false)}
                   className="px-3 py-2 text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
                 >
