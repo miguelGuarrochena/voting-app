@@ -11,7 +11,6 @@ import { isTerminal, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { Lock } from 'lucide-react';
 import { getPoll, submitResponse, getPollResponses, deletePoll, closePoll, updatePollTitle } from '@/lib/db';
 import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
-import { safeBack } from '@/lib/navigation';
 import { supabase } from '@/lib/supabase';
 
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -260,7 +259,9 @@ export default function VoteTokenPage() {
             if (isCreator && !hasVotedState && wasJustCreated) {
               router.push(`/votes/${token}/edit`);
             } else {
-              safeBack(router, '/votes');
+              // Always go to the listing, not browser back. Otherwise a freshly
+              // created poll lands on /create when the user hits this button.
+              router.push('/votes');
             }
           }}
           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-3"
@@ -507,7 +508,7 @@ function HeaderBackOnly({
   return (
     <div className="flex items-center gap-3 mb-6">
       <button
-        onClick={() => safeBack(router, fallback)}
+        onClick={() => router.push(fallback)}
         className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
         aria-label={label}
       >

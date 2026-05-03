@@ -9,7 +9,6 @@ import { Star, Share2, ArrowLeft, ExternalLink, Check, Eye, Lock } from 'lucide-
 import { isTerminal, getTimeRemaining, formatTimeRemaining } from '@/lib/token';
 import { getPoll, submitResponse, getPollResponses, deletePoll, closePoll, updatePollTitle } from '@/lib/db';
 import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
-import { safeBack } from '@/lib/navigation';
 import { supabase } from '@/lib/supabase';
 
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -283,7 +282,7 @@ export default function RatingTokenPage() {
         <div className="max-w-2xl mx-auto px-4">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => safeBack(router, '/ratings')}
+              onClick={() => router.push('/ratings')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
               aria-label={t('common.back')}
             >
@@ -316,7 +315,9 @@ export default function RatingTokenPage() {
             if (isCreator && !hasVotedState && wasJustCreated) {
               router.push(`/ratings/${token}/edit`);
             } else {
-              safeBack(router, '/ratings');
+              // Always go to the listing, not browser back. Otherwise a freshly
+              // created rating lands on /create when the user hits this button.
+              router.push('/ratings');
             }
           }}
           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-3"

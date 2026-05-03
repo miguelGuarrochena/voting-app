@@ -7,7 +7,6 @@ import { useLanguage } from '@/context/LanguageContext';
 import { isExpired } from '@/lib/token';
 import { getTournament, updateMatchResult, deleteTournament, closeTournament, updateTournamentTitle } from '@/lib/db';
 import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
-import { safeBack } from '@/lib/navigation';
 import { Tournament, MatchResult, BracketMatch, LeagueMatch, Player } from '@/types/versus';
 import { getBracketChampion, getLeagueChampion, calculateLeagueStandings, getCurrentBracketRound, getTotalBracketRounds, formatMatchResult } from '@/lib/tournament';
 import { supabase } from '@/lib/supabase';
@@ -315,7 +314,7 @@ function VersusTournamentPageInner({ params }: PageProps) {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => safeBack(router, '/versus')}
+              onClick={() => router.push('/versus')}
               className="hidden sm:flex items-center gap-2 p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-muted)]" />
@@ -345,7 +344,9 @@ function VersusTournamentPageInner({ params }: PageProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <button
-          onClick={() => safeBack(router, '/versus')}
+          // Always go to the listing, not browser back. Otherwise a freshly
+          // created tournament lands on /versus/create when the user hits this.
+          onClick={() => router.push('/versus')}
           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-3"
         >
           <ArrowLeft className="w-4 h-4" />

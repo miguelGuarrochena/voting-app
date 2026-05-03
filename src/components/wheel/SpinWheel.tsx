@@ -50,6 +50,39 @@ export const SpinWheel = () => {
     optionsRef.current = options;
   }, [options]);
 
+  // Sync mobile wheel "step" with the navbar so it can decide whether to
+  // render the back arrow. Step 1 (configure options) is the wheel's
+  // "home" → no back arrow. Step 2 (spin) shows back, which goes to step 1.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('spin-step-change', { detail: { step } }));
+    return () => {
+      // On unmount, signal we're no longer on the wheel so the navbar
+      // doesn't keep showing the wheel-specific back arrow elsewhere.
+      window.dispatchEvent(new CustomEvent('spin-step-change', { detail: { step: 0 } }));
+    };
+  }, [step]);
+
+  // The navbar's back arrow on /spin dispatches this event instead of
+  // navigating away — we want it to step backwards within the wheel
+  // flow rather than leave /spin entirely.
+  //
+  // We preserve the user's options on the way back (so they can edit
+  // one and keep the rest), but we clear the previous result state so
+  // when they return to step 2 the wheel is fresh — otherwise the old
+  // "🎉 The wheel has spoken: Walk" stays glued to options that may have
+  // changed in the meantime.
+  useEffect(() => {
+    const handler = () => {
+      setStep(1);
+      setShowResult(false);
+      setSelectedOption(null);
+      setValidationError('');
+      setShareCopied(false);
+    };
+    window.addEventListener('spin-back', handler);
+    return () => window.removeEventListener('spin-back', handler);
+  }, []);
+
   const drawWheel = useCallback((
     opts: WheelOption[],
     sel: WheelOption | null,
@@ -61,7 +94,8 @@ export const SpinWheel = () => {
     if (!ctx) return;
 
     const scale = window.devicePixelRatio || 1;
-    const actualWidth = window.innerWidth < 1024 ? 280 : 400;
+    const isMobileWheel = window.innerWidth < 1024;
+    const actualWidth = isMobileWheel ? 280 : 400;
     const actualHeight = actualWidth;
     canvas.width = actualWidth * scale;
     canvas.height = actualHeight * scale;
@@ -143,19 +177,27 @@ export const SpinWheel = () => {
         ctx.shadowBlur = 4;
       }
 
-      // Position text closer to center to prevent overflow
-      const textRadius = radius * 0.5; // Further reduced to prevent overflow
+      // On mobile we hide the white center disc (the spin button lives
+      // BELOW the wheel, so the disc is just visual noise). Without that
+      // disc we can push text a bit further out — more breathing room
+      // and the labels don't crowd the middle anymore.
+      const textRadius = radius * (isMobileWheel ? 0.6 : 0.5);
       ctx.fillText(displayText, textRadius, 0);
       ctx.restore();
     });
 
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-    ctx.strokeStyle = '#e0e0e0';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // Center disc — only on desktop, where the spin button is anchored on
+    // top of it. On mobile the spin button is rendered below the wheel,
+    // so the disc would just be wasted space covering text.
+    if (!isMobileWheel) {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
   }, []);
 
   useEffect(() => {
@@ -407,7 +449,11 @@ export const SpinWheel = () => {
   }, [selectedOption, t]);
 
   const isFormValid = newOptionText.trim().length > 0 && options.length < 12;
-  const canSpin = options.filter(opt => opt.text.trim().length > 0).length >= 2 && !isSpinning;
+  // The wheel needs at least 2 options with actual text. We split this from
+  // canSpin (which also factors in isSpinning) so the mobile "Continue to
+  // wheel" button at the end of step 1 can use the same readiness check.
+  const hasEnoughOptions = options.filter(opt => opt.text.trim().length > 0).length >= 2;
+  const canSpin = hasEnoughOptions && !isSpinning;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
@@ -753,14 +799,15 @@ export const SpinWheel = () => {
                   </div>
                 </div>
 
-                {options.length >= 2 && (
-                  <button
-                    onClick={() => setStep(2)}
-                    className="w-full py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-transform"
-                  >
-                    {t('spin.continueToWheel')}
-                  </button>
-                )}
+                {/* Always render so the user knows the next step is here;
+                    disabled until there are 2+ options with text. */}
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={!hasEnoughOptions}
+                  className="w-full py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+                >
+                  {t('spin.continueToWheel')}
+                </button>
               </motion.div>
             )}
 
@@ -809,15 +856,14 @@ export const SpinWheel = () => {
                           <div className="text-2xl mb-2">🎉</div>
                           <h3 className="font-display text-lg font-bold text-[var(--text)] mb-1">{t('spin.theWheelHasSpoken')}</h3>
                           <div className="text-xl font-bold text-[var(--primary)] mb-2">{selectedOption.text}</div>
-                          <div className="flex flex-col gap-2 items-center">
+                          {/* Spin Again lives in the main button above (it
+                              switches its label to "Spin Again" once there's
+                              a result), so the result card only owns Share. */}
+                          <div className="flex justify-center">
                             <button onClick={handleShareResult}
                               className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-[var(--primary)] text-white rounded-full font-medium hover:bg-[var(--primary-dark)] transition-colors text-sm">
                               {shareCopied ? <Check size={14} /> : <Share2 size={14} />}
                               {shareCopied ? t('spin.resultCopied') : t('spin.shareResult')}
-                            </button>
-                            <button onClick={spinAgain}
-                              className="px-4 py-1.5 bg-[var(--surface)] text-[var(--primary)] rounded-full font-medium hover:bg-[var(--surface-2)] transition-colors border border-[var(--primary)] text-sm">
-                              {t('spin.spinAgain')}
                             </button>
                           </div>
                         </motion.div>
@@ -826,12 +872,8 @@ export const SpinWheel = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setStep(1)}
-                  className="mt-4 px-5 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-full font-medium hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)] text-sm"
-                >
-                  ← {t('spin.editOptions')}
-                </button>
+                {/* Back to step 1 lives in the top navbar arrow now;
+                    this used to be a "← Edit options" button. */}
               </motion.div>
             )}
           </div>

@@ -35,6 +35,19 @@ const Navbar = () => {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [showChangeUsernameModal, setShowChangeUsernameModal] = useState(false);
   const [newUsername, setNewUsername] = useState('');
+  // The /spin page is a 2-step wizard on mobile (configure → spin). We
+  // hide the back arrow on step 1 (the wheel's "home") and show it on
+  // step 2, where it returns to step 1. SpinWheel emits this event.
+  const [spinStep, setSpinStep] = useState(0);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ step: number }>).detail;
+      setSpinStep(detail?.step ?? 0);
+    };
+    window.addEventListener('spin-step-change', handler);
+    return () => window.removeEventListener('spin-step-change', handler);
+  }, []);
 
   // Handle scroll effect for desktop navbar
   useEffect(() => {
@@ -118,23 +131,34 @@ const Navbar = () => {
           <div className="flex items-center justify-between px-4 py-3">
             {/* Left side - Back button or spacer */}
             <div className="flex-1">
-              {pathname !== '/' && !['/votes', '/ranking', '/spin', '/versus'].includes(pathname) ? (
-                <button
-                  onClick={() => {
-                    if (pathname === '/spin') {
-                      // Dispatch custom event for spin page to handle step navigation
-                      window.dispatchEvent(new CustomEvent('spin-back'));
-                    } else {
-                      safeBack(router, '/');
-                    }
-                  }}
-                  className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] hover:bg-[var(--surface)] transition-colors"
-                >
-                  <ArrowLeftIcon className="w-4 h-4" />
-                </button>
-              ) : (
-                <div className="w-8" />
-              )}
+              {(() => {
+                // The four listing pages and home are top-level — no back arrow.
+                const isTopLevel =
+                  pathname === '/' ||
+                  ['/votes', '/ranking', '/ratings', '/versus'].includes(pathname);
+                // /spin is special: step 1 (configure) acts as its home, step 2
+                // (spin) shows back so it can return to step 1.
+                const showSpinBack = pathname === '/spin' && spinStep === 2;
+                const showBack = (!isTopLevel && pathname !== '/spin') || showSpinBack;
+
+                if (!showBack) return <div className="w-8" />;
+
+                return (
+                  <button
+                    onClick={() => {
+                      if (pathname === '/spin') {
+                        // SpinWheel listens and steps backwards inside the wizard.
+                        window.dispatchEvent(new CustomEvent('spin-back'));
+                      } else {
+                        safeBack(router, '/');
+                      }
+                    }}
+                    className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] hover:bg-[var(--surface)] transition-colors"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4" />
+                  </button>
+                );
+              })()}
             </div>
 
             {/* Center - Logo always visible */}
