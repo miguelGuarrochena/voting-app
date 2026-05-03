@@ -42,11 +42,15 @@ const eslintConfig = [
   {
     ignores: [
       ".next/**",
-      "out/**", 
+      "out/**",
       "build/**",
       "next-env.d.ts",
       "**/*.config.js",
       "**/*.config.mjs",
+      "**/*.config.ts",
+      "e2e/**",
+      "playwright-report/**",
+      "test-results/**",
     ],
   },
 ];

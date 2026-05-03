@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Swords, Trophy, Clock, Users } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -10,11 +9,12 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { ListingEmptyState } from '@/components/mypolls/ListingEmptyState';
 import {
-  removeMyPoll,
   pruneExpiredMyPolls,
   type MyPollEntry,
 } from '@/lib/mypolls';
 import { getMyPollsHybrid } from '@/lib/mypollsHybrid';
+import { deleteTournament } from '@/lib/db';
+import { handleListingRemove } from '@/lib/listingDelete';
 import { formatTimeRemaining, getTimeRemaining } from '@/lib/token';
 import { FEATURES } from '@/lib/features';
 import { VersusComingSoon } from '@/components/versus/ComingSoon';
@@ -46,11 +46,14 @@ function VersusPageInner() {
     if (!authLoading) refresh();
   }, [refresh, authLoading]);
 
-  const handleRemove = (token: string) => {
-    removeMyPoll(token);
-    toast.success(t('common.removed'));
-    refresh();
-  };
+  const handleRemove = (token: string) =>
+    handleListingRemove({
+      token,
+      entries,
+      serverDelete: deleteTournament,
+      removedLabel: t('common.removed'),
+      onAfter: refresh,
+    });
 
   const { created, joined } = useMemo(() => {
     return {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
@@ -10,13 +9,12 @@ import { useAuth } from '@/context/AuthContext';
 import { MyPollCard } from '@/components/mypolls/MyPollCard';
 import { ListingEmptyState } from '@/components/mypolls/ListingEmptyState';
 import {
-  findMyPoll,
-  removeMyPoll,
   pruneExpiredMyPolls,
   type MyPollEntry,
 } from '@/lib/mypolls';
 import { getMyPollsHybrid } from '@/lib/mypollsHybrid';
 import { deletePoll } from '@/lib/db';
+import { handleListingRemove } from '@/lib/listingDelete';
 
 export default function VotesPage() {
   const { t } = useLanguage();
@@ -35,21 +33,14 @@ export default function VotesPage() {
     if (!authLoading) refresh();
   }, [refresh, authLoading]);
 
-  const handleRemove = async (token: string) => {
-    // For polls the user created we need to actually delete the row.
-    // Removing only from localStorage looks fine until refresh() pulls
-    // the poll back from the server via get_my_polls_rpc.
-    // For 'participant' entries (just opened a shared link) we keep the
-    // local-only removal — they don't own the poll.
-    const entry = entries.find((e) => e.token === token) ?? findMyPoll(token);
-    if (entry?.role === 'creator') {
-      const ok = await deletePoll(token);
-      if (!ok) return; // deletePoll already showed an error toast
-    }
-    removeMyPoll(token);
-    toast.success(t('common.removed'));
-    refresh();
-  };
+  const handleRemove = (token: string) =>
+    handleListingRemove({
+      token,
+      entries,
+      serverDelete: deletePoll,
+      removedLabel: t('common.removed'),
+      onAfter: refresh,
+    });
 
   if (!mounted) {
     return (

@@ -232,12 +232,6 @@ export async function deletePoll(token: string): Promise<boolean> {
       p_token: token,
     })
 
-    // Diagnostic — tells us at a glance whether the RPC actually
-    // returned success or a wrapped/null result that the code below
-    // would otherwise swallow.
-    // eslint-disable-next-line no-console
-    console.log('[deletePoll] token:', token, '| data:', data, '| error:', error)
-
     if (error) {
       // 'forbidden' = the poll has an owner and the current session
       // can't prove it. Two common cases (treated identically here):
