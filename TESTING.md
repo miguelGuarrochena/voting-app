@@ -74,16 +74,19 @@ If E2E fails, the Playwright HTML report is uploaded as a workflow
 artifact — download it from the run summary to see screenshots and
 traces.
 
-### Required GitHub secrets
+### GitHub secrets (optional today, required later)
 
-Set these under **Settings → Secrets and variables → Actions**:
+The CI workflow falls back to dummy Supabase values when these aren't
+set, so smoke tests pass out of the box. The happy-path E2E spec will
+require real values once enabled.
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_KEY`
+Set under **Settings → Secrets and variables → Actions**:
 
-Without them, the dev server boots but Supabase calls fail at runtime
-and most flows break. For now the smoke tests don't need real Supabase
-data, but as soon as we enable the happy-path spec they will.
+- `NEXT_PUBLIC_SUPABASE_URL` — point at a Supabase test project
+- `NEXT_PUBLIC_SUPABASE_KEY` — its anon key
+
+Recommendation: use a separate Supabase project for CI (not prod) so
+test data doesn't pollute real polls.
 
 ## Adding a new test
 

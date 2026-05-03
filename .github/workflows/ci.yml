@@ -43,11 +43,15 @@ jobs:
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
-    # Supabase env vars come from repo Secrets — set them in
-    # Settings → Secrets and variables → Actions.
+    # Supabase env vars: prefer real secrets when set (Settings →
+    # Secrets and variables → Actions), fall back to dummy values so
+    # the dev server boots and smoke tests pass without configuration.
+    # Smoke tests don't make Supabase network calls — they only check
+    # that pages render without an error overlay. The happy-path spec
+    # WILL need real secrets once enabled.
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321' }}
+      NEXT_PUBLIC_SUPABASE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy-payload-for-ci.dummy-signature' }}
     steps:
       - uses: actions/checkout@v4
 
