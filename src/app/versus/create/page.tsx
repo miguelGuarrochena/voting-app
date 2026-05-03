@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusIcon, Trash2, ArrowLeft, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
+import { PlusIcon, Trash2, ArrowLeft, GripVertical, ChevronUp, ChevronDown, Info } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import toast from 'react-hot-toast';
 import { useUsername } from '@/context/UsernameContext';
@@ -323,7 +323,16 @@ function CreateVersusPageInner() {
           </button>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-6">{t('versus.createTournament')}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text)] mb-3">{t('versus.createTournament')}</h1>
+
+        {/* Creator hint — pre-empts the asymmetry: in Versus only the creator
+            can update match results, so we want them to know upfront that
+            they'll be the one running the bracket. Keeps the surprise out
+            of the post-share flow. */}
+        <div className="flex items-start gap-2 mb-6 text-xs sm:text-sm text-[var(--text-muted)]">
+          <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-[var(--primary)]" />
+          <p className="leading-snug">{t('versus.creatorHint')}</p>
+        </div>
 
         <AnonCreateModal />
 

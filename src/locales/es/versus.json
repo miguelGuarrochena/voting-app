@@ -112,5 +112,9 @@
   "invalidFormat": "Formato inválido",
   "completeRequiredFields": "Por favor completa todos los campos obligatorios",
   "scrollHint": "Desliza para ver todas las rondas",
-  "noDraw": "Los empates no están permitidos en el bracket. Debe haber un ganador."
+  "noDraw": "Los empates no están permitidos en el bracket. Debe haber un ganador.",
+  "viewerNoticeTitle": "Estás viendo el torneo",
+  "viewerNoticeBody": "Los resultados los va cargando {creator}. Vos podés seguir el bracket en vivo.",
+  "viewerNoticeBodyNoCreator": "Los resultados los va cargando quien creó el torneo. Vos podés seguir el bracket en vivo.",
+  "creatorHint": "Vas a ir cargando los resultados a medida que se juegue. Solo vos podés actualizar el bracket — los demás siguen el torneo desde el link."
 }

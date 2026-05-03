@@ -42,3 +42,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# internal launch / runbook notes — kept locally, not pushed
+LAUNCH_CHECKLIST.md
+LAUNCH_LINKEDIN.md

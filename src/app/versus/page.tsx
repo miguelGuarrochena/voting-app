@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { Swords, Trophy, Clock, Users } from 'lucide-react';
+import { Swords, Trophy, Clock } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -21,8 +21,11 @@ import { VersusComingSoon } from '@/components/versus/ComingSoon';
 
 /**
  * Listing de torneos Versus.
- * Rediseñado para ser más atractivo: hero con gradiente, split creador/participante,
- * cards con badge de estado y CTA prominente.
+ *
+ * Versus only tracks tournaments the user *created*. Non-creators aren't saved
+ * locally because only the creator can update match results — labelling viewers
+ * as "participants" was misleading. (Votes/Ranking/Ratings still track
+ * participants because anyone can interact there.)
  */
 export default function VersusPage() {
   if (!FEATURES.versus) return <VersusComingSoon />;
@@ -55,12 +58,13 @@ function VersusPageInner() {
       onAfter: refresh,
     });
 
-  const { created, joined } = useMemo(() => {
-    return {
-      created: entries.filter((e) => e.role === 'creator'),
-      joined: entries.filter((e) => e.role === 'participant'),
-    };
-  }, [entries]);
+  // Only creator entries surface here — see the comment at the top of the file.
+  // We still filter explicitly so any legacy `role: 'participant'` entries left
+  // in localStorage from a previous version of the app are quietly ignored.
+  const created = useMemo(
+    () => entries.filter((e) => e.role === 'creator'),
+    [entries]
+  );
 
   if (!mounted) {
     return (
@@ -73,7 +77,9 @@ function VersusPageInner() {
     );
   }
 
-  const isEmpty = entries.length === 0;
+  // Use `created` (not `entries`) so legacy `role: 'participant'` entries left
+  // in localStorage still trigger the empty state instead of an empty section.
+  const isEmpty = created.length === 0;
 
   return (
     <>
@@ -108,12 +114,13 @@ function VersusPageInner() {
               )}
             </div>
 
-            {/* stats row */}
+            {/* stats row — only creator entries are tracked, so two stats are
+                enough: total tournaments + active. Three columns felt padded
+                once the "joined" stat was removed. */}
             {!isEmpty && (
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-[var(--border)]">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-[var(--border)]">
                 <StatChip icon={<Trophy className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.createdSection')} value={created.length} />
-                <StatChip icon={<Users className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.joinedSection')} value={joined.length} />
-                <StatChip icon={<Clock className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.active')} value={entries.length} />
+                <StatChip icon={<Clock className="w-4 h-4 text-[var(--primary)]" />} label={t('versus.active')} value={created.length} />
               </div>
             )}
           </div>
@@ -132,13 +139,6 @@ function VersusPageInner() {
               {created.length > 0 && (
                 <Section title={t('versus.createdSection')} icon={<Trophy className="w-5 h-5 text-[var(--primary)]" />}>
                   {created.map((e) => (
-                    <VersusCard key={e.token} entry={e} onRemove={handleRemove} t={t} />
-                  ))}
-                </Section>
-              )}
-              {joined.length > 0 && (
-                <Section title={t('versus.joinedSection')} icon={<Users className="w-5 h-5 text-[var(--primary)]" />}>
-                  {joined.map((e) => (
                     <VersusCard key={e.token} entry={e} onRemove={handleRemove} t={t} />
                   ))}
                 </Section>

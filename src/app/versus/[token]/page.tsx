@@ -6,7 +6,7 @@ import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { isExpired } from '@/lib/token';
 import { getTournament, updateMatchResult, deleteTournament, closeTournament, updateTournamentTitle } from '@/lib/db';
-import { addMyPoll, findMyPoll, removeMyPoll } from '@/lib/mypolls';
+import { findMyPoll, removeMyPoll } from '@/lib/mypolls';
 import { Tournament, MatchResult, BracketMatch, LeagueMatch, Player } from '@/types/versus';
 import { getBracketChampion, getLeagueChampion, calculateLeagueStandings, getCurrentBracketRound, getTotalBracketRounds, formatMatchResult } from '@/lib/tournament';
 import { supabase } from '@/lib/supabase';
@@ -15,7 +15,7 @@ import { BracketResultView } from '@/components/versus/BracketResultView';
 import { LeagueStandingsView } from '@/components/versus/LeagueStandingsView';
 import { CelebrationScreen } from '@/components/versus/CelebrationScreen';
 import { useRouter } from 'next/navigation';
-import { Swords, Clock, AlertTriangle, Share2, ArrowLeft } from 'lucide-react';
+import { Swords, Clock, AlertTriangle, Share2, ArrowLeft, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -76,16 +76,10 @@ function VersusTournamentPageInner({ params }: PageProps) {
       setTournament(data);
       setLoading(false);
 
-      // Save in "my tournaments" as participant.
-      addMyPoll({
-        token,
-        type: 'versus',
-        title: data.title,
-        role: 'participant',
-        createdBy: data.createdBy,
-        expiresAt: data.expiresAt,
-      });
-
+      // Versus does not track non-creators: only the creator can update match
+      // results, so labelling viewers as "participants" was misleading. The
+      // creator's entry was saved at /versus/create, so findMyPoll still works
+      // to detect ownership here.
       const my = findMyPoll(token);
       setIsCreator(my?.role === 'creator');
 
@@ -436,6 +430,28 @@ function VersusTournamentPageInner({ params }: PageProps) {
             <p className="text-2xl font-bold text-[var(--primary)]">
               {formatTimeRemaining(timeRemaining)}
             </p>
+          </div>
+        )}
+
+        {/* Viewer notice — only the tournament creator can update match
+            results, so without this banner a non-creator opening the link
+            would not understand why every match looks read-only. We fall
+            back to a generic copy if `createdBy` is empty for any reason. */}
+        {!isCreator && (
+          <div className="flex items-start gap-3 bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3 sm:p-4 mb-6">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mt-0.5">
+              <Info className="w-4 h-4 text-[var(--primary)]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--text)] leading-snug">
+                {t('versus.viewerNoticeTitle')}
+              </p>
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-snug mt-0.5">
+                {tournament.createdBy
+                  ? t('versus.viewerNoticeBody').replace('{creator}', tournament.createdBy)
+                  : t('versus.viewerNoticeBodyNoCreator')}
+              </p>
+            </div>
           </div>
         )}
 

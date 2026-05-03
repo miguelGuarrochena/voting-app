@@ -112,5 +112,9 @@
   "invalidFormat": "Invalid format",
   "completeRequiredFields": "Please complete all required fields",
   "scrollHint": "Scroll to see all rounds",
-  "noDraw": "Draws are not allowed in bracket mode. There must be a winner."
+  "noDraw": "Draws are not allowed in bracket mode. There must be a winner.",
+  "viewerNoticeTitle": "You're viewing this tournament",
+  "viewerNoticeBody": "{creator} updates the results as games are played. You can follow the bracket live.",
+  "viewerNoticeBodyNoCreator": "The creator updates the results as games are played. You can follow the bracket live.",
+  "creatorHint": "You'll enter results as the games are played. Only you can update the bracket — everyone else follows along from the link."
 }
