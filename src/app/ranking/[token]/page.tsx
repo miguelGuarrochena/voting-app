@@ -20,7 +20,6 @@ import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
 import { ImageModal } from '@/components/modals/ImageModal';
 import { AnimatePresence } from 'framer-motion';
-import { WinnerPodium, PodiumEntry } from '@/components/results/WinnerPodium';
 import { fireWinnerConfetti } from '@/lib/confetti';
 
 // ------------------------------------------------------------
@@ -482,9 +481,6 @@ export default function RankingTokenPage() {
           ) : (
             <RankingResultsList
               options={pollData.options}
-              expired={expired}
-              expiredTitle={t('ranking.expiredTitle')}
-              expiredDesc={t('ranking.expiredDesc')}
               pointsLabel={t('ranking.points')}
               onZoomImage={(url, alt) => setZoomImage({ url, alt })}
             />
@@ -626,18 +622,24 @@ function HeaderBackOnly({
   );
 }
 
+// Top 3 get gold/silver/bronze on the number badge — same idea as a music
+// chart or league table. The dedicated "podium" block was a Votes-style
+// celebration imported here without thinking; Ranking is a chart, not a
+// single-winner contest, so a numbered list reads better. The page-level
+// "closed" banner above already signals end-of-voting.
+function rankBadgeClasses(rank: number): string {
+  if (rank === 1) return 'bg-amber-400 text-amber-900';
+  if (rank === 2) return 'bg-slate-300 text-slate-800';
+  if (rank === 3) return 'bg-orange-400 text-orange-950';
+  return 'bg-[var(--primary)] text-white';
+}
+
 function RankingResultsList({
   options,
-  expired,
-  expiredTitle,
-  expiredDesc,
   pointsLabel,
   onZoomImage,
 }: {
   options: any[];
-  expired: boolean;
-  expiredTitle: string;
-  expiredDesc: string;
   pointsLabel: string;
   onZoomImage: (url: string, alt: string) => void;
 }) {
@@ -646,35 +648,10 @@ function RankingResultsList({
   );
   const maxScore = Math.max(1, ...sorted.map((o: any) => o.rankingScore || 0));
 
-  const sortedWithScore = sorted.filter((o) => (o.rankingScore || 0) > 0);
-  const showPodium = expired && sortedWithScore.length > 0;
-
-  const podiumEntries: PodiumEntry[] = showPodium
-    ? sortedWithScore.slice(0, 3).map((o: any) => ({
-        id: o.id,
-        title: o.title,
-        emoji: o.emoji,
-        imageUrl: o.imageUrl,
-        primary: `${o.rankingScore || 0} ${pointsLabel}`,
-      }))
-    : [];
-  const podiumIds = new Set(podiumEntries.map((e) => e.id));
-  const listOptions = showPodium ? sorted.filter((o) => !podiumIds.has(o.id)) : sorted;
-
   return (
     <div className="space-y-3">
-      {expired && (
-        <div className="text-center mb-4">
-          <div className="text-5xl mb-2">🏆</div>
-          <h2 className="text-lg sm:text-xl font-bold text-[var(--text)]">{expiredTitle}</h2>
-          <p className="text-sm text-[var(--text-muted)]">{expiredDesc}</p>
-        </div>
-      )}
-      {showPodium && (
-        <WinnerPodium entries={podiumEntries} onZoomImage={onZoomImage} />
-      )}
-      {listOptions.map((option: any) => {
-        const index = sorted.indexOf(option);
+      {sorted.map((option: any, index: number) => {
+        const rank = index + 1;
         const score = option.rankingScore || 0;
         const percentage = Math.round((score / maxScore) * 100);
         const isWinner = index === 0 && score > 0;
@@ -712,8 +689,10 @@ function RankingResultsList({
               <div className="flex-1 min-w-0 p-3 sm:p-4">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                      {index + 1}
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${rankBadgeClasses(rank)}`}
+                    >
+                      {rank}
                     </div>
                     {isWinner && <span aria-hidden>👑</span>}
                     {option.emoji && (

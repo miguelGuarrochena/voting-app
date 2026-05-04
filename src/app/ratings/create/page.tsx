@@ -164,6 +164,18 @@ export default function CreateRatingPage() {
     const validItems = items.filter((item) => item.label.trim() !== '');
     if (validItems.length < 1) {
       newErrors.items = t('ratings.atLeast1ItemRequired');
+    } else {
+      // Same case-insensitive duplicate check we already do for attributes,
+      // mirrored over to item names. Without this the create button stays
+      // enabled with two items called "Pizza Hut" and the user only sees
+      // the error on submit (or worse, never).
+      const itemLabelsLower = validItems.map((it) => it.label.trim().toLowerCase());
+      const dupItems = itemLabelsLower.filter(
+        (l, i) => itemLabelsLower.indexOf(l) !== i
+      );
+      if (dupItems.length > 0) {
+        newErrors.items = t('ratings.duplicateItems');
+      }
     }
 
     const cleanAttrs = attributes

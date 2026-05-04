@@ -41,8 +41,6 @@
   "submittedToast": "¡Valoraciones enviadas! 🎉",
   "submitError": "Error al enviar tus valoraciones",
   "alreadyRated": "Ya puntuaste. Resultados en vivo debajo.",
-  "expiredTitle": "¡Se acabó el tiempo! 🎉",
-  "expiredDesc": "Este rating terminó. Estos son los resultados finales:",
   "participants": "Participantes",
   "createYourOwn": "Crea tu propio rating",
   "notRated": "Sin puntuar",
@@ -59,6 +57,7 @@
   "removeAttribute": "Eliminar criterio",
   "needAtLeastOneAttribute": "Necesitás al menos 1 criterio",
   "duplicateAttribute": "Los nombres de los criterios no se pueden repetir",
+  "duplicateItems": "Los nombres de los ítems no se pueden repetir",
   "defaultAttribute": "General",
   "overallAverage": "Promedio general"
 }

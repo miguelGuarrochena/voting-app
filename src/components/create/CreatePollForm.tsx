@@ -231,8 +231,20 @@ export default function CreatePollForm({ defaultType, initialData, isEdit, onSub
   };
 
   const isFormValid = () => {
+    // Mirror the checks in validateForm so the submit button matches what the
+    // form will actually accept. The duplicate check used to live only in
+    // validateForm, which meant the button stayed enabled with duplicate
+    // options and the user only saw the error after pressing it.
+    const validOptions = options.filter(opt => opt.text.trim() !== '');
+    const optionTexts = validOptions.map(opt => opt.text.trim().toLowerCase());
+    const hasDuplicateOptions = optionTexts.some(
+      (text, idx) => optionTexts.indexOf(text) !== idx
+    );
+
     return title.trim().length >= 3 &&
-           options.filter(opt => opt.text.trim() !== '').length >= 2 &&
+           validOptions.length >= 2 &&
+           validOptions.length <= 10 &&
+           !hasDuplicateOptions &&
            selectedDuration &&
            !loading;
   };

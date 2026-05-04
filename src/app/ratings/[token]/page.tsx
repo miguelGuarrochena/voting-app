@@ -20,8 +20,6 @@ import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
 import { ImageModal } from '@/components/modals/ImageModal';
 import { AnimatePresence } from 'framer-motion';
-import { WinnerPodium, PodiumEntry } from '@/components/results/WinnerPodium';
-import { fireWinnerConfetti } from '@/lib/confetti';
 import { RatingsComingSoon } from '@/components/ratings/ComingSoon';
 import { FEATURES } from '@/lib/features';
 import {
@@ -143,15 +141,12 @@ export default function RatingTokenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, username]);
 
-  // Confetti when it expires if there's at least one rating
-  useEffect(() => {
-    if (expired && pollData) {
-      const hasRatings = (pollData.options ?? []).some(
-        (o: any) => (o.ratingCount || 0) > 0
-      );
-      if (hasRatings) fireWinnerConfetti(token);
-    }
-  }, [expired, pollData, token]);
+  // No confetti / no podium when a rating closes — Ratings is not a winner
+  // contest. Each item is evaluated independently, so the close view is the
+  // same list of cards used during voting, just with the consolidated stats
+  // (avg + count) frozen. The "closed" banner above already signals the
+  // end-of-voting state. Votes/Ranking still celebrate because they have a
+  // clear winner, but here it would import a metaphor that doesn't apply.
 
   const attributes: RatingAttribute[] = pollData
     ? getAttributesFromPoll(pollData, t('ratings.defaultAttribute') || 'Overall')
@@ -476,9 +471,6 @@ export default function RatingTokenPage() {
             <RatingResultsList
               options={pollData.options}
               attributes={attributes}
-              expired={expired}
-              expiredTitle={t('ratings.expiredTitle')}
-              expiredDesc={t('ratings.expiredDesc')}
               countLabel={t('ratings.ratingCount')}
               avgLabel={t('ratings.average')}
               overallAverageLabel={t('ratings.overallAverage')}
@@ -708,9 +700,6 @@ function RatingItem({
 function RatingResultsList({
   options,
   attributes,
-  expired,
-  expiredTitle,
-  expiredDesc,
   countLabel,
   avgLabel,
   overallAverageLabel,
@@ -718,9 +707,6 @@ function RatingResultsList({
 }: {
   options: any[];
   attributes: RatingAttribute[];
-  expired: boolean;
-  expiredTitle: string;
-  expiredDesc: string;
   countLabel: string;
   avgLabel: string;
   overallAverageLabel: string;
@@ -730,48 +716,19 @@ function RatingResultsList({
     (a: any, b: any) => avgOverall(b) - avgOverall(a)
   );
 
-  const sortedWithRatings = sorted.filter((o) => (o.ratingCount || 0) > 0);
-  const showPodium = expired && sortedWithRatings.length > 0;
-
-  const podiumEntries: PodiumEntry[] = showPodium
-    ? sortedWithRatings.slice(0, 3).map((o: any) => {
-        const avg = avgOverall(o);
-        return {
-          id: o.id,
-          title: o.title,
-          emoji: o.emoji,
-          imageUrl: o.imageUrl,
-          primary: `⭐ ${avg.toFixed(1)}`,
-          secondary: `${o.ratingCount || 0} ${countLabel}`,
-        };
-      })
-    : [];
-  const podiumIds = new Set(podiumEntries.map((e) => e.id));
-  const listOptions = showPodium
-    ? sorted.filter((o) => !podiumIds.has(o.id))
-    : sorted;
-
   // If there's only 1 attribute (e.g. legacy "Overall"), skip the
   // redundant per-attribute breakdown.
   const showAttrBreakdown = attributes.length > 1;
 
+  // Same layout for both states — already-voted (still open) and closed.
+  // The page-level "closed" banner above signals end-of-voting; here we just
+  // freeze the live ratings list. No podium, no confetti, no "🏆" header:
+  // each item is rated independently, so the contest framing of Votes
+  // doesn't apply. The #1 still gets a discreet 👑 + border highlight via
+  // `isWinner` below — useful as an anchor without imposing 1-2-3 hierarchy.
   return (
     <div className="space-y-3">
-      {expired && (
-        <div className="text-center mb-4">
-          <div className="text-5xl mb-2">🏆</div>
-          <h2 className="text-lg sm:text-xl font-bold text-[var(--text)]">
-            {expiredTitle}
-          </h2>
-          <p className="text-sm text-[var(--text-muted)]">{expiredDesc}</p>
-        </div>
-      )}
-      {showPodium && (
-        <WinnerPodium entries={podiumEntries} onZoomImage={onZoomImage} />
-      )}
-
-      {listOptions.map((option: any) => {
-        const index = sorted.indexOf(option);
+      {sorted.map((option: any, index: number) => {
         const avg = avgOverall(option);
         const avgStr = avg.toFixed(1);
         const isWinner = index === 0 && (option.ratingCount || 0) > 0;

@@ -41,8 +41,6 @@
   "submittedToast": "Ratings sent! 🎉",
   "submitError": "Error sending your ratings",
   "alreadyRated": "You already rated. Live results below.",
-  "expiredTitle": "Time's up 🎉",
-  "expiredDesc": "This rating has ended. Here are the final results:",
   "participants": "Participants",
   "createYourOwn": "Create your own rating",
   "notRated": "Not rated",
@@ -59,6 +57,7 @@
   "removeAttribute": "Remove criterion",
   "needAtLeastOneAttribute": "You need at least 1 criterion",
   "duplicateAttribute": "Criterion names cannot repeat",
+  "duplicateItems": "Item names cannot repeat",
   "defaultAttribute": "Overall",
   "overallAverage": "Overall average"
 }
