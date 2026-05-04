@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlusIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
-import { Trash2, ArrowLeft, Camera, SlidersHorizontal } from 'lucide-react';
+import { Trash2, ArrowLeft, Camera, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import toast from 'react-hot-toast';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
@@ -50,7 +50,24 @@ export default function CreateRatingPage() {
   const [uploadingItem, setUploadingItem] = useState<string | null>(null);
   const [itemFileNames, setItemFileNames] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  // Custom criteria are collapsed by default. The implicit "General" /
+  // "Overall" attribute lives in `attributes` state regardless — collapsing
+  // just hides the editor UI for users who don't need multi-criteria scoring.
+  const [showCustomCriteria, setShowCustomCriteria] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Concrete examples cycle through the first three item rows. Anything past
+  // that falls back to a generic "another option" placeholder. Saying
+  // "Item 1" tells the user nothing about what to type — a real example
+  // anchors the mental model.
+  const itemPlaceholderFor = (index: number): string => {
+    const examples = [
+      t('ratings.itemExample1'),
+      t('ratings.itemExample2'),
+      t('ratings.itemExample3'),
+    ];
+    return examples[index] ?? t('ratings.itemExampleMore');
+  };
 
   // Duration options
   const durationOptions = [
@@ -357,66 +374,17 @@ export default function CreateRatingPage() {
             </div>
           </div>
 
-          {/* Attributes (rating criteria) */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-[var(--text)] mb-1">
-              <SlidersHorizontal className="w-4 h-4 text-[var(--primary)] flex-shrink-0" />
-              <span>{t('ratings.attributesLabel')}</span>
-            </label>
-            <p className="text-xs text-[var(--text-muted)] mb-3 leading-snug">
-              {t('ratings.attributesHint')}
-            </p>
-            <div className="space-y-2">
-              {attributes.map((attr, index) => (
-                <div
-                  key={attr.id}
-                  className="flex items-center gap-2 min-w-0"
-                >
-                  <input
-                    type="text"
-                    value={attr.label}
-                    onChange={(e) => updateAttribute(attr.id, e.target.value)}
-                    className="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
-                    placeholder={`${t('ratings.attributePlaceholder')} ${index + 1}`}
-                    maxLength={30}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeAttribute(attr.id)}
-                    disabled={attributes.length <= 1}
-                    className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    aria-label={t('ratings.removeAttribute')}
-                    title={
-                      attributes.length <= 1
-                        ? t('ratings.needAtLeastOneAttribute')
-                        : t('ratings.removeAttribute')
-                    }
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={addAttribute}
-              className="mt-3 px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface)] transition-colors font-medium flex items-center gap-2 text-sm"
-            >
-              <PlusIcon className="w-4 h-4" />
-              {t('ratings.addAttribute')}
-            </button>
-            {errors.attributes && (
-              <p className="mt-2 text-sm text-red-600">{errors.attributes}</p>
-            )}
-          </div>
-
-          {/* Items */}
+          {/* Items — what they're rating. We deliberately put this BEFORE
+              the criteria section: starting from a concrete list ("Pizza Hut,
+              Güerrín…") forces a real mental model. Choosing abstract criteria
+              first ("Service, Food, Price… of what?") was the source of the
+              confusion users reported. */}
           <div>
             <label className="block text-sm font-medium text-[var(--text)] mb-1">
-              {t('ratings.itemsToRateLabel')}
+              {t('ratings.whatToRateTitle')}
             </label>
             <p className="text-xs text-[var(--text-muted)] mb-3 leading-snug">
-              {t('ratings.itemsToRateHint')}
+              {t('ratings.whatToRateHelper')}
             </p>
             <div className="space-y-3">
               {items.map((item, index) => (
@@ -432,10 +400,7 @@ export default function CreateRatingPage() {
                         updateItem(item.id, { label: e.target.value })
                       }
                       className="w-full min-w-0 px-3 sm:px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors placeholder-gray-400 dark:placeholder-gray-500"
-                      placeholder={t('ratings.itemPlaceholder').replace(
-                        '{n}',
-                        String(index + 1)
-                      )}
+                      placeholder={itemPlaceholderFor(index)}
                       maxLength={50}
                     />
                     <textarea
@@ -568,6 +533,89 @@ export default function CreateRatingPage() {
             {errors.items && (
               <p className="mt-1 text-sm text-red-600">{errors.items}</p>
             )}
+          </div>
+
+          {/* Criteria — collapsed by default. The implicit "General" /
+              "Overall" attribute is always in state, so submission works
+              regardless of whether the user expands this section. We only
+              auto-expand if attributes validation fails (e.g. duplicate
+              criterion names) so the user actually sees the error. */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-[var(--text)] mb-1">
+              <SlidersHorizontal className="w-4 h-4 text-[var(--primary)] flex-shrink-0" />
+              <span>{t('ratings.howToRateTitle')}</span>
+            </label>
+            <p className="text-xs text-[var(--text-muted)] mb-3 leading-snug">
+              {showCustomCriteria || errors.attributes
+                ? t('ratings.howToRateHelperLong')
+                : t('ratings.howToRateHelperShort')}
+            </p>
+
+            {(showCustomCriteria || errors.attributes) && (
+              <>
+                <div className="space-y-2">
+                  {attributes.map((attr, index) => (
+                    <div
+                      key={attr.id}
+                      className="flex items-center gap-2 min-w-0"
+                    >
+                      <input
+                        type="text"
+                        value={attr.label}
+                        onChange={(e) => updateAttribute(attr.id, e.target.value)}
+                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm placeholder-gray-400 dark:placeholder-gray-500"
+                        placeholder={`${t('ratings.attributePlaceholder')} ${index + 1}`}
+                        maxLength={30}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeAttribute(attr.id)}
+                        disabled={attributes.length <= 1}
+                        className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        aria-label={t('ratings.removeAttribute')}
+                        title={
+                          attributes.length <= 1
+                            ? t('ratings.needAtLeastOneAttribute')
+                            : t('ratings.removeAttribute')
+                        }
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addAttribute}
+                  className="mt-3 px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface)] transition-colors font-medium flex items-center gap-2 text-sm"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  {t('ratings.addAttribute')}
+                </button>
+                {errors.attributes && (
+                  <p className="mt-2 text-sm text-red-600">{errors.attributes}</p>
+                )}
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowCustomCriteria((prev) => !prev)}
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--primary)] hover:underline"
+              aria-expanded={showCustomCriteria}
+            >
+              {showCustomCriteria ? (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  {t('ratings.hideCustomCriteria')}
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  {t('ratings.addCustomCriteria')}
+                </>
+              )}
+            </button>
           </div>
 
           {/* Submit */}
