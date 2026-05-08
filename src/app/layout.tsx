@@ -74,8 +74,53 @@ const RootLayout = ({
 }: {
   children: React.ReactNode;
 }) => {
+  // JSON-LD structured data for the site itself. WebSite gives Google a
+  // sitelinks search box opportunity (potentialAction), Organization gives
+  // it a canonical name + logo for knowledge panels and social cards.
+  // Inlined as a script tag in <head> — server-rendered, so crawlers see
+  // it on first paint without waiting for JS.
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': 'https://letspicky.com/#website',
+        url: 'https://letspicky.com',
+        name: 'Pickly',
+        description:
+          'Crea encuestas, rankings, ratings y torneos para compartir con amigos. Sin registro, sin complicaciones.',
+        inLanguage: 'es',
+        publisher: { '@id': 'https://letspicky.com/#organization' },
+      },
+      {
+        '@type': 'Organization',
+        '@id': 'https://letspicky.com/#organization',
+        name: 'Pickly',
+        url: 'https://letspicky.com',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://letspicky.com/icon-512.png',
+          width: 512,
+          height: 512,
+        },
+      },
+    ],
+  };
+
   return (
-    <html lang="en" className="h-full">
+    // lang="es" matches the metadata + content. Was hardcoded to "en"
+    // which was actively confusing crawlers (Google was probably
+    // ranking us in the wrong locale). The app supports an EN toggle
+    // but the default audience and SSR-rendered content is Spanish.
+    <html lang="es" className="h-full">
+      <head>
+        <script
+          type="application/ld+json"
+          // Next.js requires this exact pattern for JSON-LD in server
+          // components — stringify and inject as innerHTML.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      </head>
       <body className={`${inter.className} flex flex-col min-h-screen`}>
         <ErrorBoundary>
           <AuthProvider>

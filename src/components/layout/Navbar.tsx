@@ -19,6 +19,7 @@ import ThemeLanguageSwitcher from '@/components/layout/ThemeLanguageSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 import { safeBack } from '@/lib/navigation';
 import { FEATURES } from '@/lib/features';
+import { announceNavbarMenuOpen, onNavbarMenuOpen } from '@/lib/navbarMenus';
 
 const Navbar = () => {
   const { t, language, toggleLanguage } = useLanguage();
@@ -47,6 +48,18 @@ const Navbar = () => {
     };
     window.addEventListener('spin-step-change', handler);
     return () => window.removeEventListener('spin-step-change', handler);
+  }, []);
+
+  // Coordinate with the language menu (which lives in
+  // ThemeLanguageSwitcher.tsx). When the language dropdown opens, it
+  // announces 'language' and we close ours. We do the same for our two
+  // when they open via the announceNavbarMenuOpen call inside their
+  // onClick handlers — so a single event bus handles all three.
+  useEffect(() => {
+    return onNavbarMenuOpen((menu) => {
+      if (menu !== 'create') setShowCreateMenu(false);
+      if (menu !== 'user') setShowUsernameMenu(false);
+    });
   }, []);
 
   // Handle scroll effect for desktop navbar
@@ -601,7 +614,14 @@ const Navbar = () => {
                     <button
                       onClick={() => {
                         setShowUsernameMenu(false);
-                        setShowCreateMenu((v) => !v);
+                        setShowCreateMenu((v) => {
+                          // Only announce on opening — other menus listen
+                          // and close themselves. The username menu also
+                          // closes via setShowUsernameMenu(false) above,
+                          // but the announce covers the language menu too.
+                          if (!v) announceNavbarMenuOpen('create');
+                          return !v;
+                        });
                       }}
                       className={`relative group bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] text-white ${isMedium ? 'px-4 py-2.5' : 'px-5 py-2.5'} rounded-full font-medium hover:shadow-lg hover:shadow-[var(--primary)]/30 hover:scale-105 transition-all duration-300 text-sm flex items-center ${isMedium ? 'justify-center' : 'gap-2'}`}
                     >
@@ -688,7 +708,10 @@ const Navbar = () => {
                     <button
                       onClick={() => {
                         setShowCreateMenu(false);
-                        setShowUsernameMenu((v) => !v);
+                        setShowUsernameMenu((v) => {
+                          if (!v) announceNavbarMenuOpen('user');
+                          return !v;
+                        });
                       }}
                       className="flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] rounded-full hover:bg-[var(--surface)] hover:shadow-md transition-all duration-300 border border-[var(--border)] hover:border-[var(--primary)]"
                     >

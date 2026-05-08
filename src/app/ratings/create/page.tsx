@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlusIcon, PhotoIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
-import { Trash2, ArrowLeft, Camera, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, ArrowLeft, Camera, SlidersHorizontal, ChevronUp, Star } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import toast from 'react-hot-toast';
 import ImagePickerModal from '@/components/create/ImagePickerModal';
@@ -535,12 +535,14 @@ export default function CreateRatingPage() {
             )}
           </div>
 
-          {/* Criteria — collapsed by default. The implicit "General" /
-              "Overall" attribute is always in state, so submission works
-              regardless of whether the user expands this section. We only
-              auto-expand if attributes validation fails (e.g. duplicate
-              criterion names) so the user actually sees the error. */}
-          <div>
+          {/* Criteria — wrapped in a proper card so it reads as a real
+              section (not an orphan link). Collapsed by default, but the
+              card always shows a concrete "current setup" preview chip so
+              the user knows exactly what the rating will look like. The
+              implicit "General"/"Overall" attribute lives in state
+              regardless. We auto-expand if attributes validation fails so
+              the user actually sees the error. */}
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-4">
             <label className="flex items-center gap-2 text-sm font-medium text-[var(--text)] mb-1">
               <SlidersHorizontal className="w-4 h-4 text-[var(--primary)] flex-shrink-0" />
               <span>{t('ratings.howToRateTitle')}</span>
@@ -551,7 +553,7 @@ export default function CreateRatingPage() {
                 : t('ratings.howToRateHelperShort')}
             </p>
 
-            {(showCustomCriteria || errors.attributes) && (
+            {(showCustomCriteria || errors.attributes) ? (
               <>
                 <div className="space-y-2">
                   {attributes.map((attr, index) => (
@@ -587,7 +589,7 @@ export default function CreateRatingPage() {
                 <button
                   type="button"
                   onClick={addAttribute}
-                  className="mt-3 px-4 py-2 bg-[var(--surface-2)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface)] transition-colors font-medium flex items-center gap-2 text-sm"
+                  className="mt-3 px-4 py-2 bg-[var(--surface)] text-[var(--primary)] rounded-lg hover:bg-[var(--surface-2)] transition-colors font-medium flex items-center gap-2 text-sm border border-[var(--border)]"
                 >
                   <PlusIcon className="w-4 h-4" />
                   {t('ratings.addAttribute')}
@@ -596,12 +598,25 @@ export default function CreateRatingPage() {
                   <p className="mt-2 text-sm text-red-600">{errors.attributes}</p>
                 )}
               </>
+            ) : (
+              // Collapsed preview: a concrete chip showing how the rating
+              // will look. Removes the "wait, is anything happening?"
+              // ambiguity of an empty section.
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)]">
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                <span className="text-sm font-medium text-[var(--text)]">
+                  {t('ratings.defaultPreviewLabel')}
+                </span>
+                <span className="text-xs text-[var(--text-muted)]">
+                  · {t('ratings.defaultPreviewScale')}
+                </span>
+              </div>
             )}
 
             <button
               type="button"
               onClick={() => setShowCustomCriteria((prev) => !prev)}
-              className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--primary)] hover:underline"
+              className="mt-3 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg border border-dashed border-[var(--primary)]/40 text-sm font-medium text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors"
               aria-expanded={showCustomCriteria}
             >
               {showCustomCriteria ? (
@@ -611,7 +626,7 @@ export default function CreateRatingPage() {
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-4 h-4" />
+                  <PlusIcon className="w-4 h-4" />
                   {t('ratings.addCustomCriteria')}
                 </>
               )}
