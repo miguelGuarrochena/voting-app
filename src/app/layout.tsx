@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://letspicky.com'),
+  metadataBase: new URL('https://letspickly.com'),
   title: {
     default: 'Pickly — Crea y comparte encuestas en segundos',
     template: '%s · Pickly',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Pickly — Crea y comparte encuestas en segundos',
     description:
       'Crea encuestas, rankings, ratings y torneos 1-vs-1. Compartí el link y votá en segundos, sin registro.',
-    url: 'https://letspicky.com',
+    url: 'https://letspickly.com',
     siteName: 'Pickly',
     type: 'website',
     locale: 'es_AR',
@@ -67,6 +67,14 @@ export const metadata: Metadata = {
       'Encuestas, rankings, ratings y torneos. Compartí el link y votá en segundos, sin registro.',
     images: ['/icon-512.png'],
   },
+  // Google Search Console verification. The token is just a random
+  // ownership-proof string (not a secret, fine to commit) but we read
+  // it from env so swapping or removing it doesn't require a code
+  // change. Set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in Vercel project
+  // settings → Environment Variables, then redeploy.
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 const RootLayout = ({
@@ -84,22 +92,22 @@ const RootLayout = ({
     '@graph': [
       {
         '@type': 'WebSite',
-        '@id': 'https://letspicky.com/#website',
-        url: 'https://letspicky.com',
+        '@id': 'https://letspickly.com/#website',
+        url: 'https://letspickly.com',
         name: 'Pickly',
         description:
           'Crea encuestas, rankings, ratings y torneos para compartir con amigos. Sin registro, sin complicaciones.',
         inLanguage: 'es',
-        publisher: { '@id': 'https://letspicky.com/#organization' },
+        publisher: { '@id': 'https://letspickly.com/#organization' },
       },
       {
         '@type': 'Organization',
-        '@id': 'https://letspicky.com/#organization',
+        '@id': 'https://letspickly.com/#organization',
         name: 'Pickly',
-        url: 'https://letspicky.com',
+        url: 'https://letspickly.com',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://letspicky.com/icon-512.png',
+          url: 'https://letspickly.com/icon-512.png',
           width: 512,
           height: 512,
         },

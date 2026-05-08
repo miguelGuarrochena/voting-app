@@ -3,7 +3,7 @@
   "lastUpdated": "Last updated: April 25, 2026",
   "home": "Home",
   "summaryTitle": "Quick summary",
-  "summaryText": "Pickly (operated from the domain letspicky.com) is a tool for creating polls, rankings, ratings, and tournaments. It's designed to be used with the minimum amount of personal data possible. We don't sell information, we don't use third-party advertising, and we don't share your data with advertisers.",
+  "summaryText": "Pickly (operated from the domain letspickly.com) is a tool for creating polls, rankings, ratings, and tournaments. It's designed to be used with the minimum amount of personal data possible. We don't sell information, we don't use third-party advertising, and we don't share your data with advertisers.",
   "whatWeSaveTitle": "What we save when you create a poll without an account",
   "whatWeSave1": "The poll content: title, description, options, and if you upload an image, that image.",
   "whatWeSave2": "A random token to identify the poll in the URL.",

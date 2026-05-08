@@ -18,7 +18,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/auth/', '/api/'],
       },
     ],
-    sitemap: 'https://letspicky.com/sitemap.xml',
-    host: 'https://letspicky.com',
+    sitemap: 'https://letspickly.com/sitemap.xml',
+    host: 'https://letspickly.com',
   };
 }

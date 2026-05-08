@@ -209,7 +209,7 @@ export const CelebrationScreen = ({ champion, tournamentTitle, onShareResult, on
             className="mt-4 text-xs font-semibold uppercase tracking-wider"
             style={{ color: '#92400e' }}
           >
-            Pickly · letspicky.com
+            Pickly · letspickly.com
           </div>
         </div>
 

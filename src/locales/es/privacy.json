@@ -3,7 +3,7 @@
   "lastUpdated": "Última actualización: 25 de abril de 2026",
   "home": "Inicio",
   "summaryTitle": "Resumen rápido",
-  "summaryText": "Pickly (operado desde el dominio letspicky.com) es una herramienta para crear encuestas, rankings, ratings y torneos. Está pensada para que la uses con la menor cantidad de datos personales posible. No vendemos información, no usamos publicidad de terceros y no compartimos tus datos con anunciantes.",
+  "summaryText": "Pickly (operado desde el dominio letspickly.com) es una herramienta para crear encuestas, rankings, ratings y torneos. Está pensada para que la uses con la menor cantidad de datos personales posible. No vendemos información, no usamos publicidad de terceros y no compartimos tus datos con anunciantes.",
   "whatWeSaveTitle": "Qué guardamos cuando creás una encuesta sin cuenta",
   "whatWeSave1": "El contenido de la encuesta: título, descripción, opciones y, si subís imagen, esa imagen.",
   "whatWeSave2": "Un token aleatorio para identificar la encuesta en la URL.",

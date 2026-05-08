@@ -14,7 +14,7 @@ import type { MetadataRoute } from 'next';
 // when we re-deploy. Priority is loose — Google mostly ignores it now
 // but it doesn't hurt to provide.
 
-const BASE_URL = 'https://letspicky.com';
+const BASE_URL = 'https://letspickly.com';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
