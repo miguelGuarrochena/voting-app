@@ -1,114 +1,63 @@
 /**
- * Cloudflare Turnstile — client and server helpers.
- *
- * Client (browser):
- *   - turnstileExecute(siteKey): fires an invisible challenge and returns a token.
- *     The token is valid for ~5 min and is consumed on the server when validating.
- *
- * Server (Next.js edge route):
- *   - verifyTurnstile(token, secret, ip?): validates the token against
- *     https://challenges.cloudflare.com/turnstile/v0/siteverify
+ * Cloudflare Turnstile — types + server verifier.
  *
  * Setup:
  *   - Create site at https://dash.cloudflare.com → Turnstile → Add Site.
- *   - Mode: "Invisible" or "Managed" (Managed shows the widget only if
- *     there's suspicion; Invisible never shows it). Recommended: Managed.
+ *   - Mode: "Managed" (CF decides whether interaction is needed).
  *   - Copy Site Key → NEXT_PUBLIC_TURNSTILE_SITE_KEY (Vercel + .env.local)
  *   - Copy Secret Key → TURNSTILE_SECRET (only on Vercel)
  *
- *   For dev without Cloudflare, there are official test keys:
+ *   Dev test keys (no Cloudflare account needed):
  *     Site key:   1x00000000000000000000AA  (always passes)
  *     Secret:     1x0000000000000000000000000000000AA
  *
- *   If env vars aren't set, the code degrades gracefully:
- *   on client skip the challenge, on server skip the verification.
- *   This allows local work without Cloudflare for now.
+ *   When env vars aren't set, the code degrades gracefully:
+ *   client skips the challenge, server skips verification.
+ *
+ * Client widget mounting lives in src/hooks/useTurnstile.ts —
+ * an in-page persistent widget so a managed challenge can render
+ * in front of the user on mobile (an off-screen invisible widget
+ * was the cause of the "stuck on submit → bot" bug).
  */
 
 // ------------------------------------------------------------
-//  CLIENT — turnstile.execute() invisible
+//  Types — shared between hook and any future caller
 // ------------------------------------------------------------
+
+export interface TurnstileRenderOptions {
+  sitekey: string
+  action?: string
+  callback?: (token: string) => void
+  'error-callback'?: () => void
+  'expired-callback'?: () => void
+  'timeout-callback'?: () => void
+  size?: 'normal' | 'compact' | 'flexible' | 'invisible'
+  appearance?: 'always' | 'execute' | 'interaction-only'
+  retry?: 'auto' | 'never'
+  theme?: 'light' | 'dark' | 'auto'
+}
 
 declare global {
   interface Window {
     turnstile?: {
-      execute: (
-        container: string | HTMLElement,
-        options: { sitekey: string; action?: string }
-      ) => Promise<string>
+      ready?: (cb: () => void) => void
       render: (
         container: string | HTMLElement,
-        options: {
-          sitekey: string
-          action?: string
-          callback?: (token: string) => void
-          'error-callback'?: () => void
-          'expired-callback'?: () => void
-          size?: 'normal' | 'compact' | 'invisible'
-          appearance?: 'always' | 'execute' | 'interaction-only'
-        }
+        options: TurnstileRenderOptions
       ) => string | undefined
+      execute: (
+        widgetIdOrContainer: string | HTMLElement,
+        options?: { sitekey?: string; action?: string }
+      ) => void
       reset: (widgetId?: string) => void
       remove: (widgetId?: string) => void
+      getResponse: (widgetId?: string) => string | undefined
     }
   }
 }
 
 export const TURNSTILE_SCRIPT_URL =
   'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-
-/**
- * Executes an invisible challenge and returns the token.
- * If Turnstile isn't loaded or there's no siteKey, returns null
- * (degraded mode — the server will accept it if it also doesn't have secret set).
- */
-export async function turnstileExecute(
-  siteKey: string | undefined,
-  action = 'submit'
-): Promise<string | null> {
-  if (typeof window === 'undefined') return null
-  if (!siteKey) return null
-  if (!window.turnstile) {
-    // Wait up to 3s for the script to load
-    for (let i = 0; i < 30; i++) {
-      await new Promise((r) => setTimeout(r, 100))
-      if (window.turnstile) break
-    }
-    if (!window.turnstile) return null
-  }
-
-  // Create a temporary off-screen container for the invisible render
-  const container = document.createElement('div')
-  container.style.position = 'fixed'
-  container.style.left = '-9999px'
-  container.style.top = '-9999px'
-  document.body.appendChild(container)
-
-  try {
-    return await new Promise<string>((resolve, reject) => {
-      const widgetId = window.turnstile!.render(container, {
-        sitekey: siteKey,
-        action,
-        size: 'invisible',
-        callback: (token: string) => {
-          resolve(token)
-        },
-        'error-callback': () => reject(new Error('turnstile_error')),
-        'expired-callback': () => reject(new Error('turnstile_expired')),
-      })
-
-      if (!widgetId) {
-        reject(new Error('turnstile_render_failed'))
-      }
-
-      // Timeout safety net (15s)
-      setTimeout(() => reject(new Error('turnstile_timeout')), 15000)
-    })
-  } finally {
-    // Clean up the container; the Turnstile script stays loaded
-    setTimeout(() => container.remove(), 0)
-  }
-}
 
 // ------------------------------------------------------------
 //  SERVER — verifyTurnstile()
@@ -135,7 +84,7 @@ export async function verifyTurnstile(
   ip?: string
 ): Promise<boolean> {
   if (!secret) {
-    // Modo dev: skip
+    // Dev mode: skip
     console.warn(
       '[turnstile] TURNSTILE_SECRET not set — skipping verification (dev mode).'
     )

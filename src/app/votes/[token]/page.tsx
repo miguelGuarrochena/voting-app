@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -16,7 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { useTurnstile } from '@/hooks/useTurnstile';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/common/TurnstileWidget';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
@@ -38,7 +38,12 @@ export default function VoteTokenPage() {
   const searchParams = useSearchParams();
   const { username } = useUsername();
   const { t } = useLanguage();
-  const getCaptchaToken = useTurnstile('vote_submit');
+  // Turnstile is mounted inline in the form (see render below), pre-fetches
+  // a token in the background, and exposes getToken/reset via the ref.
+  // Replaces the old on-click execution which hung on mobile when Cloudflare
+  // wanted to show an interactive challenge — the off-screen container left
+  // it unreachable, the request timed out, and the API rejected as "bot".
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const token = params.token as string;
   const justCreated = searchParams.get('created') === 'true';
@@ -157,12 +162,15 @@ export default function VoteTokenPage() {
   const handleVote = async () => {
     if (!selectedOption || !pollData || submitting) return;
     setSubmitting(true);
-    const captchaToken = await getCaptchaToken();
+    const captchaToken = (await turnstileRef.current?.getToken()) ?? null;
     const ok = await submitResponse(token, username || 'Anonymous', { optionId: selectedOption }, captchaToken);
     setSubmitting(false);
 
     if (!ok) return; // db.ts ya mostró el toast con el error real
 
+    // Stage a fresh token in case the user submits again (e.g. via a
+    // future "change vote" flow). Cheap; runs entirely in the background.
+    turnstileRef.current?.reset();
     setHasVotedState(true);
     toast.success(t('votes.submittedToast'));
 
@@ -358,17 +366,22 @@ export default function VoteTokenPage() {
           )}
 
           {!hasVotedState && !expired ? (
-            <VoteForm
-              options={pollData.options}
-              selectedOption={selectedOption}
-              setSelectedOption={setSelectedOption}
-              onSubmit={handleVote}
-              submitting={submitting}
-              pickLabel={t('votes.pickAnOption')}
-              submitLabel={t('votes.submitVote')}
-              changeLabel={t('votes.change')}
-              onZoomImage={(url, alt) => setZoomImage({ url, alt })}
-            />
+            <>
+              <VoteForm
+                options={pollData.options}
+                selectedOption={selectedOption}
+                setSelectedOption={setSelectedOption}
+                onSubmit={handleVote}
+                submitting={submitting}
+                pickLabel={t('votes.pickAnOption')}
+                submitLabel={t('votes.submitVote')}
+                changeLabel={t('votes.change')}
+                onZoomImage={(url, alt) => setZoomImage({ url, alt })}
+              />
+              {/* Persistent Turnstile placeholder — invisible by default;
+                  expands in place if Cloudflare requires interaction. */}
+              <TurnstileWidget ref={turnstileRef} action="vote_submit" className="mt-3" />
+            </>
           ) : (
             <ResultsList
               options={pollData.options}

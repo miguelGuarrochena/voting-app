@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { useTurnstile } from '@/hooks/useTurnstile';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/common/TurnstileWidget';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
@@ -40,7 +40,9 @@ export default function RatingTokenPage() {
   const searchParams = useSearchParams();
   const { username } = useUsername();
   const { t } = useLanguage();
-  const getCaptchaToken = useTurnstile('rating_submit');
+  // Turnstile mounted in-form (see render below); pre-fetches the token in
+  // the background so submit doesn't have to wait for a CF round-trip.
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const token = params.token as string;
   const justCreated = searchParams.get('created') === 'true';
@@ -190,7 +192,7 @@ export default function RatingTokenPage() {
     }
 
     setSubmitting(true);
-    const captchaToken = await getCaptchaToken();
+    const captchaToken = (await turnstileRef.current?.getToken()) ?? null;
     const ok = await submitResponse(
       token,
       username || 'Anonymous',
@@ -201,6 +203,7 @@ export default function RatingTokenPage() {
 
     if (!ok) return;
 
+    turnstileRef.current?.reset();
     setHasVotedState(true);
     toast.success(t('ratings.submittedToast'));
 
@@ -465,6 +468,9 @@ export default function RatingTokenPage() {
                       : t('ratings.submitRatings')
                     : `${t('ratings.submitRatings')} (${rated}/${total})`}
                 </button>
+                {/* Persistent Turnstile placeholder. Invisible by default;
+                    expands in place if Cloudflare requires interaction. */}
+                <TurnstileWidget ref={turnstileRef} action="rating_submit" className="mt-1" />
               </div>
             </div>
           ) : (

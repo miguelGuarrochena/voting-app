@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useUsername } from '@/context/UsernameContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { useTurnstile } from '@/hooks/useTurnstile';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '@/components/common/TurnstileWidget';
 import { OwnerMenu, OwnerMenuItem } from '@/components/common/OwnerMenu';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import EditTitleModal from '@/components/modals/EditTitleModal';
@@ -33,7 +33,9 @@ export default function RankingTokenPage() {
   const searchParams = useSearchParams();
   const { username } = useUsername();
   const { t } = useLanguage();
-  const getCaptchaToken = useTurnstile('ranking_submit');
+  // Turnstile mounted in-form (see render below); pre-fetches a token in
+  // the background so submit doesn't have to wait for a CF round-trip.
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const token = params.token as string;
   const justCreated = searchParams.get('created') === 'true';
@@ -179,12 +181,13 @@ export default function RankingTokenPage() {
   const handleSubmitRanking = async () => {
     if (!pollData || submitting) return;
     setSubmitting(true);
-    const captchaToken = await getCaptchaToken();
+    const captchaToken = (await turnstileRef.current?.getToken()) ?? null;
     const ok = await submitResponse(token, username || 'Anonymous', { rankings }, captchaToken);
     setSubmitting(false);
 
     if (!ok) return; // db.ts ya toasteó el error real
 
+    turnstileRef.current?.reset();
     setHasVotedState(true);
     toast.success(t('ranking.submittedToast'));
 
@@ -477,6 +480,10 @@ export default function RankingTokenPage() {
               >
                 {submitting ? '…' : t('ranking.submitRanking')}
               </button>
+              {/* Persistent Turnstile placeholder. Invisible by default; if
+                  Cloudflare requires interaction, the challenge renders here
+                  in-place where the user can complete it. */}
+              <TurnstileWidget ref={turnstileRef} action="ranking_submit" className="mt-3" />
             </div>
           ) : (
             <RankingResultsList
